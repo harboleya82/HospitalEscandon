@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Escandón - Diagnóstico Interactivo con Simuladores</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f6fa;--card:#fff;--text:#1a1a2e;--muted:#6b7280;--accent:#1e3a5f;--accent2:#2563eb;--green:#059669;--red:#dc2626;--amber:#d97706;--border:#e5e7eb;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04)}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#1e40af 100%);color:#fff;padding:2.5rem 1.5rem;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero h1{font-size:1.8rem;font-weight:700;margin-bottom:.4rem;position:relative;z-index:1}
+.hero p{opacity:.8;font-size:.9rem;position:relative;z-index:1}
+.hero .badge{display:inline-block;background:rgba(255,255,255,.15);padding:4px 14px;border-radius:20px;font-size:.75rem;margin-top:.5rem;position:relative;z-index:1}
+.container{max-width:1140px;margin:0 auto;padding:1rem}
+nav{display:flex;gap:3px;background:#e2e8f0;padding:3px;border-radius:12px;margin-bottom:1.5rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+nav button{padding:.55rem .9rem;border:none;background:none;cursor:pointer;border-radius:10px;font-size:.8rem;font-weight:600;color:var(--muted);white-space:nowrap;transition:all .2s}
+nav button.on{background:var(--card);color:var(--accent2);box-shadow:var(--shadow)}
+nav button:hover:not(.on){color:var(--text)}
+.page{display:none}.page.on{display:block}
+.row{display:grid;gap:1rem}.r2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}.r3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.r4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.card{background:var(--card);border-radius:14px;padding:1.3rem;box-shadow:var(--shadow);border:1px solid var(--border)}
+.kpi{text-align:center;padding:1rem}.kpi .label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px}.kpi .val{font-size:1.7rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}.kpi .delta{font-size:.75rem;margin-top:2px}
+.up{color:var(--green)}.dn{color:var(--red)}.nt{color:var(--amber)}
+h2{font-size:1.15rem;font-weight:700;color:var(--accent);margin-bottom:.8rem;display:flex;align-items:center;gap:8px}
+h2 .icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+h3{font-size:.95rem;font-weight:600;margin:.8rem 0 .5rem;color:var(--text)}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.65rem;font-weight:700;letter-spacing:.3px}
+.t-fact{background:#dcfce7;color:#166534}.t-inf{background:#fef9c3;color:#854d0e}.t-risk{background:#fee2e2;color:#991b1b}.t-act{background:#dbeafe;color:#1e40af}.t-opp{background:#ede9fe;color:#5b21b6}
+.insight{padding:.9rem 1rem;border-left:4px solid var(--accent2);margin-bottom:.6rem;background:#f8faff;border-radius:0 10px 10px 0;font-size:.85rem}
+.alert{padding:1rem;border-radius:12px;margin-bottom:1rem;font-size:.85rem;display:flex;gap:10px;align-items:flex-start}
+.alert-red{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.alert-amber{background:#fffbeb;border:1px solid #fde68a;color:#92400e}.alert-blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}.alert-green{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.alert .emoji{font-size:1.2rem;flex-shrink:0}
+.chart-box{position:relative;height:260px;margin:.5rem 0}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:.8rem}
+.bar-lbl{min-width:130px;text-align:right;color:var(--muted);font-size:.75rem}
+.bar-trk{flex:1;height:20px;background:#f1f5f9;border-radius:6px;position:relative}
+.bar-fl{height:100%;border-radius:6px;position:absolute;top:0;left:0;transition:width .6s ease}
+.bar-txt{position:absolute;top:0;height:100%;display:flex;align-items:center;font-size:.68rem;font-weight:700;white-space:nowrap}
+.bar-v{min-width:60px;font-size:.75rem;color:var(--muted)}
+.tbl-wrap{max-height:350px;overflow-y:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{background:#f8fafc;padding:.5rem;text-align:left;font-weight:700;color:var(--accent);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:1}
+td{padding:.4rem .5rem;border-bottom:1px solid #f1f5f9}
+tr:hover td{background:#f8faff}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700}
+.p-hi{background:#dcfce7;color:#166534}.p-md{background:#fef9c3;color:#854d0e}.p-lo{background:#fee2e2;color:#991b1b}
+.sim{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:2px solid #7dd3fc;border-radius:14px;padding:1.3rem;margin-bottom:1rem}
+.sim h3{color:#0369a1;margin-top:0}
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:700px){.sim-grid{grid-template-columns:1fr}}
+.sim label{display:block;font-size:.78rem;color:#0c4a6e;font-weight:600;margin-bottom:3px}
+.sim input[type=range]{width:100%;margin:4px 0;accent-color:#2563eb}
+.sim .readout{font-size:1.3rem;font-weight:800;color:#1e40af;text-align:center;padding:.5rem;background:rgba(255,255,255,.7);border-radius:10px;margin-top:.5rem}
+.sim .readout small{font-size:.7rem;color:#64748b;display:block;font-weight:500}
+.sim .val-display{font-size:.85rem;font-weight:700;color:#0369a1;text-align:right}
+.donut-legend{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:.5rem;font-size:.75rem}
+.donut-legend span{display:flex;align-items:center;gap:4px}
+.donut-legend .dot{width:10px;height:10px;border-radius:3px}
+.src{font-size:.62rem;color:#9ca3af;font-weight:400;font-style:italic;margin-left:4px;letter-spacing:0}
+.src-block{font-size:.62rem;color:#9ca3af;font-style:italic;margin-top:3px;line-height:1.3}
+.src-block::before{content:'Fuente: '}
+.src-inline::before{content:'['}
+.src-inline::after{content:']'}
+.src-inline{font-size:.6rem;color:#9ca3af;font-style:italic;font-weight:400}
+.footer{text-align:center;padding:1.5rem;color:var(--muted);font-size:.7rem;border-top:1px solid var(--border);margin-top:2rem}
+.sparkline{display:flex;align-items:end;gap:2px;height:30px}
+.sparkline div{flex:1;background:#2563eb;border-radius:2px 2px 0 0;opacity:.7;transition:opacity .2s}
+.sparkline div:hover{opacity:1}
+.funnel{display:flex;flex-direction:column;align-items:center;gap:4px;margin:1rem 0}
+.funnel-step{padding:.6rem 1rem;border-radius:8px;text-align:center;font-size:.8rem;font-weight:600;color:#fff;transition:all .3s}
+.counter{font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--green),#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+</style>
+</head>
+<body>
+<div class="hero">
+<h1>Hospital Escandón — Simulador Estratégico</h1>
+<p>Diagnóstico interactivo con calculadoras de impacto económico en tiempo real</p>
+<div class="badge">Reunión Patronato · 23 marzo 2026 · Datos 2025</div>
+</div>
+<div class="container">
+<nav id="nav"></nav>
+
+<!-- ===================== TAB 1: PANORAMA ===================== -->
+<div class="page on" id="p-panorama">
+<div class="row r4" style="margin-bottom:1.2rem">
+<div class="card kpi"><div class="label">Facturación 2025</div><div class="val">$97.8M</div><div class="delta nt">146 médicos</div><div class="src-block">Ctas Hosp Médicos Especialidad 2025</div></div>
+<div class="card kpi"><div class="label">Cirujanos (amarillo)</div><div class="val">60</div><div class="delta">$49.7M (50.8%)</div><div class="src-block">Ctas Hosp Médicos v2 (amarillo)</div></div>
+<div class="card kpi"><div class="label">Cirugías</div><div class="val">945</div><div class="src-block">Comparativo Estadísticas Anuales HE</div><div class="delta dn"> 7.9% vs 2024</div></div>
+<div class="card kpi"><div class="label">Urgencias</div><div class="val">5,727</div><div class="src-block">Comparativo Estadísticas Anuales HE</div><div class="delta up"> 17.5%</div></div>
+<div class="card kpi"><div class="label">Consultas</div><div class="val">42,125</div><div class="src-block">Comparativo Estadísticas Anuales HE</div><div class="delta dn"> 15.8% vs 2019</div></div>
+<div class="card kpi"><div class="label">Pacientes</div><div class="val">7,053</div><div class="delta">95.3% pago directo</div><div class="src-block">Origen de Pacientes 2025</div></div>
+</div>
+
+<div class="alert alert-red"><div><strong>Corrección crítica:</strong> El análisis anterior reportaba 10.5 cirugías/día. El dato real es <strong>2.6/día</strong> (945÷365). El Dr. Samperio es intensivista — su facturación de $10.5M proviene de 2 pacientes de UCI, no de volumen quirúrgico. <span class="src-inline">Ctas Hosp Médicos v2 + Reuniones con equipo hospitalario</span></div></div>
+
+
+<div class="row r2" style="margin-bottom:1rem">
+<div class="card" style="border:2px solid #2563eb">
+<h2>Datos del Informe Anual 2024 (fuente oficial) <span class="src">Informe Anual 2024, hospitalescandon.org</span></h2>
+<div class="row r4" style="margin-bottom:.8rem">
+<div class="kpi"><div class="label">Total servicios 2024</div><div class="val" style="font-size:1.4rem">126,979</div></div>
+<div class="kpi"><div class="label">Personas atendidas</div><div class="val" style="font-size:1.4rem">28,262</div></div>
+<div class="kpi"><div class="label">Cirugías 2024</div><div class="val" style="font-size:1.4rem">1,026</div></div>
+<div class="kpi"><div class="label">Consultas espec.</div><div class="val" style="font-size:1.4rem">41,585</div></div>
+</div>
+<div class="row r3" style="margin-bottom:.5rem">
+<div><h3 style="margin-top:0">Estados financieros auditados 2024</h3>
+<div class="bar-row"><div class="bar-lbl">Activo total</div><div class="bar-trk"><div class="bar-fl" style="width:100%;background:#2563eb"></div><div class="bar-txt" style="left:8px;color:#fff">$150.5M</div></div></div>
+<div class="bar-row"><div class="bar-lbl">Patrimonio</div><div class="bar-trk"><div class="bar-fl" style="width:84%;background:#059669"></div><div class="bar-txt" style="left:8px;color:#fff">$126.6M (84%)</div></div></div>
+<div class="bar-row"><div class="bar-lbl">Pasivo total</div><div class="bar-trk"><div class="bar-fl" style="width:16%;background:#d97706"></div><div class="bar-txt" style="left:calc(16% + 8px);color:#d97706">$23.9M (16%)</div></div></div>
+<p style="font-size:.72rem;color:#64748b;margin-top:4px">Nivel de endeudamiento bajo (16%). La Fundación es financieramente sólida con patrimonio de $126.6M respaldando la operación. <span class="src-inline">Informe Anual 2024 p.27, auditoría Prieto Ruiz de Velasco</span></p>
+</div>
+<div><h3 style="margin-top:0">Reconocimientos 2024</h3>
+<div class="alert alert-green" style="margin-bottom:.5rem"><div><strong>Ranking Expansión #19 metropolitano</strong> — Puntajes: Talento 56.2, Tecnología 65.4, Procesos 60.2, Percepción 65.9, Resultados 84.7. Es el hospital sin fines de lucro mejor posicionado de CDMX. <span class="src-inline">Informe Anual 2024 p.21 + Funsalud/Expansión 2024</span></div></div>
+<div class="alert alert-green" style="margin-bottom:.5rem"><div><strong>Certificación Consejo de Salubridad General</strong> <span class="src-inline">Informe Anual 2024 p.19</span></div></div>
+<div class="alert alert-green"><div><strong>CEMEFI nivel Óptimo</strong> en Institucionalidad y Transparencia (vigente hasta julio 2026). <span class="src-inline">Informe Anual 2024 p.20</span></div></div>
+</div>
+<div><h3 style="margin-top:0">Infraestructura clave</h3>
+<p style="font-size:.82rem">34 camas censables + 18 urgencias + 7 TI + 6 UCIN</p>
+<p style="font-size:.82rem">3 quirófanos (2 operativos, 1 inactivo)</p>
+<p style="font-size:.82rem">RM Siemens Magnetom Sempra + Tomógrafo + US 4D + Mastografía + Densitometría</p>
+<p style="font-size:.82rem">Laboratorio con Premio Rey Pacal (mejor laboratorio nacional)</p>
+<p style="font-size:.82rem">155 médicos + 100 internos/pasantes de 12+ universidades</p>
+<p style="font-size:.82rem">Escuela de Enfermería: 116 alumnos inscritos</p>
+<p style="font-size:.82rem">Albergue Ramón Arbide para familiares foráneos</p>
+<p style="font-size:.72rem;color:#64748b;margin-top:4px"><span class="src-inline">Informe Anual 2024 pp.7-17 + web hospitalescandon.org</span></p>
+</div>
+</div>
+</div>
+</div>
+<div class="row r2">
+<div class="card">
+<h2>Estructura de ingresos <span class="src">Ctas Hosp Médicos v2 (especialidades amarillo)</span></h2>
+<div class="chart-box" style="height:220px"><canvas id="cDonut"></canvas></div>
+<div class="donut-legend">
+<span><span class="dot" style="background:#2563eb"></span>Cirujanos $49.7M</span>
+<span><span class="dot" style="background:#64748b"></span>Intensivistas/Internistas $33.8M</span>
+<span><span class="dot" style="background:#94a3b8"></span>Otros médicos $14.3M</span>
+</div>
+</div>
+<div class="card">
+<h2>Tendencia de cirugías (10 años) <span class="src">Comparativo Estadísticas Anuales HE 2016-2025</span></h2>
+<div class="chart-box" style="height:220px"><canvas id="cCxTrend"></canvas></div>
+<p style="font-size:.75rem;color:var(--muted);margin-top:.3rem"><span class="tag t-fact">HECHO</span> 2024 fue el pico histórico (1,026). 2025 retrocedió a niveles de 2019.</p>
+</div>
+</div>
+
+<div class="card" style="margin-top:1rem">
+<h2>El embudo roto: pacientes entran pero no convierten</h2>
+<div class="row r3">
+<div>
+<div id="funnelViz" class="funnel"></div>
+</div>
+<div>
+<div class="chart-box" style="height:240px"><canvas id="cFunnel"></canvas></div>
+</div>
+<div>
+<p style="font-size:.82rem"><span class="tag t-inf">INFERENCIA</span> Las urgencias crecieron 17.5% pero cirugías cayó 7.9%. <span class="src-inline">Comparativo Estadísticas Anuales HE</span> Los pacientes llegan al hospital, reciben cotización quirúrgica, comparan con clínicas de corta estancia y se van a operar fuera.</p>
+<p style="font-size:.82rem;margin-top:.5rem"><span class="tag t-risk">RIESGO</span> Las consultas de especialidad caen desde 2019 (-15.8%). <span class="src-inline">Comparativo Estadísticas Anuales HE</span> La "puerta de entrada" se estrecha año con año.</p>
+<p style="font-size:.82rem;margin-top:.5rem"><span class="tag t-act">ACCIÓN</span> Medir tasa de conversión consulta→cirugía y urgencia→cirugía. Hoy nadie lo monitorea.</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ===================== TAB 2: CIRUJANOS ===================== -->
+<div class="page" id="p-cirujanos">
+<div class="row r2" style="margin-bottom:1rem">
+<div class="card">
+<h2>Facturación por especialidad quirúrgica <span class="src">Ctas Hosp Médicos v2 (amarillo)</span></h2>
+<div class="chart-box" style="height:320px"><canvas id="cEsp"></canvas></div>
+</div>
+<div class="card">
+<h2>Ticket promedio por cuenta <span class="src">Ctas Hosp Médicos v2 (amarillo)</span></h2>
+<div class="chart-box" style="height:320px"><canvas id="cTicket"></canvas></div>
+</div>
+</div>
+<div class="card" style="margin-bottom:1rem">
+<h2>Nivel de actividad de los 60 cirujanos <span class="src">Ctas Hosp Médicos v2 (amarillo)</span></h2>
+<div class="row r3">
+<div>
+<div class="chart-box" style="height:200px"><canvas id="cActivity"></canvas></div>
+</div>
+<div style="grid-column:span 2">
+<div class="bar-row"><div class="bar-lbl"><span class="pill p-hi">Activos</span> ≥10 ctas</div><div class="bar-trk"><div class="bar-fl" style="width:55%;background:#059669"></div><div class="bar-txt" style="left:8px;color:#fff">33 cirujanos</div></div><div class="bar-v">$47.4M (95.4%)</div></div>
+<div class="bar-row"><div class="bar-lbl"><span class="pill p-md">Moderados</span> 3-9</div><div class="bar-trk"><div class="bar-fl" style="width:32%;background:#d97706"></div><div class="bar-txt" style="left:8px;color:#fff">19 cirujanos</div></div><div class="bar-v">$2.1M (4.3%)</div></div>
+<div class="bar-row"><div class="bar-lbl"><span class="pill p-lo">Baja</span> &lt;3 ctas</div><div class="bar-trk"><div class="bar-fl" style="width:13%;background:#dc2626"></div><div class="bar-txt" style="left:calc(13% + 8px);color:#dc2626">8 cirujanos</div></div><div class="bar-v">$0.2M (0.3%)</div></div>
+<div class="alert alert-amber" style="margin-top:.8rem"><div><strong>Pregunta central para entrevistas:</strong> ¿Por qué 27 cirujanos con privilegios generan menos de 10 cuentas/año? ¿Operan en otro hospital? ¿El costo de equipo los frena? ¿No tienen volumen en la zona?</div></div>
+</div>
+</div>
+</div>
+<div class="card">
+<h2>Top 20 cirujanos por facturación <span class="src">Ctas Hosp Médicos v2 (amarillo)</span></h2>
+<div class="tbl-wrap"><table>
+<thead><tr><th>#</th><th>Cirujano</th><th>Especialidad</th><th>Ctas</th><th>Facturación</th><th>$/Cta</th><th>Actividad</th></tr></thead>
+<tbody id="tblTop"></tbody>
+</table></div>
+</div>
+</div>
+
+<!-- ===================== TAB 3: SIMULADORES ===================== -->
+<div class="page" id="p-simuladores">
+<h2>Simuladores de impacto económico</h2>
+<p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Ajusta los controles para visualizar escenarios hipotéticos y su impacto potencial en la facturación del hospital.</p>
+
+<!-- SIM 1: Activación de cirujanos -->
+<div class="sim">
+<h3> Simulador 1: Activación de cirujanos sub-activos</h3>
+<p style="font-size:.8rem;color:#0c4a6e;margin-bottom:.8rem">Hoy hay 27 cirujanos con menos de 10 cuentas/año. <span class="src-inline">Ctas Hosp Médicos v2</span> ¿Qué pasa si logramos que algunos operen más?</p>
+<div class="sim-grid">
+<div>
+<label>Cirujanos que se activan (de los 27 sub-activos): <span id="s1v1" style="color:#2563eb">5</span></label>
+<input type="range" min="1" max="27" value="5" id="s1r1" oninput="sim1()">
+<label>Cuentas adicionales por cirujano/año: <span id="s1v2" style="color:#2563eb">8</span></label>
+<input type="range" min="1" max="30" value="8" id="s1r2" oninput="sim1()">
+<label>Ticket promedio por cuenta: $<span id="s1v3" style="color:#2563eb">40,685</span></label>
+<input type="range" min="15000" max="80000" value="40685" step="1000" id="s1r3" oninput="sim1()">
+</div>
+<div>
+<div class="readout" id="s1result"><small>Ingreso adicional anual</small>$1.6M</div>
+<div class="readout" style="margin-top:.5rem;background:rgba(5,150,105,.1)" id="s1pct"><small>Incremento sobre facturación quirúrgica</small>+3.3%</div>
+<div class="readout" style="margin-top:.5rem;background:rgba(37,99,235,.1)" id="s1cx"><small>Cirugías adicionales al año</small>+40</div>
+</div>
+</div>
+</div>
+
+<!-- SIM 2: Conversión urgencias -->
+<div class="sim" style="background:linear-gradient(135deg,#fdf2f8,#fce7f3);border-color:#f9a8d4">
+<h3> Simulador 2: Mejorar conversión urgencia → cirugía</h3>
+<p style="font-size:.8rem;color:#831843;margin-bottom:.8rem">De 5,727 urgencias <span class="src-inline">Comparativo Estadísticas Anuales HE</span>, se estima que ~5-8% podrían requerir cirugía. Hoy muchos se van a operar fuera.</p>
+<div class="sim-grid">
+<div>
+<label>% de urgencias con potencial quirúrgico: <span id="s2v1" style="color:#be185d">6%</span></label>
+<input type="range" min="2" max="15" value="6" id="s2r1" oninput="sim2()">
+<label>% de esos que hoy se capturan: <span id="s2v2" style="color:#be185d">30%</span></label>
+<input type="range" min="10" max="80" value="30" id="s2r2" oninput="sim2()">
+<label>% que se podrían capturar con mejoras: <span id="s2v3" style="color:#be185d">55%</span></label>
+<input type="range" min="10" max="90" value="55" id="s2r3" oninput="sim2()">
+<label>Ticket promedio cirugía: $<span id="s2v4" style="color:#be185d">45,000</span></label>
+<input type="range" min="20000" max="80000" value="45000" step="1000" id="s2r4" oninput="sim2()">
+</div>
+<div>
+<div class="readout" style="background:rgba(190,24,93,.08)" id="s2result"><small>Ingreso adicional anual</small>$3.9M</div>
+<div class="readout" style="margin-top:.5rem;background:rgba(190,24,93,.05)" id="s2cx"><small>Cirugías adicionales al año</small>+86</div>
+<div class="readout" style="margin-top:.5rem;background:rgba(5,150,105,.08)" id="s2pct"><small>Incremento vs 945 cirugías actuales</small>+9.1%</div>
+</div>
+</div>
+</div>
+
+<!-- SIM 3: Check-ups corporativos -->
+<div class="sim" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-color:#86efac">
+<h3> Simulador 3: Programa de check-ups corporativos</h3>
+<p style="font-size:.8rem;color:#166534;margin-bottom:.8rem">6 paquetes de check-up ($6,500 a $22,000). <span class="src-inline">Imágenes Check-up H/M Básico, Avanzado, Plus</span> Si se venden a empresas de la zona (AO, MH, Cuajimalpa)...</p>
+<div class="sim-grid">
+<div>
+<label>Empresas que se captan: <span id="s3v1" style="color:#166534">5</span></label>
+<input type="range" min="1" max="20" value="5" id="s3r1" oninput="sim3()">
+<label>Empleados promedio por empresa: <span id="s3v2" style="color:#166534">50</span></label>
+<input type="range" min="10" max="200" value="50" step="5" id="s3r2" oninput="sim3()">
+<label>% de adopción del check-up: <span id="s3v3" style="color:#166534">30%</span></label>
+<input type="range" min="5" max="80" value="30" id="s3r3" oninput="sim3()">
+<label>Ticket promedio check-up: $<span id="s3v4" style="color:#166534">8,500</span></label>
+<input type="range" min="6500" max="22000" value="8500" step="500" id="s3r4" oninput="sim3()">
+<label>% de hallazgos que derivan en cirugía: <span id="s3v5" style="color:#166534">5%</span></label>
+<input type="range" min="1" max="15" value="5" id="s3r5" oninput="sim3()">
+</div>
+<div>
+<div class="readout" style="background:rgba(22,101,52,.08)" id="s3result"><small>Ingreso por check-ups</small>$637K</div>
+<div class="readout" style="margin-top:.5rem;background:rgba(22,101,52,.05)" id="s3cx"><small>Cirugías derivadas</small>+4</div>
+<div class="readout" style="margin-top:.5rem;background:rgba(37,99,235,.08)" id="s3total"><small>Ingreso total (check-ups + cirugías)</small>$815K</div>
+</div>
+</div>
+</div>
+
+<!-- SIM 4: Impacto agregado -->
+<div class="card" style="border:2px solid var(--accent2)">
+<h2>Impacto agregado de los 3 escenarios</h2>
+<div class="row r3">
+<div style="text-align:center"><div class="counter" id="aggTotal">$6.4M</div><p style="font-size:.8rem;color:var(--muted)">Ingreso incremental anual</p></div>
+<div style="text-align:center"><div class="counter" id="aggCx">+130</div><p style="font-size:.8rem;color:var(--muted)">Cirugías adicionales/año</p></div>
+<div style="text-align:center"><div class="counter" id="aggPct">+6.5%</div><p style="font-size:.8rem;color:var(--muted)">Crecimiento sobre $97.8M</p></div>
+</div>
+<div class="alert alert-green" style="margin-top:1rem"><div><strong>Contexto:</strong> Estas 3 iniciativas combinadas podrían incrementar la facturación ~6.5% SIN inversión en infraestructura — solo activando capacidad existente. Son estimaciones conservadoras basadas en datos reales; la investigación cualitativa refinará los números. <span class="src-inline">Supuestos del equipo consultor sobre datos de Comparativo Anual + Ctas Hosp Médicos v2</span></div></div>
+</div>
+</div>
+
+<!-- ===================== TAB 4: PACIENTES ===================== -->
+<div class="page" id="p-pacientes">
+<div class="row r4" style="margin-bottom:1rem">
+<div class="card kpi"><div class="label">Edad mediana</div><div class="val">27</div><div class="delta">Rango 0-101</div><div class="src-block">Origen de Pacientes 2025</div></div>
+<div class="card kpi"><div class="label">% Mujeres</div><div class="val">55.7%</div><div class="delta">3,928 de 7,053</div><div class="src-block">Origen de Pacientes 2025</div></div>
+<div class="card kpi"><div class="label">Pago directo</div><div class="val">95.3%</div><div class="delta">Solo 3.4% asegurado</div><div class="src-block">Origen de Pacientes 2025 (campo Cliente)</div></div>
+<div class="card kpi"><div class="label">Ingreso prom./pac.</div><div class="val">$13.9K</div><div class="delta">Mediana $1,296</div><div class="src-block">Origen de Pacientes 2025 (campo Cargos)</div></div>
+</div>
+<div class="row r2">
+<div class="card">
+<h2>Origen geográfico <span class="src">Origen de Pacientes 2025 (campo Ciudad/Estado)</span></h2>
+<div class="chart-box" style="height:250px"><canvas id="cGeo"></canvas></div>
+<p style="font-size:.78rem;color:var(--muted);margin-top:.3rem">53.8% viene de 2 alcaldías. Colonias top: Tacubaya (152), Escandón (149), Bellavista (91). <span class="src-inline">Origen de Pacientes 2025</span></p>
+</div>
+<div class="card">
+<h2>Pacientes vs ingreso por servicio <span class="src">Origen de Pacientes 2025 (campos Servicio + Cargos)</span></h2>
+<div class="chart-box" style="height:250px"><canvas id="cServ"></canvas></div>
+<p style="font-size:.78rem;color:var(--muted);margin-top:.3rem"><span class="tag t-inf">INFERENCIA</span> Urgencias = 78% pacientes pero solo 23% ingreso. <span class="src-inline">Origen de Pacientes 2025</span></p>
+</div>
+</div>
+<div class="card" style="margin-top:1rem">
+<h2>Composición de clientes <span class="src">Origen de Pacientes 2025 (campo Cód. Cliente)</span></h2>
+<div class="row r2">
+<div>
+<div class="chart-box" style="height:220px"><canvas id="cClientes"></canvas></div>
+</div>
+<div>
+<div class="alert alert-blue"><div><strong>Contexto Aarón:</strong> La presentación menciona reunión inicial con Aarón para incluir al hospital en nuevo plan para sus clientes. <span class="src-inline">Presentación Patronato 23/mar, slide 3</span> Si se concreta, este canal podría ser significativo dado que actualmente solo 3.4% tiene aseguradora.</div></div>
+<div class="alert alert-amber"><div><strong>Dato clave:</strong> El paciente promedio de aseguradora genera $83,346 vs $10,351 del público general (8x más). <span class="src-inline">Origen de Pacientes 2025 (promedio Cargos por tipo Cliente)</span> Un convenio que traiga 50 pacientes asegurados al año representaría ~$4.2M de ingreso adicional.</div></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ===================== TAB 5: BRECHAS ===================== -->
+<div class="page" id="p-brechas">
+<h2>Brechas correctamente identificadas <span class="src">Presentación Patronato 23/mar, slides 4-8</span></h2>
+<div class="row r2" style="margin-bottom:1rem">
+<div class="card"><h3>Pacientes</h3>
+<div class="insight"><span class="tag t-fact">1a PRIORIDAD</span> <strong>Satisfacciones/insatisfacciones de pacientes</strong> <span class="src-inline">Slide 4</span></div>
+<p style="font-size:.82rem;margin:.4rem 0"><strong>Lo que SI sabemos:</strong> Perfil claro: 55.7% mujeres, mediana 27 años, 53.8% de AO+MH. Ingreso promedio $13,854 pero mediana solo $1,296 (la mayoría son urgencias de bajo monto). De 7,053 pacientes, 5,486 pasan por urgencias pero solo 317 terminan en hospitalización. El Informe 2024 incluye testimonios positivos (Embajada de Cuba, Grupo Bimbo) pero son anecdóticos, no sistemáticos. <span class="src-inline">Origen Pacientes 2025 + Informe 2024 pp.30-35</span></p>
+<p style="font-size:.82rem;margin:.4rem 0"><strong>Lo que NO sabemos:</strong> ¿Por qué pacientes con cotización quirúrgica se van a operar fuera? ¿El costo de lab/imagen los empuja a Salud Digna? ¿Los que vienen por generaciones siguen viniendo? No hay encuesta de satisfacción sistematizada.</p>
+<p style="font-size:.78rem;color:#991b1b;margin-top:.3rem"><strong>Impacto:</strong> Sin entender por qué 42,125 consultas y 5,727 urgencias no se convierten en más de 945 cirugías, cualquier estrategia de atracción es ciega.</p>
+</div>
+<div class="card"><h3>Médicos</h3>
+<div class="insight"><span class="tag t-risk">1a PRIORIDAD — LA MAS CRITICA</span> <strong>Barreras, satisfacciones, comparación con competencia</strong> <span class="src-inline">Slide 5</span></div>
+<p style="font-size:.82rem;margin:.4rem 0"><strong>Lo que SI sabemos:</strong> 155 médicos en plantilla, 146 con facturación. De 60 cirujanos, 27 tienen menos de 10 cuentas/año y 8 menos de 3. Top 10 cirujanos = 45.6% del ingreso total. El Q&A dice que la competencia son clínicas de corta estancia con equipo propio (20-30% más baratas). El informe 2024 destaca alta rotación de enfermería por sueldos no competitivos y falta de plan de carrera. <span class="src-inline">Ctas Hosp v2 + Q&A 24Feb + Informe 2024 p.7</span></p>
+<p style="font-size:.82rem;margin:.4rem 0"><strong>Lo que NO sabemos:</strong> ¿Por qué los 27 sub-activos no operan más aquí? ¿Operan en otro hospital? ¿El costo de renta de equipo los frena? ¿Los que se fueron, a dónde? El Q&A solo dice "por crecimiento".</p>
+<p style="font-size:.78rem;color:#991b1b;margin-top:.3rem"><strong>Impacto:</strong> Los médicos SON el hospital — ellos traen pacientes. Activar 5 de los 27 sub-activos con 8 cuentas extra cada uno = ~$1.6M anuales sin inversión (ver simulador). Palanca de mayor impacto.</p>
+</div>
+<div class="card"><h3>Organizaciones</h3>
+<div class="insight"><span class="tag t-fact">1a PRIORIDAD</span> <strong>Potencial real del canal de convenios y barreras de uso</strong> <span class="src-inline">Slide 6</span></div>
+<p style="font-size:.82rem;margin:.4rem 0"><strong>Lo que SI sabemos:</strong> Solo 3.4% de pacientes (239 de 7,053) llega por convenio. El Informe 2024 (p.22) lista 10 alianzas activas: HSBC/IKE, Valle de María, Fdn. Magdalena Ruiz del Valle, Fdn. Luz Saviñón, Fdn. Protección de la Niñez, Grupo Elam, entre otras. Convenio formalizado con Alcaldía Miguel Hidalgo (Mauricio Tabe). Grupo Bimbo es aliado activo. Reunión con Aarón para nuevo plan (slide 3). <span class="src-inline">Informe 2024 p.22 + Origen Pacientes 2025 + Presentación Patronato slide 3</span></p>
+<p style="font-size:.82rem;margin:.4rem 0"><strong>Lo que NO sabemos:</strong> ¿Cuántos pacientes genera cada convenio al año? ¿Cuántos se han perdido? ¿El convenio con Alcaldía MH ya genera pacientes? ¿Los donantes (Monte de Piedad, Fundación Providencia, Quálitas) podrían convertirse en convenios de salud para sus empleados/beneficiarios?</p>
+<p style="font-size:.78rem;color:#991b1b;margin-top:.3rem"><strong>Impacto:</strong> Paciente de aseguradora genera $83,346 vs $10,351 público general (8x más). Si el canal de organizaciones pasara de 3.4% a 10%, el ingreso crecería desproporcionadamente. Pero sin diagnosticar el 3.4% actual, no se puede escalar.</p>
+</div>
+<div class="card"><h3>Mercado y competencia</h3>
+<div class="insight"><span class="tag t-fact">1a PRIORIDAD</span> <strong>Competencia real por servicio, precios comparados y percepción</strong> <span class="src-inline">Slide 7</span></div>
+<p style="font-size:.82rem;margin:.4rem 0"><strong>Lo que SI sabemos:</strong> Competidores mencionados: Hospital de Jesús, Diomed, Ángeles Mocel, clínicas de corta estancia. Identificamos "Centro Médico Quirúrgico Escandón" (quirurgicoescandon.com) con nombre casi idéntico en la zona, paquetes 24/7 y equipo propio. El hospital tiene Ranking Expansión #19, Certificación CSG, Lab con Premio Rey Pacal — pero no hay evidencia de que se comuniquen. 67 paquetes quirúrgicos documentados sin benchmark. <span class="src-inline">Q&A 24Feb + Web competidor + Paquetes Qx 2026 + Informe 2024 p.21</span></p>
+<p style="font-size:.82rem;margin:.4rem 0"><strong>Lo que NO sabemos:</strong> ¿Cuánto cuestan los mismos procedimientos en los 5 competidores? ¿La población de Tacubaya percibe al hospital como opción de calidad o como hospital "para los pobres"? ¿Cuántos pacientes se pierden por confusión con "Quirúrgico Escandón"?</p>
+<p style="font-size:.78rem;color:#991b1b;margin-top:.3rem"><strong>Impacto:</strong> Cirugías cayeron 7.9% mientras urgencias creció 17.5%. La hipótesis es que pacientes comparan con corta estancia y se van. Sin benchmark de precios, esta hipótesis no se confirma — y sin confirmarla, la inversión en equipo propio no se puede justificar ante Patronato.</p>
+</div>
+</div>
+
+<h2>Brechas faltantes (NO identificadas) <span class="src">Análisis cruzado de todos los archivos disponibles</span></h2>
+<div class="row r2" style="margin-bottom:1rem">
+<div class="card" style="border-left:4px solid #d97706"><h3 style="color:#d97706">Estructura de costos (parcialmente resuelta)</h3><p style="font-size:.82rem">El Informe Anual 2024 incluye estados financieros auditados con balance general (Activo $150.5M, Pasivo $23.9M, Patrimonio $126.6M). <strong>Lo que aún falta:</strong> estado de resultados desglosado (ingresos por servicio, costos variables, costos fijos, punto de equilibrio). El balance muestra solidez patrimonial (endeudamiento solo 16%) pero no permite calcular rentabilidad por servicio individual. <span class="src-inline">Informe Anual 2024 p.27 — solo presenta balance general, no P&L desglosado</span></p></div>
+<div class="card" style="border-left:4px solid #059669"><h3 style="color:#059669">Tasa de conversión (dato obtenido)</h3>
+<p style="font-size:.82rem;margin-bottom:.5rem"><strong>Consulta → Cirugía: 5.8%</strong> (1,117 cirugías de 19,408 consultas en especialidades quirúrgicas). <strong>Urgencias → Otro servicio: 5.2%</strong> (249 de 4,825 pacientes; el 94.8% se va sin convertir). <span class="src-inline">ESTDIST DIREC 2025 + Origen Pacientes 2025</span></p>
+<p style="font-size:.78rem;margin-bottom:.3rem"><strong>Conversión por especialidad (2025):</strong></p>
+<div style="font-size:.72rem;display:grid;grid-template-columns:1fr 1fr;gap:2px 12px">
+<span>Cirugía General: 710 cons → 253 cx (<strong>35.6%</strong>)</span>
+<span>Cx Cabeza y Cuello: 175 cons → 44 cx (<strong>25.1%</strong>)</span>
+<span>Cx Maxilofacial: 103 cons → 21 cx (<strong>20.4%</strong>)</span>
+<span>Cx Pediátrica: 140 cons → 22 cx (<strong>15.7%</strong>)</span>
+<span>Cx Plástica: 211 cons → 31 cx (<strong>14.7%</strong>)</span>
+<span>Gastroenterología: 1,598 cons → 110 cx (6.9%)</span>
+<span>Urología: 1,654 cons → 112 cx (6.8%)</span>
+<span>Coloproctología: 467 cons → 26 cx (5.6%)</span>
+<span>Angiología: 1,477 cons → 69 cx (4.7%)</span>
+<span>Gineco-Obstetricia: 4,145 cons → 179 cx (4.3%)</span>
+<span>Ortopedia: 3,955 cons → 166 cx (4.2%)</span>
+<span>ORL: 1,593 cons → 24 cx (<strong style="color:#dc2626">1.5%</strong>)</span>
+<span>Neurocirugía: 1,271 cons → 19 cx (<strong style="color:#dc2626">1.5%</strong>)</span>
+<span>Neumología: 848 cons → 6 cx (<strong style="color:#dc2626">0.7%</strong>)</span>
+</div>
+<p style="font-size:.78rem;color:#991b1b;margin-top:.4rem"><strong>Hallazgo clave:</strong> ORL tiene 1,593 consultas pero solo 24 cirugías (1.5%). Ortopedia tiene 3,955 consultas y 166 cx (4.2%). Si Ortopedia convirtiera al nivel de Urología (6.8%), serían 103 cirugías adicionales. Las especialidades de alto volumen + baja conversión son la oportunidad principal.</p>
+</div>
+<div class="card" style="border-left:4px solid #059669"><h3 style="color:#059669">Capacidad de quirófano (dato obtenido)</h3><p style="font-size:.82rem"><strong>3 quirófanos físicos, 2 operativos 24/7, 1 inactivo.</strong> Con 945 cirugías/año en 2 salas, la utilización es ~1.3 cirugías/quirófano/día (estimado 10-16% de capacidad). El <strong>3er quirófano inactivo es oportunidad de expansión sin construcción</strong> — reactivarlo podría aumentar capacidad teórica 50% sin inversión en obra. <span class="src-inline">Web hospitalescandon.org/servicios (3 QX) + equipo hospitalario (2 operativos)</span></p></div>
+<div class="card" style="border-left:4px solid #d97706"><h3 style="color:#d97706">Marketing digital</h3><p style="font-size:.82rem">7 redes sociales activas sin métricas de alcance ni generación de citas.</p></div>
+</div>
+
+<h2>Riesgos del proyecto</h2>
+<div class="alert alert-red"><div><strong>Riesgo 1:</strong> Avanzar a diseño de iniciativas sin la investigación cualitativa. Las respuestas del Q&A del 24/feb son percepciones de una persona, no evidencia. <span class="src-inline">Preguntas diagnóstico y dudas 24Feb2026</span></div></div>
+<div class="alert alert-amber"><div><strong>Riesgo 2:</strong> La narrativa única de "equipo médico caro". El Q&A insiste en esto pero puede oscurecer problemas más profundos <span class="src-inline">Preguntas diagnóstico 24Feb2026, pestañas Mercado e Impacto</span> (experiencia, posicionamiento, incentivos).</div></div>
+<div class="alert alert-amber"><div><strong>Riesgo 3:</strong> Dependencia del Dr. Samperio para ingresos de UCI. Si sus 2 pacientes clave egresan, $8-9M de facturación desaparece <span class="src-inline">Ctas Hosp Médicos v2 + Reuniones equipo hospitalario</span> sin cirugías que lo compensen.</div></div>
+</div>
+
+<!-- ===================== TAB 6: PLAN ===================== -->
+<div class="page" id="p-plan">
+<h2>Acciones inmediatas (esta semana)</h2>
+<div class="row r3" style="margin-bottom:1rem">
+<div class="card" style="border-top:4px solid #059669"><h3>1. Protocolo de conversión</h3><p style="font-size:.82rem">Cuando urgencias identifica caso quirúrgico <span class="src-inline">Basado en: Comparativo Anual muestra urgencias +17.5% pero cirugías -7.9%</span> → canalizar activamente al cirujano del hospital. Hoy se da de alta con referencia externa.</p><div class="pill p-hi" style="margin-top:.5rem">Costo: $0 · Impacto: alto</div></div>
+<div class="card" style="border-top:4px solid #2563eb"><h3>2. Reunión 1-a-1 Top 10 cirujanos</h3><p style="font-size:.82rem">Márquez, Alcántara, Toto, García Torres, Jiménez Canet. <span class="src-inline">Ranking de Ctas Hosp Médicos v2 (amarillo)</span> ¿Qué necesitan para programar más cirugías?</p><div class="pill p-hi" style="margin-top:.5rem">Costo: $0 · Impacto: alto</div></div>
+<div class="card" style="border-top:4px solid #7c3aed"><h3>3. Difundir catálogo de paquetes</h3><p style="font-size:.82rem">67 paquetes documentados. <span class="src-inline">Paquetes Quirúrgicos 2026 HE, hoja INICIO</span> Crear PDF/digital y enviar a los 60 cirujanos y sus consultorios.</p><div class="pill p-md" style="margin-top:.5rem">Costo: mínimo · Impacto: medio</div></div>
+</div>
+
+<h2>Timeline del proyecto <span class="src">Presentación Patronato slide 11</span></h2>
+<div class="card">
+<div id="timeline"></div>
+</div>
+
+<h2 style="margin-top:1rem">Información pendiente de solicitar</h2>
+<div class="card"><div class="tbl-wrap">
+<table>
+<thead><tr><th>Dato requerido</th><th>Para qué sirve</th><th>Prioridad</th></tr></thead>
+<tbody>
+<tr><td>Estado de resultados (P&L) desglosado</td><td>El balance general ya está disponible (Informe 2024). Falta el estado de actividades con desglose de ingresos vs costos por servicio para calcular márgenes.</td><td><span class="pill p-hi">Crítica</span></td></tr>
+<tr><td>Bitácora de uso de quirófanos</td><td><strong>Resuelto:</strong> 3 quirófanos (2 operativos 24/7, 1 inactivo). Pendiente: bitácora de horas reales de uso para calcular utilización exacta y evaluar reactivación del 3er QX.</td><td><span class="pill p-md">Alta</span></td></tr>
+<tr><td>Volumen de pacientes por convenio</td><td>El Informe 2024 lista 10 alianzas organizacionales activas. <strong>Falta:</strong> cuántos pacientes genera cada una al año y qué servicios usan. Esto dimensionaría el potencial real del canal Aarón.</td><td><span class="pill p-hi">Crítica</span></td></tr>
+<tr><td>Médicos que se han ido (3 años) + motivo</td><td>Entender rotación de cuerpo médico</td><td><span class="pill p-md">Alta</span></td></tr>
+<tr><td>Métricas redes sociales y web</td><td>Evaluar presencia digital y captación online</td><td><span class="pill p-md">Alta</span></td></tr>
+<tr><td>Volumen de check-ups por tipo/mes</td><td>Dimensionar oportunidad corporativa <span class="src-inline">Imágenes check-up</span></td><td><span class="pill p-md">Alta</span></td></tr>
+<tr><td>Encuestas de satisfacción previas</td><td>Línea base para medir mejoras — <strong>disponibles en la página web del hospital</strong>. Extraer y sistematizar resultados.</td><td><span class="pill p-hi">Disponible</span></td></tr>
+</tbody>
+</table>
+</div></div>
+</div>
+
+<div class="footer">
+Análisis preparado como insumo interno del equipo consultor · Todos los datos provienen de archivos del Hospital Escandón · 20 de marzo de 2026<br>
+Etiquetas: <span class="tag t-fact">HECHO</span> dato verificable · <span class="tag t-inf">INFERENCIA</span> deducción razonable · <span class="tag t-risk">RIESGO</span> amenaza identificada · <span class="tag t-act">ACCIÓN</span> paso concreto · <span class="tag t-opp">OPORTUNIDAD</span> área de crecimiento
+</div>
+
+<script>
+// NAV
+const tabs=[
+{id:'panorama',label:'Panorama'},
+{id:'cirujanos',label:'Cirujanos'},
+{id:'simuladores',label:'Simuladores'},
+{id:'pacientes',label:'Pacientes'},
+{id:'brechas',label:'Brechas'},
+{id:'plan',label:'Plan'}
+];
+const nav=document.getElementById('nav');
+tabs.forEach(t=>{const b=document.createElement('button');b.textContent=t.label;b.className=t.id==='panorama'?'on':'';b.onclick=()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));document.getElementById('p-'+t.id).classList.add('on');b.classList.add('on');renderAll()};nav.appendChild(b)});
+
+// CHARTS
+const chartInstances={};
+function getOrCreate(id,config){if(chartInstances[id]){chartInstances[id].destroy()}chartInstances[id]=new Chart(document.getElementById(id),config);return chartInstances[id]}
+
+function renderAll(){
+// Donut
+if(document.getElementById('cDonut')&&!chartInstances['cDonut']){
+getOrCreate('cDonut',{type:'doughnut',data:{labels:['Cirujanos (60)','Intensivistas/Internistas','Otros'],datasets:[{data:[49.7,33.8,14.3],backgroundColor:['#2563eb','#64748b','#cbd5e1'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': $'+c.raw+'M ('+Math.round(c.raw/97.8*100)+'%)'}}}}})
+}
+// Cx trend
+if(document.getElementById('cCxTrend')&&!chartInstances['cCxTrend']){
+getOrCreate('cCxTrend',{type:'line',data:{labels:['2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'],datasets:[{data:[910,659,779,962,686,736,707,916,1026,945],borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',fill:true,tension:.35,pointRadius:5,pointBackgroundColor:['#64748b','#64748b','#64748b','#64748b','#dc2626','#dc2626','#64748b','#64748b','#059669','#d97706']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,min:500}}}})
+}
+// Funnel chart
+if(document.getElementById('cFunnel')&&!chartInstances['cFunnel']){
+getOrCreate('cFunnel',{type:'bar',data:{labels:['Urgencias','Admisión cont.','Consultas','Hospitalizados','Cirugías'],datasets:[{label:'2024',data:[4876,3929,42385,1081,1026],backgroundColor:'rgba(37,99,235,.3)',borderColor:'#2563eb',borderWidth:1,borderRadius:4},{label:'2025',data:[5727,5883,42125,1071,945],backgroundColor:'rgba(37,99,235,.8)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{y:{ticks:{callback:v=>v>=1000?(v/1000)+'K':v}},x:{ticks:{font:{size:10}}}}}})
+}
+// Funnel viz
+const fv=document.getElementById('funnelViz');
+if(fv&&!fv.children.length){
+const steps=[{l:'Urgencias',v:'5,727',c:'#3b82f6',w:'100%'},{l:'Admisión continua',v:'5,883',c:'#6366f1',w:'90%'},{l:'Consultas espec.',v:'42,125',c:'#8b5cf6',w:'80%'},{l:'Hospitalizados',v:'1,071',c:'#a855f7',w:'40%'},{l:'Cirugías',v:'945',c:'#dc2626',w:'30%'}];
+steps.forEach(s=>{const d=document.createElement('div');d.className='funnel-step';d.style.cssText=`background:${s.c};width:${s.w}`;d.innerHTML=`${s.l}: <strong>${s.v}</strong>`;fv.appendChild(d)})
+}
+// Specialty bars
+if(document.getElementById('cEsp')&&!chartInstances['cEsp']){
+const d=[{l:'Cx General',v:19056},{l:'Trauma/Ortopedia',v:8398},{l:'Urología',v:7275},{l:'Ginecología',v:5490},{l:'Vascular',v:1805},{l:'Cx Pediátrica',v:1663},{l:'Neurocirugía',v:1325},{l:'Maxilofacial',v:1008},{l:'Gastro/Coloprocto.',v:858},{l:'Cx Plástica',v:848},{l:'ORL',v:689}];
+getOrCreate('cEsp',{type:'bar',data:{labels:d.map(x=>x.l),datasets:[{data:d.map(x=>x.v),backgroundColor:['#1e40af','#2563eb','#3b82f6','#60a5fa','#93c5fd','#7c3aed','#a78bfa','#f59e0b','#10b981','#ec4899','#6366f1'],borderRadius:5}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+(c.raw/1000).toFixed(1)+'M'}}},scales:{x:{ticks:{callback:v=>'$'+(v/1000)+'M'}},y:{ticks:{font:{size:11}}}}}})
+}
+// Ticket
+if(document.getElementById('cTicket')&&!chartInstances['cTicket']){
+const d=[{l:'Cx Tórax',v:222},{l:'Cx Ped.',v:166},{l:'Cx Gral',v:65},{l:'Neurocx',v:63},{l:'Urología',v:63},{l:'Maxilo.',v:56},{l:'Card.Int.',v:52},{l:'Trauma',v:29},{l:'Cx Plást.',v:28},{l:'Gineco.',v:26},{l:'Vascular',v:27},{l:'ORL',v:21},{l:'Gastro',v:11}];
+getOrCreate('cTicket',{type:'bar',data:{labels:d.map(x=>x.l),datasets:[{data:d.map(x=>x.v),backgroundColor:d.map(x=>x.v>60?'#1e40af':x.v>25?'#3b82f6':'#93c5fd'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw+'K promedio'}}},scales:{y:{ticks:{callback:v=>'$'+v+'K'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}})
+}
+// Activity donut
+if(document.getElementById('cActivity')&&!chartInstances['cActivity']){
+getOrCreate('cActivity',{type:'doughnut',data:{labels:['Activos (≥10)','Moderados (3-9)','Baja (<3)'],datasets:[{data:[33,19,8],backgroundColor:['#059669','#d97706','#dc2626'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}})
+}
+// Geo
+if(document.getElementById('cGeo')&&!chartInstances['cGeo']){
+getOrCreate('cGeo',{type:'bar',data:{labels:['Álvaro Obregón','Miguel Hidalgo','Edo. México','Cuajimalpa','Benito Juárez','Cuauhtémoc','Naucalpan','Huixquilucan','Otros'],datasets:[{data:[2665,1127,811,424,266,215,194,171,1180],backgroundColor:['#1e40af','#2563eb','#3b82f6','#60a5fa','#93c5fd','#bfdbfe','#c4b5fd','#d8b4fe','#e2e8f0'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{maxRotation:45,font:{size:9}}},y:{ticks:{callback:v=>v.toLocaleString()}}}}})
+}
+// Servicio
+if(document.getElementById('cServ')&&!chartInstances['cServ']){
+getOrCreate('cServ',{type:'bar',data:{labels:['Urgencias','Priv.Alta','Priv.Baja','Ter.Int.','Adm/Urg','Endosc.','Quiróf.','Tratam.'],datasets:[{label:'Pacientes',data:[5486,788,317,20,208,39,19,129],backgroundColor:'rgba(37,99,235,.7)',borderRadius:3,yAxisID:'y'},{label:'Ingreso ($M)',data:[22,30,35.5,8,0.7,0.4,0.3,0.3],backgroundColor:'rgba(249,115,22,.7)',borderRadius:3,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{y:{position:'left',ticks:{callback:v=>v>=1000?(v/1000)+'K':v}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{callback:v=>'$'+v+'M'}},x:{ticks:{font:{size:9}}}}}})
+}
+// Clientes
+if(document.getElementById('cClientes')&&!chartInstances['cClientes']){
+getOrCreate('cClientes',{type:'doughnut',data:{labels:['Público general','VA-Seguro/HSBC','Fundaciones','Aseguradoras','Otros'],datasets:[{data:[6721,218,84,24,6],backgroundColor:['#64748b','#2563eb','#059669','#7c3aed','#cbd5e1'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:6}}}}})
+}
+// Top cirujanos table
+const tb=document.getElementById('tblTop');
+if(tb&&!tb.children.length){
+const docs=[
+{n:'Márquez Ugalde M.A.',e:'Cx General+Lap',c:43,t:4583887},
+{n:'Alcántara Mena S.',e:'Urología',c:50,t:4214390},
+{n:'Toto Morales J.',e:'Cx General',c:47,t:2749245},
+{n:'García Torres L.J.',e:'Cx General',c:51,t:2561954},
+{n:'Jiménez Canet A.',e:'Cx General',c:48,t:2362778},
+{n:'Orrico Gálvez R.D.',e:'Traumatología',c:71,t:2224873},
+{n:'Alfán Guzmán F.',e:'Ginecología',c:100,t:2128895},
+{n:'Melgarejo López J.C.',e:'Cx Gral+Bariatra',c:12,t:1964857},
+{n:'Canales Zamora O.A.',e:'Ortopedia',c:45,t:1911603},
+{n:'Vázquez Rodríguez R.',e:'Urología',c:16,t:1599725},
+{n:'Ayala Hidalgo J.A.',e:'Cx Pediátrica',c:7,t:1572244},
+{n:'Hernández Trejo A.',e:'Cx General',c:37,t:1525590},
+{n:'Zea Prado F.',e:'Ginecología',c:54,t:1461914},
+{n:'Román Proa P.',e:'Ginecología',c:39,t:1360611},
+{n:'Gamboa Ramírez F.',e:'Vascular',c:52,t:1354214},
+{n:'Mejía Paz M.',e:'Trauma Ped.',c:80,t:1114728},
+{n:'Palafox Carral I.',e:'Traumatología',c:25,t:1084832},
+{n:'Herrera Meillón H.',e:'Cx General',c:18,t:1072513},
+{n:'Baca Cardoso C.J.',e:'Cx General',c:13,t:1050109},
+{n:'Ortiz Ramírez J.E.',e:'Maxilofacial',c:18,t:1008012}
+];
+docs.forEach((d,i)=>{const tr=document.createElement('tr');const act=d.c>=20?'p-hi':d.c>=10?'p-md':'p-lo';tr.innerHTML=`<td>${i+1}</td><td><strong>${d.n}</strong></td><td>${d.e}</td><td>${d.c}</td><td>$${(d.t/1e6).toFixed(1)}M</td><td>$${Math.round(d.t/d.c).toLocaleString()}</td><td><span class="pill ${act}">${d.c>=20?'Alto':d.c>=10?'Medio':'Bajo'}</span></td>`;tb.appendChild(tr)})
+}
+// Timeline
+const tl=document.getElementById('timeline');
+if(tl&&!tl.children.length){
+const phases=[
+{m:'Feb-Mar',l:'Análisis de brechas',c:'#2563eb',w:'25%',items:['Recibir información','Identificar brechas','Priorizar']},
+{m:'Mar-Jul',l:'Análisis de oportunidades',c:'#7c3aed',w:'60%',items:['Entrevistas cualitativas (16 médicos, 14 pacientes)','Quick wins','Resultados investigación de mercado']},
+{m:'Abr-Jun',l:'Investigación de mercado',c:'#059669',w:'40%',items:['Planear con proveedor','Ejecutar encuestas','Benchmark precios']},
+{m:'Jul-Ago',l:'Definición de estrategia',c:'#d97706',w:'25%',items:['Priorizar oportunidades','Diseñar iniciativas','Aprobación Patronato']}
+];
+phases.forEach(p=>{
+const d=document.createElement('div');d.style.cssText='margin-bottom:12px';
+d.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="background:${p.c};color:#fff;padding:2px 10px;border-radius:6px;font-size:.72rem;font-weight:700">${p.m}</span><strong style="font-size:.85rem">${p.l}</strong></div><div style="background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden"><div style="background:${p.c};height:100%;width:${p.w};border-radius:6px;opacity:.7"></div></div><div style="font-size:.75rem;color:#64748b;margin-top:3px">${p.items.join(' · ')}</div>`;
+tl.appendChild(d)})
+}
+}
+
+// SIMULATORS
+function fmt(n){return n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1e3?'$'+Math.round(n/1e3)+'K':'$'+Math.round(n)}
+
+function sim1(){
+const docs=+document.getElementById('s1r1').value;
+const ctas=+document.getElementById('s1r2').value;
+const tick=+document.getElementById('s1r3').value;
+document.getElementById('s1v1').textContent=docs;
+document.getElementById('s1v2').textContent=ctas;
+document.getElementById('s1v3').textContent=tick.toLocaleString();
+const rev=docs*ctas*tick;
+const cx=docs*ctas;
+document.getElementById('s1result').innerHTML=`<small>Ingreso adicional anual</small>${fmt(rev)}`;
+document.getElementById('s1pct').innerHTML=`<small>Incremento sobre facturación quirúrgica</small>+${(rev/49717331*100).toFixed(1)}%`;
+document.getElementById('s1cx').innerHTML=`<small>Cirugías adicionales al año</small>+${cx}`;
+updateAgg()
+}
+
+function sim2(){
+const pctQx=+document.getElementById('s2r1').value/100;
+const pctHoy=+document.getElementById('s2r2').value/100;
+const pctNew=+document.getElementById('s2r3').value/100;
+const tick=+document.getElementById('s2r4').value;
+document.getElementById('s2v1').textContent=Math.round(pctQx*100)+'%';
+document.getElementById('s2v2').textContent=Math.round(pctHoy*100)+'%';
+document.getElementById('s2v3').textContent=Math.round(pctNew*100)+'%';
+document.getElementById('s2v4').textContent=tick.toLocaleString();
+const potencial=5727*pctQx;
+const adicional=potencial*(pctNew-pctHoy);
+const rev=adicional*tick;
+document.getElementById('s2result').innerHTML=`<small>Ingreso adicional anual</small>${fmt(rev)}`;
+document.getElementById('s2cx').innerHTML=`<small>Cirugías adicionales al año</small>+${Math.round(adicional)}`;
+document.getElementById('s2pct').innerHTML=`<small>Incremento vs 945 cirugías actuales</small>+${(adicional/945*100).toFixed(1)}%`;
+updateAgg()
+}
+
+function sim3(){
+const emp=+document.getElementById('s3r1').value;
+const ppl=+document.getElementById('s3r2').value;
+const adopt=+document.getElementById('s3r3').value/100;
+const tick=+document.getElementById('s3r4').value;
+const hallazgo=+document.getElementById('s3r5').value/100;
+document.getElementById('s3v1').textContent=emp;
+document.getElementById('s3v2').textContent=ppl;
+document.getElementById('s3v3').textContent=Math.round(adopt*100)+'%';
+document.getElementById('s3v4').textContent=tick.toLocaleString();
+document.getElementById('s3v5').textContent=Math.round(hallazgo*100)+'%';
+const checks=emp*ppl*adopt;
+const revCheck=checks*tick;
+const cxDeriv=Math.round(checks*hallazgo);
+const revCx=cxDeriv*45000;
+document.getElementById('s3result').innerHTML=`<small>Ingreso por check-ups (${Math.round(checks)} check-ups)</small>${fmt(revCheck)}`;
+document.getElementById('s3cx').innerHTML=`<small>Cirugías derivadas de hallazgos</small>+${cxDeriv}`;
+document.getElementById('s3total').innerHTML=`<small>Ingreso total (check-ups + cirugías)</small>${fmt(revCheck+revCx)}`;
+updateAgg()
+}
+
+function updateAgg(){
+const s1=getSim1Rev(),s2=getSim2Rev(),s3=getSim3Rev();
+const total=s1.rev+s2.rev+s3.rev+s3.cxRev;
+const cx=s1.cx+s2.cx+s3.cx;
+document.getElementById('aggTotal').textContent=fmt(total);
+document.getElementById('aggCx').textContent='+'+cx;
+document.getElementById('aggPct').textContent='+'+(total/97814635*100).toFixed(1)+'%';
+}
+
+function getSim1Rev(){const d=+document.getElementById('s1r1').value,c=+document.getElementById('s1r2').value,t=+document.getElementById('s1r3').value;return{rev:d*c*t,cx:d*c}}
+function getSim2Rev(){const p=+document.getElementById('s2r1').value/100,h=+document.getElementById('s2r2').value/100,n=+document.getElementById('s2r3').value/100,t=+document.getElementById('s2r4').value;const a=5727*p*(n-h);return{rev:a*t,cx:Math.round(a)}}
+function getSim3Rev(){const e=+document.getElementById('s3r1').value,p=+document.getElementById('s3r2').value,a=+document.getElementById('s3r3').value/100,t=+document.getElementById('s3r4').value,h=+document.getElementById('s3r5').value/100;const ch=e*p*a;const cx=Math.round(ch*h);return{rev:ch*t,cx:cx,cxRev:cx*45000}}
+
+// Init
+renderAll();sim1();sim2();sim3();
+</script>
+</body>
+</html>
