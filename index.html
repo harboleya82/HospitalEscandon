@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Encuesta Hospital Escandón</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh;min-height:-webkit-fill-available}
@@ -423,35 +424,101 @@ function toggleNav(){
 }
 
 function submitSurvey(){
+  // Build row for Supabase
+  var row = {
+    consent: answers['consent'] || null,
+    p1_1_especialidad: answers['p1_1'] || null,
+    p1_2_anos_adscrito: answers['p1_2'] || null,
+    p1_3_otros_hospitales: answers['p1_3'] || null,
+    p1_4_porcentaje_he: answers['p1_4'] || null,
+    p1_5_consultorio: answers['p1_5'] || null,
+    p2_1_cirugias_total: answers['p2_1'] || null,
+    p2_2_cirugias_he: answers['p2_2'] || null,
+    p2_3_razones_otros: Array.isArray(answers['p2_3']) ? answers['p2_3'].filter(function(v){return v!=='__other__'}).join('; ') : null,
+    p2_3_otro: answers['p2_3_other'] || null,
+    p2_4_pacientes_otros: answers['p2_4'] || null,
+    p2_5_razon_principal: answers['p2_5'] || null,
+    p2_6_horarios: Array.isArray(answers['p2_6']) ? answers['p2_6'].join('; ') : null,
+    p3_1_reputacion: answers['p3_1'] || null,
+    p3_2_calidad_precio: answers['p3_2'] || null,
+    p3_3_infraestructura: answers['p3_3'] || null,
+    p3_4_recomienda: answers['p3_4'] || null,
+    p3_5_satisfaccion_pacientes: answers['p3_5'] || null,
+    p3_6_vs_corta_estancia: answers['p3_6'] || null,
+    p3_7_opinion_sincera: answers['p3_7'] || null,
+    p4_1_disponibilidad_horarios: answers['p4_1'] || null,
+    p4_2_equipo_quirurgico: answers['p4_2'] || null,
+    p4_3_equipo_especializado: answers['p4_3'] || null,
+    p4_4_enfermeria_qx: answers['p4_4'] || null,
+    p4_5_rotacion: answers['p4_5'] || null,
+    p4_6_anestesiologia: answers['p4_6'] || null,
+    p4_7_programacion: answers['p4_7'] || null,
+    p4_8_insumos: answers['p4_8'] || null,
+    p4_9_cancelaciones: answers['p4_9'] || null,
+    p4_10_equipo_necesario: answers['p4_10'] || null,
+    p5_1_habitaciones: answers['p5_1'] || null,
+    p5_2_limpieza: answers['p5_2'] || null,
+    p5_3_enfermeria_piso: answers['p5_3'] || null,
+    p5_4_alimentos: answers['p5_4'] || null,
+    p5_5_familiares: answers['p5_5'] || null,
+    p5_6_admision_alta: answers['p5_6'] || null,
+    p5_7_imagen_general: answers['p5_7'] || null,
+    p5_8_insatisfaccion: answers['p5_8'] || null,
+    p5_9_aspecto_mencionado: Array.isArray(answers['p5_9']) ? answers['p5_9'].filter(function(v){return v!=='__other__'}).join('; ') : null,
+    p5_9_otro: answers['p5_9_other'] || null,
+    p5_10_hoteleria_influye: answers['p5_10'] || null,
+    p5_11_mejora_experiencia: answers['p5_11'] || null,
+    p6_1_procesos_agiles: answers['p6_1'] || null,
+    p6_2_comunicacion: answers['p6_2'] || null,
+    p6_3_aseguradoras: answers['p6_3'] || null,
+    p6_4_costos_competitivos: answers['p6_4'] || null,
+    p6_5_respaldo_direccion: answers['p6_5'] || null,
+    p6_6_banco_sangre: answers['p6_6'] || null,
+    p6_7_barrera_frustrante: answers['p6_7'] || null,
+    p6_8_cambio_proceso: answers['p6_8'] || null,
+    p7_1_otras_instituciones: Array.isArray(answers['p7_1']) ? answers['p7_1'].join('; ') : null,
+    p7_2_ventaja_otra: answers['p7_2'] || null,
+    p7_3_probabilidad_aumentar: answers['p7_3'] || null,
+    p7_4_que_necesita: answers['p7_4'] || null,
+    p8_1_importancia_costo: answers['p8_1'] || null,
+    p8_2_incentivos_atractivos: Array.isArray(answers['p8_2']) ? answers['p8_2'].filter(function(v){return v!=='__other__'}).join('; ') : null,
+    p8_2_otro: answers['p8_2_other'] || null,
+    p8_3_conoce_paquetes: answers['p8_3'] || null,
+    p8_4_por_que_no_usa: answers['p8_4'] || null,
+    p9_1_especialidad_fortalecer: answers['p9_1'] || null,
+    p9_2_cambio_impacto: answers['p9_2'] === '__other__' ? (answers['p9_2_other']||'Otro') : (answers['p9_2'] || null),
+    p9_2_otro: answers['p9_2_other'] || null,
+    p9_3_jornada_social: answers['p9_3'] || null,
+    deep_1_decision: answers['deep_1'] || null,
+    deep_2_hospital_ideal: answers['deep_2'] || null,
+    deep_3_paciente_otro: answers['deep_3'] || null,
+    deep_4_ventaja_he: answers['deep_4'] || null,
+    deep_5_familiar: answers['deep_5'] || null,
+    user_agent: navigator.userAgent || null
+  };
+
+  // Send to Supabase (fire and forget — show thank you immediately)
+  supabase.from('respuestas_encuesta').insert([row]).then(function(res){
+    if(res.error) console.error('Supabase error:', res.error);
+    else console.log('Guardado exitosamente en Supabase');
+  });
+
+  // Show thank you screen (same as original)
   document.getElementById('contentArea').style.display = 'none';
   document.getElementById('footerNav').style.display = 'none';
-  document.getElementById('header')
   document.querySelector('.header').style.display = 'none';
-  const ty = document.getElementById('thankYou');
+  var ty = document.getElementById('thankYou');
   ty.classList.add('active');
 
-  const count = Object.keys(answers).filter(k => {
-    const v = answers[k];
+  var count = Object.keys(answers).filter(function(k){
+    var v = answers[k];
     if(v === undefined || v === null || v === '') return false;
     if(Array.isArray(v) && v.length === 0) return false;
     return true;
   }).length;
   document.getElementById('answerCount').textContent = count;
 
-  let preview = '';
-  SECTIONS.forEach(sec => {
-    preview += `<strong>${sec.title}</strong><br>`;
-    sec.questions.forEach(q => {
-      const a = answers[q.id];
-      if(a !== undefined && a !== '' && a !== null && !(Array.isArray(a) && a.length===0)){
-        let display = Array.isArray(a) ? a.join(', ') : a;
-        if(answers[q.id+'_other']) display += ' → ' + answers[q.id+'_other'];
-        preview += `${q.id}: ${display}<br>`;
-      }
-    });
-    preview += '<br>';
-  });
-  document.getElementById('resultsPreview').innerHTML = preview;
+  document.getElementById('resultsPreview').innerHTML = '<strong style="color:#059669">✅ Respuestas enviadas a la base de datos.</strong>';
 }
 
 function getExportData(){
@@ -499,6 +566,12 @@ function exportCSV(){
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// Supabase connection
+var supabase = window.supabase.createClient(
+  'https://gggwswbgwihlokrnvktl.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjMwMjksImV4cCI6MjA4OTg5OTAyOX0.hyjmonvNM3b9aK4tM8hJGQv7ZF1-1absbczxUwiTCUg'
+);
 
 buildSections();
 </script>
