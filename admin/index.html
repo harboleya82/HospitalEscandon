@@ -44,9 +44,47 @@ tr:hover td{background:#F9FAFB}
 .btn-gold:hover{background:var(--gold-400);box-shadow:0 0 25px rgba(170,138,74,.5);transform:translateY(-1px)}
 .btn-outline{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.25rem;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:999px;font-size:.875rem;font-weight:500;cursor:pointer;backdrop-filter:blur(4px);transition:all .3s}
 .btn-outline:hover{background:rgba(255,255,255,.1)}
+
+/* ===== LOGIN GATE STYLES ===== */
+#loginGate{position:fixed;inset:0;background:var(--esc-900);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column}
+#loginGate::before{content:'';position:absolute;top:-20%;left:-10%;width:50%;height:150%;background:var(--esc-800);border-radius:50%;filter:blur(120px);opacity:.4}
+#loginGate::after{content:'';position:absolute;bottom:-30%;right:-10%;width:60%;height:120%;background:var(--esc-950);border-radius:50%;filter:blur(100px);opacity:.6}
+.login-box{position:relative;z-index:1;background:#fff;border-radius:1.5rem;padding:2.5rem;max-width:400px;width:90%;box-shadow:0 25px 80px -12px rgba(0,0,0,.4);text-align:center}
+.login-box img{height:56px;margin-bottom:1.25rem}
+.login-box h2{font-family:'Playfair Display',serif;color:var(--esc-900);font-size:1.5rem;margin-bottom:.25rem}
+.login-box .subtitle{font-size:.85rem;color:#6B7280;margin-bottom:2rem}
+.login-input{width:100%;padding:.85rem 1rem;border:1.5px solid #E5E7EB;border-radius:12px;font-size:.9rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+.login-input:focus{border-color:var(--esc-500)}
+.login-input+.login-input{margin-top:.75rem}
+.login-btn{width:100%;padding:.85rem;margin-top:1.25rem;background:var(--esc-800);color:#fff;border:none;border-radius:999px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s}
+.login-btn:hover{background:var(--esc-600)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-error{color:#DC2626;font-size:.8rem;margin-top:.75rem;display:none;background:#FEF2F2;padding:.5rem .75rem;border-radius:8px}
+.login-footer{position:relative;z-index:1;margin-top:1.5rem;font-size:.7rem;color:var(--esc-300);letter-spacing:.1em;text-transform:uppercase}
 </style>
 </head>
 <body>
+
+<!-- ============================================================ -->
+<!-- LOGIN GATE — se muestra primero, se oculta al autenticarse   -->
+<!-- ============================================================ -->
+<div id="loginGate">
+  <div class="login-box">
+    <img src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón" onerror="this.style.display='none'">
+    <h2>Dashboard Ejecutivo</h2>
+    <p class="subtitle">Acceso exclusivo para administradores</p>
+    <input id="loginEmail" type="email" placeholder="Correo electrónico" class="login-input" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    <input id="loginPass" type="password" placeholder="Contraseña" class="login-input" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()" id="loginBtn" class="login-btn">Iniciar sesión</button>
+    <p id="loginError" class="login-error"></p>
+  </div>
+  <p class="login-footer">Fundación María Ana Mier de Escandón I.A.P.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- DASHBOARD — todo el contenido original (oculto hasta login)  -->
+<!-- ============================================================ -->
+<div id="dashboardContent" style="display:none">
 
 <div class="loader" id="loader">
   <div style="position:relative;width:64px;height:64px;margin-bottom:1.5rem">
@@ -74,7 +112,10 @@ tr:hover td{background:#F9FAFB}
         </div>
       </div>
     </div>
-    <div style="display:flex;gap:.75rem">
+    <div style="display:flex;gap:.75rem;align-items:center">
+      <!-- NOMBRE DEL ADMIN + LOGOUT -->
+      <span id="adminName" style="font-size:.8rem;color:var(--esc-300);font-weight:500"></span>
+      <button class="btn-outline" onclick="doLogout()" style="padding:.4rem 1rem;font-size:.75rem"><i class="ph ph-sign-out"></i>Salir</button>
       <button class="btn-outline" onclick="loadData()"><i class="ph ph-arrows-clockwise"></i>Actualizar</button>
       <button class="btn-gold" onclick="exportAllCSV()"><i class="ph ph-download-simple" style="font-size:1.1rem"></i>Exportar reporte</button>
     </div>
@@ -110,6 +151,7 @@ tr:hover td{background:#F9FAFB}
   </div>
 
 </div>
+</div><!-- fin dashboardContent -->
 
 <script>
 var SUPABASE_URL='https://gggwswbgwihlokrnvktl.supabase.co';
@@ -117,6 +159,72 @@ var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 var allData=[];
 
+// ============================================================
+// AUTH: LOGIN / SESSION / LOGOUT
+// ============================================================
+async function doLogin(){
+  var email=document.getElementById('loginEmail').value.trim();
+  var pass=document.getElementById('loginPass').value;
+  var errEl=document.getElementById('loginError');
+  var btn=document.getElementById('loginBtn');
+  errEl.style.display='none';
+
+  if(!email||!pass){errEl.textContent='Ingresa correo y contraseña';errEl.style.display='block';return}
+
+  btn.disabled=true;btn.textContent='Verificando...';
+
+  var res=await sb.auth.signInWithPassword({email:email,password:pass});
+
+  if(res.error){
+    errEl.textContent='Credenciales incorrectas';errEl.style.display='block';
+    btn.disabled=false;btn.textContent='Iniciar sesión';return;
+  }
+
+  // Verificar que sea admin registrado
+  var adminRes=await sb.from('admin_users').select('role,display_name').eq('id',res.data.user.id).single();
+
+  if(adminRes.error||!adminRes.data){
+    errEl.textContent='No tienes permisos de administrador';errEl.style.display='block';
+    await sb.auth.signOut();
+    btn.disabled=false;btn.textContent='Iniciar sesión';return;
+  }
+
+  // Login exitoso — mostrar dashboard
+  showDashboard(adminRes.data.display_name);
+}
+
+function showDashboard(name){
+  document.getElementById('loginGate').style.display='none';
+  document.getElementById('dashboardContent').style.display='block';
+  document.getElementById('adminName').textContent=name;
+  loadData().then(function(){
+    document.getElementById('loader').classList.add('hidden');
+  });
+  setTimeout(function(){document.getElementById('loader').classList.add('hidden')},5000);
+  document.querySelectorAll('.fade-in').forEach(function(el,i){el.style.animationDelay=(i*.15)+'s'});
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  location.reload();
+}
+
+// Revisar si ya hay sesión activa (para no pedir login cada vez)
+async function checkSession(){
+  var sess=await sb.auth.getSession();
+  if(sess.data.session){
+    var adminRes=await sb.from('admin_users').select('role,display_name').eq('id',sess.data.session.user.id).single();
+    if(adminRes.data){
+      showDashboard(adminRes.data.display_name);
+      return;
+    }
+  }
+  // No hay sesión válida — el login gate ya está visible
+}
+
+// ============================================================
+// DASHBOARD: funciones originales (sin cambios)
+// ============================================================
 async function loadData(){
   var res=await sb.from('respuestas_encuesta').select('*').order('created_at',{ascending:false});
   if(res.error){alert('Error: '+res.error.message);return}
@@ -236,13 +344,11 @@ function exportAllCSV(){
   a.download='Reporte_HE_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
 }
 
-// Init
+// ============================================================
+// INIT — revisar sesión al cargar
+// ============================================================
 window.addEventListener('DOMContentLoaded',function(){
-  loadData().then(function(){
-    document.getElementById('loader').classList.add('hidden');
-  });
-  setTimeout(function(){document.getElementById('loader').classList.add('hidden')},5000);
-  document.querySelectorAll('.fade-in').forEach(function(el,i){el.style.animationDelay=(i*.15)+'s'});
+  checkSession();
 });
 </script>
 </body>
