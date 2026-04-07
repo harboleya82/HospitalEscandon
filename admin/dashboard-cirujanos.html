@@ -15,6 +15,24 @@
   --radius:16px;--shadow:0 2px 16px rgba(0,0,0,.06);
   --red:#dc2626;--amber:#d97706;--blue:#2563eb;
 }
+[data-theme="dark"]{
+  --bg:#091a13;--card:#0f2319;--text:#e4f0ea;--muted:#7da990;
+  --border:rgba(255,255,255,.1);--shadow:0 2px 16px rgba(0,0,0,.3);
+}
+[data-theme="dark"] nav{background:#0f2319;border-bottom-color:rgba(255,255,255,.08)}
+[data-theme="dark"] nav button.active{color:#5DCAA5;border-bottom-color:#5DCAA5}
+[data-theme="dark"] nav button:hover{color:var(--text)}
+[data-theme="dark"] .quote{background:#132a1e;border-left-color:#5DCAA5}
+[data-theme="dark"] .quote .text{color:#c4dece}
+[data-theme="dark"] .matrix tr:hover td{background:#132a1e}
+[data-theme="dark"] .matrix th{background:#154135}
+[data-theme="dark"] .comp-bar .bar-track{background:#132a1e}
+[data-theme="dark"] .kpi .val{color:#5DCAA5}
+[data-theme="dark"] .card h3{color:#5DCAA5}
+.back-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .75rem;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .2s}
+.back-btn:hover{background:rgba(255,255,255,.22)}
+.theme-btn{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-btn:hover{background:rgba(255,255,255,.22)}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
 
 /* HERO */
@@ -125,7 +143,11 @@ nav button:hover{color:var(--text)}
     <h1>Dashboard — Entrevistas Cirujanos</h1>
     <p>Análisis cualitativo de la investigación de campo</p>
   </div>
-  <div class="right">
+  <div class="right" style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem">
+    <div style="display:flex;gap:.4rem;align-items:center">
+      <a href="../index.html" class="back-btn">← Panel de Control</a>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Cambiar tema">☀</button>
+    </div>
     <div class="badge" id="badgeCount">Cargando...</div>
     <p style="font-size:.72rem;margin-top:.3rem;opacity:.7" id="lastUpdate"></p>
   </div>
@@ -681,6 +703,20 @@ function render() {
 
 // ============== INIT ==============
 fetchData();
+
+// Dark mode
+(function(){
+  function applyTheme(dark){
+    document.documentElement.setAttribute('data-theme',dark?'dark':'');
+    const btn=document.getElementById('themeBtn');
+    if(btn)btn.textContent=dark?'☾':'☀';
+    localStorage.setItem('he-theme',dark?'dark':'light');
+  }
+  window.toggleTheme=function(){applyTheme(document.documentElement.getAttribute('data-theme')!=='dark');};
+  const saved=localStorage.getItem('he-theme');
+  if(saved){applyTheme(saved==='dark');}
+  else{applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);}
+})();
 </script>
 </body>
 </html>

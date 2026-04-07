@@ -2,611 +2,186 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Hospital Escandón | Cuestionario Diagnóstico</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Control — Hospital Escandón</title>
 <link rel="icon" type="image/png" href="https://hospitalescandon.org/img/core-img/logo.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;1,500;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,500;1,600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg-canvas:#f6f8f7;
-  --bg-surface:#ffffff;
-  --bg-mint:#eef5f1;
-  --bg-brand:#0f5f42;
-  --bg-brand-soft:#e6f1ec;
-  --brand:#127850;
-  --brand-hover:#0d6341;
-  --brand-deep:#0a4931;
-  --brand-gold:#c9a96b;
-  --text-main:#18201c;
-  --text-muted:#65726a;
-  --text-inv:#fff;
-  --border:#e6ebe8;
-  --border-active:#a2c4b4;
-  --radius-pill:999px;
-  --radius-card:18px;
-  --radius-input:12px;
-  --font-sans:'Inter',system-ui,-apple-system,sans-serif;
-  --font-serif:'Playfair Display',Georgia,serif;
-  --shadow-sm:0 2px 8px rgba(24,32,28,.04);
-  --shadow-md:0 18px 40px rgba(15,95,66,.08);
-  --shadow-focus:0 0 0 3px rgba(18,120,80,.15);
+  --green:#127850;--green-dark:#0B2D24;--green-mid:#154135;--gold:#AA8A4A;
+  --bg:#F7F6F3;--card:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;
+  --radius:16px;--shadow:0 2px 16px rgba(0,0,0,.06);
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{scroll-behavior:smooth}
-body{
-  font-family:var(--font-sans);
-  background:
-    radial-gradient(circle at top left, rgba(18,120,80,.08), transparent 26%),
-    radial-gradient(circle at bottom right, rgba(201,169,107,.08), transparent 30%),
-    var(--bg-canvas);
-  color:var(--text-main);
-  line-height:1.5;
-  -webkit-font-smoothing:antialiased;
+[data-theme="dark"]{
+  --bg:#091a13;--card:#0f2319;--text:#e4f0ea;--muted:#7da990;
+  --border:rgba(255,255,255,.1);--shadow:0 2px 16px rgba(0,0,0,.3);
 }
-.brand-logo{
-  display:block;
-  object-fit:contain;
-  background:transparent;
-  border-radius:0;
-  padding:0;
-  box-shadow:none;
-  filter:drop-shadow(0 10px 24px rgba(18,120,80,.12));
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;transition:background .2s,color .2s}
+
+.hero{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));color:#fff;padding:2.8rem 2rem 2.2rem;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-60%;right:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(170,138,74,.15),transparent 70%);border-radius:50%;pointer-events:none}
+.hero::before{content:'';position:absolute;bottom:-40%;left:-10%;width:300px;height:300px;background:radial-gradient(circle,rgba(18,120,80,.12),transparent 70%);border-radius:50%;pointer-events:none}
+.hero img{height:62px;margin-bottom:1rem;filter:brightness(10);position:relative;z-index:1}
+.hero h1{font-family:'Playfair Display',serif;font-style:italic;font-size:2rem;font-weight:600;margin-bottom:.35rem;position:relative;z-index:1}
+.hero p{font-size:.88rem;opacity:.8;position:relative;z-index:1}
+.hero-controls{position:absolute;top:1rem;right:1rem;display:flex;gap:.4rem;z-index:2}
+.theme-btn{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-btn:hover{background:rgba(255,255,255,.25)}
+
+.kpi-bar{background:var(--card);border-bottom:1px solid var(--border);padding:1.2rem 2rem;display:flex;gap:2.5rem;flex-wrap:wrap;justify-content:center;box-shadow:var(--shadow)}
+.kpi-item{text-align:center;min-width:100px}
+.kpi-item .val{font-size:1.9rem;font-weight:800;color:var(--green);line-height:1}
+[data-theme="dark"] .kpi-item .val{color:#5DCAA5}
+.kpi-item .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:3px}
+.kpi-divider{width:1px;background:var(--border);align-self:stretch;display:none}
+@media(min-width:480px){.kpi-divider{display:block}}
+
+.container{max-width:1100px;margin:0 auto;padding:2rem}
+.section-title{font-family:'Playfair Display',serif;font-style:italic;font-size:1.25rem;font-weight:600;color:var(--green-dark);margin-bottom:1.2rem}
+[data-theme="dark"] .section-title{color:#5DCAA5}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.2rem}
+.tool-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);text-decoration:none;color:var(--text);display:block;transition:all .25s;position:relative;overflow:hidden}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--gold))}
+.tool-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(18,120,80,.14);border-color:rgba(18,120,80,.25)}
+[data-theme="dark"] .tool-card:hover{box-shadow:0 8px 32px rgba(93,202,165,.12);border-color:rgba(93,202,165,.25)}
+.tool-card .icon{font-size:2rem;margin-bottom:.8rem;display:block;line-height:1}
+.tool-card h3{font-size:1rem;font-weight:700;margin-bottom:.4rem}
+.tool-card p{font-size:.83rem;color:var(--muted);line-height:1.55}
+.tool-card .arrow{position:absolute;right:1.2rem;bottom:1.2rem;font-size:.85rem;color:var(--green);opacity:0;transition:opacity .2s,transform .2s;transform:translateX(-4px)}
+[data-theme="dark"] .tool-card .arrow{color:#5DCAA5}
+.tool-card:hover .arrow{opacity:1;transform:translateX(0)}
+
+footer{text-align:center;padding:2rem;font-size:.78rem;color:var(--muted);border-top:1px solid var(--border);margin-top:2rem}
+
+@media(max-width:600px){
+  .hero{padding:2.2rem 1.2rem 1.8rem}
+  .hero h1{font-size:1.5rem}
+  .kpi-bar{gap:1.5rem;padding:1rem}
+  .container{padding:1.2rem}
+  .grid{grid-template-columns:1fr}
 }
-.brand-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 12px;
-  border-radius:999px;
-  background:rgba(18,120,80,.08);
-  color:var(--brand);
-  font-size:.76rem;
-  font-weight:700;
-  letter-spacing:.04em;
-  text-transform:uppercase;
-}
-.brand-chip svg{flex-shrink:0}
-@media(min-width:769px){
-  .app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
-  .app.is-complete{grid-template-columns:1fr}
-  .app.is-complete .main-area{grid-column:1/-1}
-  .app.is-complete .survey-wrap{max-width:none;width:100%;padding:0;min-height:100vh}
-  .sidebar{
-    background:linear-gradient(180deg,#ffffff 0%, #fbfcfb 100%);
-    border-right:1px solid var(--border);
-    padding:28px 24px;
-    position:sticky;
-    top:0;
-    height:100vh;
-    display:flex;
-    flex-direction:column;
-    overflow-y:auto;
-  }
-  .mobile-header,.footer-bar{display:none}
-  .sticky-top{
-    position:sticky;
-    top:0;
-    background:rgba(246,248,247,.82);
-    backdrop-filter:blur(14px);
-    border-bottom:1px solid rgba(18,120,80,.08);
-    padding:14px 48px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    z-index:10;
-  }
-  .survey-wrap{
-    max-width:760px;
-    margin:0 auto;
-    padding:32px 48px 120px;
-  }
-  .desktop-footer{
-    margin-top:56px;
-    padding-top:28px;
-    border-top:1px solid var(--border);
-    display:flex;
-    justify-content:space-between;
-  }
-}
-@media(max-width:768px){
-  .sidebar,.sticky-top,.desktop-footer{display:none}
-  .mobile-header{
-    position:sticky;
-    top:0;
-    z-index:100;
-    background:linear-gradient(135deg,var(--brand-deep),var(--brand));
-    padding:14px 16px 10px;
-    box-shadow:0 8px 30px rgba(15,95,66,.2);
-  }
-  .mh-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .mh-logo{display:flex;align-items:center;gap:10px}
-  .mh-logo img{width:56px;height:auto;flex-shrink:0}
-  .mh-title{color:#fff;font-weight:700;font-size:14px}
-  .mh-sub{color:rgba(255,255,255,.76);font-size:11px}
-  .mh-menu{
-    background:rgba(255,255,255,.14);
-    border:1px solid rgba(255,255,255,.16);
-    border-radius:10px;
-    width:38px;
-    height:38px;
-    color:#fff;
-    font-size:18px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .prog-wrap{display:flex;align-items:center;gap:10px}
-  .prog-bar{flex:1;height:4px;background:rgba(255,255,255,.2);border-radius:4px;overflow:hidden}
-  .prog-fill{height:100%;background:linear-gradient(90deg,#8be3bb,#d8c08a);border-radius:4px;transition:width .4s}
-  .prog-text{color:rgba(255,255,255,.86);font-size:12px;font-weight:600;min-width:36px;text-align:right}
-  .survey-wrap{padding:16px 16px 120px}
-  .footer-bar{
-    position:fixed;
-    bottom:0;
-    left:0;
-    right:0;
-    display:flex;
-    gap:10px;
-    padding:12px 16px;
-    background:rgba(255,255,255,.96);
-    backdrop-filter:blur(12px);
-    border-top:1px solid var(--border);
-    z-index:100;
-  }
-}
-.nav-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,18,13,.5);z-index:200}
-.nav-overlay.open{display:flex;justify-content:flex-end}
-.nav-panel{width:280px;max-width:80vw;background:var(--bg-surface);height:100%;padding:20px 16px;overflow-y:auto}
-.nav-panel-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);font-weight:700;margin-bottom:12px}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:none;border-radius:10px;font-size:14px;cursor:pointer;margin-bottom:4px;font-family:inherit;background:transparent;color:var(--text-muted);text-align:left}
-.nav-btn.active{color:var(--brand);font-weight:600;background:var(--bg-mint)}
-.sb-brand-card{
-  background:linear-gradient(160deg,var(--bg-brand) 0%, #16835a 100%);
-  border-radius:22px;
-  padding:18px;
-  color:#fff;
-  margin-bottom:28px;
-  box-shadow:0 20px 40px rgba(15,95,66,.18);
-}
-.sb-brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:14px;
-}
-.sb-brand img{width:92px;height:auto;flex-shrink:0}
-.sb-brand-name{font-weight:700;font-size:1.02rem;letter-spacing:-.02em}
-.sb-brand-role{font-size:.78rem;color:rgba(255,255,255,.78)}
-.sb-brand-copy{
-  font-size:.84rem;
-  line-height:1.55;
-  color:rgba(255,255,255,.86);
-}
-.sb-meta{margin-bottom:30px}
-.sb-meta-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--brand);font-weight:700;margin-bottom:8px}
-.sb-meta-title{font-size:.96rem;font-weight:600;line-height:1.45}
-.sb-progress{margin-bottom:32px}
-.sb-progress-header{display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-muted);margin-bottom:10px}
-.sb-progress-track{height:6px;background:var(--bg-mint);border-radius:var(--radius-pill);overflow:hidden}
-.sb-progress-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-gold));border-radius:var(--radius-pill);transition:width .4s}
-.sb-nav{list-style:none;display:flex;flex-direction:column;gap:4px}
-.sb-nav li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:.86rem;color:var(--text-muted);cursor:pointer;transition:all .2s}
-.sb-nav li:hover{background:#f4f8f5;color:var(--text-main)}
-.sb-nav li.active{color:var(--brand);font-weight:600;background:var(--bg-mint)}
-.sb-nav li .sn{font-size:.72rem;opacity:.6;width:20px}
-.sb-conf{margin-top:auto;font-size:.76rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;padding-top:24px;border-top:1px solid var(--border)}
-.brand-banner{
-  display:flex;
-  align-items:center;
-  gap:18px;
-  padding:18px 20px;
-  background:linear-gradient(120deg, rgba(255,255,255,.98), rgba(238,245,241,.96));
-  border:1px solid rgba(18,120,80,.12);
-  border-radius:24px;
-  box-shadow:var(--shadow-md);
-  margin-bottom:28px;
-}
-.brand-banner img{width:132px;height:auto;flex-shrink:0}
-.brand-banner-copy{min-width:0}
-.brand-banner-title{
-  font-size:1rem;
-  font-weight:700;
-  color:var(--brand-deep);
-  letter-spacing:-.02em;
-}
-.brand-banner-sub{
-  font-size:.9rem;
-  color:var(--text-muted);
-  margin-top:4px;
-}
-.brand-banner-meta{
-  margin-top:10px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.brand-mini-tag{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:6px 10px;
-  border-radius:999px;
-  background:#fff;
-  border:1px solid rgba(18,120,80,.12);
-  color:var(--brand);
-  font-size:.73rem;
-  font-weight:700;
-}
-.main-area{min-width:0}
-.section{display:none}
-.section.active{display:block}
-.chapter-intro{margin-bottom:40px;padding-top:10px}
-.chapter-tag{display:inline-block;font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--brand);font-weight:700;margin-bottom:12px}
-.chapter-title{font-size:2rem;color:var(--text-main);line-height:1.12;letter-spacing:-.03em;margin-bottom:12px}
-.chapter-title i{font-family:var(--font-serif);font-style:italic;font-weight:500;color:var(--brand)}
-.chapter-desc{font-size:1rem;color:var(--text-muted);max-width:560px}
-.deep-note{margin-top:10px;font-size:.85rem;color:var(--brand);background:var(--bg-mint);padding:10px 14px;border-radius:10px;line-height:1.5}
-.card{
-  background:rgba(255,255,255,.96);
-  border-radius:var(--radius-card);
-  padding:24px;
-  margin-bottom:20px;
-  box-shadow:var(--shadow-sm);
-  border:1px solid rgba(18,120,80,.08);
-}
-.q-num{font-size:.8rem;color:var(--text-muted);margin-bottom:6px;display:block}
-.q-text{font-size:1.08rem;font-weight:600;color:var(--text-main);line-height:1.45;margin-bottom:20px;white-space:pre-line}
-.opts{display:flex;flex-direction:column;gap:10px}
-.max-note{font-size:.8rem;color:var(--text-muted);font-style:italic;margin-bottom:6px}
-.opt-btn{
-  display:flex;
-  align-items:flex-start;
-  gap:14px;
-  padding:14px 18px;
-  border:1px solid var(--border);
-  border-radius:var(--radius-input);
-  background:var(--bg-surface);
-  cursor:pointer;
-  font-family:inherit;
-  text-align:left;
-  width:100%;
-  font-size:.95rem;
-  color:var(--text-main);
-  transition:all .2s;
-  box-shadow:var(--shadow-sm);
-  line-height:1.4;
-  font-weight:500;
-}
-.opt-btn:hover{border-color:var(--border-active);transform:translateY(-1px)}
-.opt-btn.selected{background:var(--bg-mint);border-color:var(--brand);box-shadow:none}
-.radio-circle{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--text-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all .2s}
-.opt-btn.selected .radio-circle{border-color:var(--brand)}
-.radio-dot{width:10px;height:10px;border-radius:50%;background:transparent;transition:all .2s}
-.opt-btn.selected .radio-dot{background:var(--brand)}
-.check-box{width:20px;height:20px;border-radius:4px;border:1.5px solid var(--text-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all .2s;color:transparent;font-size:12px}
-.opt-btn.selected .check-box{border-color:var(--brand);background:var(--brand);color:#fff}
-.other-input{margin-left:34px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-input);font-size:.9rem;font-family:inherit;outline:none;color:var(--text-main);width:calc(100% - 34px);display:none;margin-top:8px}
-.other-input.visible{display:block}
-.other-input:focus{border-color:var(--brand);box-shadow:var(--shadow-focus)}
-.likert-wrap{padding:4px 0}
-.likert-labels{display:flex;justify-content:space-between;margin-bottom:8px}
-.likert-end{font-size:.75rem;color:var(--text-muted);font-weight:600}
-.likert-btns{display:flex;justify-content:space-between;gap:6px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-input);padding:14px 20px;box-shadow:var(--shadow-sm)}
-.l-btn{flex:1;min-width:44px;height:48px;border:1.5px solid var(--border);border-radius:50%;background:var(--bg-surface);font-size:16px;font-weight:700;color:var(--text-muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;font-family:inherit}
-.l-btn.selected{background:var(--brand);color:#fff;border-color:var(--brand);transform:scale(1.08);box-shadow:0 4px 12px rgba(18,120,80,.25)}
-.l-btn.color-1.selected{background:#dc2626;border-color:#dc2626}
-.l-btn.color-2.selected{background:#ea580c;border-color:#ea580c}
-.l-btn.color-3.selected{background:#ca8a04;border-color:#ca8a04}
-.l-btn.color-4.selected{background:#16a34a;border-color:#16a34a}
-.l-btn.color-5.selected{background:#0284c7;border-color:#0284c7}
-.likert-subs{display:flex;justify-content:space-between;margin-top:8px}
-.likert-sub{font-size:.6rem;color:var(--text-muted);text-align:center;flex:1;line-height:1.3}
-.scale10-wrap{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.s10-btn{width:52px;height:48px;border:1.5px solid var(--border);border-radius:var(--radius-input);background:var(--bg-surface);font-size:16px;font-weight:700;color:var(--text-muted);cursor:pointer;transition:all .15s;font-family:inherit}
-.s10-btn.selected{color:#fff;transform:scale(1.1);box-shadow:0 4px 10px rgba(0,0,0,.12)}
-input[type="number"]{width:100%;max-width:240px;padding:14px 16px;font-family:inherit;font-size:1rem;color:var(--text-main);background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-input);box-shadow:var(--shadow-sm);outline:none;-moz-appearance:textfield}
-input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
-input[type="number"]:focus{border-color:var(--brand);box-shadow:var(--shadow-focus)}
-textarea{width:100%;padding:14px 16px;font-family:inherit;font-size:.95rem;color:var(--text-main);background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-input);box-shadow:var(--shadow-sm);outline:none;resize:vertical;min-height:100px;line-height:1.5}
-textarea.tall{min-height:140px}
-textarea:focus{border-color:var(--brand);box-shadow:var(--shadow-focus)}
-textarea::placeholder,input::placeholder{color:#a0aba5}
-.btn-pill{appearance:none;border:none;font-family:inherit;font-size:.9rem;font-weight:600;cursor:pointer;padding:11px 22px;border-radius:var(--radius-pill);transition:all .2s}
-.btn-ghost{background:none;color:var(--text-muted)}
-.btn-ghost:hover{color:var(--text-main);background:rgba(0,0,0,.03)}
-.btn-primary{background:var(--brand);color:var(--text-inv)}
-.btn-primary:hover{background:var(--brand-hover)}
-.btn-submit{background:var(--brand);color:var(--text-inv)}
-.f-btn{flex:1;padding:13px 16px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--bg-surface);font-size:.9rem;font-weight:600;color:var(--text-muted);cursor:pointer;font-family:inherit}
-.f-btn:disabled{opacity:.4}
-.f-btn-primary{background:var(--brand);color:var(--text-inv);border:none}
-.f-btn-submit{background:var(--brand);color:var(--text-inv);border:none}
-.thank-you{
-  display:none;
-  position:relative;
-  align-items:center;
-  justify-content:center;
-  min-height:calc(100vh - 80px);
-  padding:56px 32px;
-  overflow:hidden;
-}
-.thank-you.active{display:flex}
-.thank-you::before{
-  content:"";
-  position:absolute;
-  inset:-20% auto auto -10%;
-  width:420px;
-  height:420px;
-  background:radial-gradient(circle, rgba(18,120,80,.14) 0%, rgba(18,120,80,0) 70%);
-  pointer-events:none;
-}
-.thank-you::after{
-  content:"";
-  position:absolute;
-  inset:auto -8% -18% auto;
-  width:500px;
-  height:500px;
-  background:radial-gradient(circle, rgba(201,169,107,.16) 0%, rgba(201,169,107,0) 72%);
-  pointer-events:none;
-}
-.thank-shell{
-  position:relative;
-  z-index:1;
-  width:min(1040px,100%);
-}
-.thank-panel{
-  display:grid;
-  grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);
-  gap:28px;
-  align-items:stretch;
-  background:rgba(255,255,255,.84);
-  border:1px solid rgba(18,120,80,.12);
-  border-radius:34px;
-  padding:38px;
-  box-shadow:0 30px 80px rgba(15,95,66,.12);
-  backdrop-filter:blur(10px);
-}
-.thank-copy{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  text-align:left;
-}
-.thank-logo{
-  width:260px;
-  max-width:100%;
-  height:auto;
-  margin-bottom:18px;
-}
-.thank-kicker{
-  display:inline-flex;
-  align-items:center;
-  width:max-content;
-  margin-bottom:14px;
-  padding:8px 12px;
-  border-radius:999px;
-  background:rgba(18,120,80,.08);
-  color:var(--brand);
-  font-size:.75rem;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-}
-.thank-side{
-  background:linear-gradient(180deg, rgba(15,95,66,.98) 0%, rgba(18,120,80,.95) 100%);
-  color:#fff;
-  border-radius:28px;
-  padding:28px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  box-shadow:0 20px 50px rgba(15,95,66,.22);
-}
-.thank-icon{
-  width:96px;
-  height:96px;
-  border-radius:50%;
-  background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.16);
-  color:#fff;
-  font-size:48px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin-bottom:20px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.12);
-}
-.thank-title{font-size:clamp(2.4rem,4vw,4rem);font-weight:700;color:var(--text-main);margin-bottom:14px;letter-spacing:-.04em;line-height:1.02}
-.thank-title i{font-family:var(--font-serif);font-style:italic;color:var(--brand)}
-.thank-text{font-size:1.08rem;color:var(--text-muted);line-height:1.75;max-width:640px}
-.thank-badge{
-  width:100%;
-  max-width:280px;
-  padding:22px 24px;
-  background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:24px;
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  align-items:center;
-  margin:0 0 16px;
-}
-.thank-badge .count{font-size:56px;font-weight:700;color:#fff;line-height:1}
-.thank-badge .label{font-size:14px;color:rgba(255,255,255,.76)}
-.results-preview{
-  width:100%;
-  max-width:280px;
-  min-height:54px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:14px 16px;
-  border-radius:18px;
-  font-size:.92rem;
-  font-weight:700;
-  line-height:1.4;
-}
-.results-preview.pending{background:rgba(255,255,255,.1);color:rgba(255,255,255,.9)}
-.results-preview.success{background:#e8fff1;color:#0f7a48}
-.results-preview.error{background:#fff1f1;color:#b42318}
-@media(max-width:900px){
-  .thank-panel{grid-template-columns:1fr}
-  .thank-copy{align-items:center;text-align:center}
-  .thank-kicker{width:auto}
-  .thank-text{text-align:center}
-}
-.sending-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(246,248,247,.94);z-index:999;flex-direction:column;align-items:center;justify-content:center}
-.sending-overlay.active{display:flex}
-.spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<div class="sending-overlay" id="sendingOverlay">
-  <div class="spinner"></div>
-  <p style="margin-top:16px;font-size:.9rem;color:var(--text-muted);font-weight:600">Enviando respuestas...</p>
-</div>
 
-<div class="app">
-  <aside class="sidebar" id="sidebarDesktop">
-    <div class="sb-brand-card">
-      <div class="sb-brand">
-        <img class="brand-logo" src="https://hospitalescandon.org/img/core-img/logo.png" alt="Logo Hospital Escandón" onerror="this.style.display='none'">
-        <div>
-          <div class="sb-brand-name">Hospital Escandón</div>
-          <div class="sb-brand-role">Diagnóstico institucional</div>
-        </div>
-      </div>
-      <div class="sb-brand-copy">Cuestionario confidencial para entender la utilización de infraestructura quirúrgica y mejorar la experiencia hospitalaria.</div>
-    </div>
-
-    <div class="sb-meta">
-      <div class="sb-meta-label">Proyecto estratégico</div>
-      <div class="sb-meta-title">Utilización de infraestructura quirúrgica y experiencia hospitalaria</div>
-    </div>
-
-    <div class="sb-progress">
-      <div class="sb-progress-header"><span>Progreso</span><span id="sbProgressPct">9%</span></div>
-      <div class="sb-progress-track"><div class="sb-progress-fill" id="sbProgressFill" style="width:9%"></div></div>
-    </div>
-
-    <ul class="sb-nav" id="sbNav"></ul>
-
-    <div class="sb-conf">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Documento confidencial
-    </div>
-  </aside>
-
-  <div class="mobile-header">
-    <div class="mh-top">
-      <div class="mh-logo">
-        <img class="brand-logo" src="https://hospitalescandon.org/img/core-img/logo.png" alt="Logo Hospital Escandón" onerror="this.style.display='none'">
-        <div>
-          <div class="mh-title">Hospital Escandón</div>
-          <div class="mh-sub">Cuestionario Diagnóstico</div>
-        </div>
-      </div>
-      <button class="mh-menu" onclick="toggleNav()">&#9776;</button>
-    </div>
-    <div class="prog-wrap">
-      <div class="prog-bar"><div class="prog-fill" id="progressFill"></div></div>
-      <span class="prog-text" id="progressText">1/11</span>
-    </div>
+<div class="hero">
+  <div class="hero-controls">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Cambiar tema">☀</button>
   </div>
+  <img src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón">
+  <h1>Panel de Control</h1>
+  <p>Hospital Escandón — Consultoría Estratégica 2026</p>
+</div>
 
-  <div class="nav-overlay" id="navOverlay" onclick="toggleNav()">
-    <div class="nav-panel" onclick="event.stopPropagation()">
-      <div class="nav-panel-title">Secciones</div>
-      <div id="navItems"></div>
-    </div>
+<div class="kpi-bar">
+  <div class="kpi-item">
+    <div class="val" id="kpiCirujanos">—</div>
+    <div class="lbl">Entrevistas Cirujanos</div>
   </div>
-
-  <main class="main-area">
-    <header class="sticky-top">
-      <div class="brand-chip">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Hospital Escandón | Documento confidencial
-      </div>
-      <span style="font-size:.8rem;color:var(--text-muted)" id="headerSection"></span>
-    </header>
-
-    <div class="survey-wrap">
-      <div class="brand-banner">
-        <img class="brand-logo" src="https://hospitalescandon.org/img/core-img/logo.png" alt="Logo Hospital Escandón" onerror="this.style.display='none'">
-        <div class="brand-banner-copy">
-          <div class="brand-banner-title">Hospital Escandón | Cuestionario Diagnóstico</div>
-          <div class="brand-banner-sub">Levantamiento confidencial orientado a fortalecer la práctica quirúrgica y la experiencia del paciente.</div>
-          <div class="brand-banner-meta">
-            <span class="brand-mini-tag">Infraestructura quirúrgica</span>
-            <span class="brand-mini-tag">Experiencia hospitalaria</span>
-            <span class="brand-mini-tag">Participación médica</span>
-          </div>
-        </div>
-      </div>
-
-      <div id="contentArea"></div>
-
-      <div class="thank-you" id="thankYou">
-        <div class="thank-shell">
-          <div class="thank-panel">
-            <div class="thank-copy">
-              <img class="thank-logo brand-logo" src="https://hospitalescandon.org/img/core-img/logo.png" alt="Logo Hospital Escandón" onerror="this.style.display='none'">
-              <div class="thank-kicker">Hospital Escandón</div>
-              <div class="thank-title">&iexcl;Gracias por su <i>participaci&oacute;n</i>!</div>
-              <div class="thank-text">Sus respuestas contribuir&aacute;n directamente a mejorar las condiciones de su pr&aacute;ctica profesional y la experiencia de sus pacientes.</div>
-            </div>
-            <div class="thank-side">
-              <div class="thank-icon">&#10003;</div>
-              <div class="thank-badge">
-                <span class="label">Respuestas registradas</span>
-                <span class="count" id="answerCount">0</span>
-              </div>
-              <div class="results-preview pending" id="resultsPreview">Guardando respuestas...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="desktop-footer" id="desktopFooter">
-        <button class="btn-pill btn-ghost" id="dBtnPrev" onclick="prevSection()">&larr; Secci&oacute;n anterior</button>
-        <button class="btn-pill btn-primary" id="dBtnNext" onclick="nextSection()">Continuar &rarr;</button>
-      </div>
-    </div>
-  </main>
+  <div class="kpi-divider"></div>
+  <div class="kpi-item">
+    <div class="val" id="kpiPacientes">—</div>
+    <div class="lbl">Entrevistas Pacientes</div>
+  </div>
+  <div class="kpi-divider"></div>
+  <div class="kpi-item">
+    <div class="val" id="kpiTotal">—</div>
+    <div class="lbl">Total Entrevistas</div>
+  </div>
 </div>
 
-<div class="footer-bar" id="footerNav">
-  <button class="f-btn" id="btnPrev" onclick="prevSection()" disabled>&larr; Anterior</button>
-  <button class="f-btn f-btn-primary" id="btnNext" onclick="nextSection()">Siguiente &rarr;</button>
+<div class="container">
+  <p class="section-title">Herramientas disponibles</p>
+  <div class="grid">
+
+    <a href="simulador.html" class="tool-card">
+      <span class="icon">📊</span>
+      <h3>Simulador Estratégico</h3>
+      <p>Calculadoras de impacto económico: activación de cirujanos, conversión de urgencias y check-ups corporativos.</p>
+      <span class="arrow">→</span>
+    </a>
+
+    <a href="segmentacion-cirujanos.html" class="tool-card">
+      <span class="icon">🫧</span>
+      <h3>Segmentación Cirujanos 2025</h3>
+      <p>Perfiles Alto/Medio/Bajo por volumen quirúrgico. Bubble chart interactivo, barras por especialidad y tarjetas detalladas.</p>
+      <span class="arrow">→</span>
+    </a>
+
+    <a href="admin/dashboard-cirujanos.html" class="tool-card">
+      <span class="icon">🔬</span>
+      <h3>Dashboard Entrevistas Cirujanos</h3>
+      <p>Análisis cualitativo: satisfacciones, problemas, competencia, decisión y relación con el hospital. 7 pestañas.</p>
+      <span class="arrow">→</span>
+    </a>
+
+    <a href="admin/dashboard-pacientes.html" class="tool-card">
+      <span class="icon">🏥</span>
+      <h3>Dashboard Entrevistas Pacientes</h3>
+      <p>Análisis cualitativo: experiencia, lealtad, precio, competencia y propuestas de mejora. 8 pestañas.</p>
+      <span class="arrow">→</span>
+    </a>
+
+    <a href="entrevista-cirujanos.html" class="tool-card">
+      <span class="icon">📋</span>
+      <h3>Entrevista a Cirujanos</h3>
+      <p>Formulario de entrevista presencial para cirujanos. 10 secciones — guarda en tiempo real en Supabase.</p>
+      <span class="arrow">→</span>
+    </a>
+
+    <a href="entrevista-pacientes.html" class="tool-card">
+      <span class="icon">👤</span>
+      <h3>Entrevista a Pacientes</h3>
+      <p>Formulario de entrevista presencial para pacientes. 7 secciones con toggle 5A/5B — guarda en Supabase.</p>
+      <span class="arrow">→</span>
+    </a>
+
+  </div>
 </div>
+
+<footer>Consultoría Hospital Escandón · 2026</footer>
 
 <script>
-var SECTIONS=[{id:"consent",title:"Bienvenido(a)",icon:"\u{1F3E5}",questions:[{id:"consent",type:"single",text:"Este cuestionario es estrictamente confidencial y an\u00f3nimo. Sus respuestas ser\u00e1n analizadas de forma agregada.\n\n\u00bfAcepta participar voluntariamente?",options:["S\u00ed, acepto","No acepto"]}]},{id:"profile",title:"Perfil del M\u00e9dico",icon:"\u{1F464}",questions:[{id:"p1_1",type:"open",text:"\u00bfCu\u00e1l es su especialidad m\u00e9dico-quir\u00fargica principal?",ph:"Ej. Cirug\u00eda General, Traumatolog\u00eda..."},{id:"p1_2",type:"single",text:"\u00bfCu\u00e1ntos a\u00f1os tiene adscrito al Hospital Escand\u00f3n?",options:["Menos de 1 a\u00f1o","1\u20133 a\u00f1os","4\u20137 a\u00f1os","8\u201315 a\u00f1os","M\u00e1s de 15 a\u00f1os"]},{id:"p1_3",type:"single",text:"\u00bfEn cu\u00e1ntos hospitales o cl\u00ednicas (adem\u00e1s de Hospital Escand\u00f3n) realiza cirug\u00edas actualmente?",options:["Ninguno","1","2","3 o m\u00e1s"]},{id:"p1_4",type:"single",text:"\u00bfQu\u00e9 porcentaje aproximado de su pr\u00e1ctica quir\u00fargica total realiza en Hospital Escand\u00f3n?",options:["Menos del 25%","25\u201350%","51\u201375%","M\u00e1s del 75%"]},{id:"p1_5",type:"single",text:"\u00bfCuenta con consultorio dentro del Hospital Escand\u00f3n?",options:["S\u00ed, de tiempo completo","S\u00ed, compartido","No, consulto en otro lugar"]}]},{id:"surgical",title:"Comportamiento Quir\u00fargico",icon:"\u{1F52C}",questions:[{id:"p2_1",type:"number",text:"\u00bfCu\u00e1ntas cirug\u00edas programa usted en promedio al mes EN TOTAL (en todos los hospitales)?",ph:"N\u00famero de cirug\u00edas"},{id:"p2_2",type:"number",text:"\u00bfCu\u00e1ntas de esas cirug\u00edas realiza espec\u00edficamente en Hospital Escand\u00f3n?",ph:"N\u00famero de cirug\u00edas"},{id:"p2_3",type:"multi",text:"\u00bfCu\u00e1les son las principales razones por las que programa cirug\u00edas en otros hospitales? (Seleccione todas las que apliquen)",options:["Costo de renta de quir\u00f3fano m\u00e1s competitivo","Disponibilidad de equipo especializado","Mis pacientes prefieren otro hospital","Comodidad/cercan\u00eda para m\u00ed","Mejor experiencia postoperatoria para el paciente","Convenios con aseguradoras m\u00e1s \u00e1giles","Costumbre / inercia"],hasOther:true},{id:"p2_4",type:"single",text:"\u00bfHa tenido pacientes que planeaba operar en Hospital Escand\u00f3n pero termin\u00f3 oper\u00e1ndolos en otro lugar?",options:["Nunca","Ocasionalmente (1\u20132/a\u00f1o)","Con frecuencia (3+/a\u00f1o)"]},{id:"p2_5",type:"open",text:"Si respondi\u00f3 \"ocasionalmente\" o \"con frecuencia\", \u00bfcu\u00e1l fue la raz\u00f3n principal?",ph:"Describa la raz\u00f3n..."},{id:"p2_6",type:"multi",text:"\u00bfEn qu\u00e9 d\u00edas y horarios prefiere programar sus cirug\u00edas?",options:["Lunes a viernes matutino (7\u201314h)","Lunes a viernes vespertino (14\u201321h)","S\u00e1bado","Me es indiferente"]}]},{id:"perception",title:"Percepci\u00f3n del Hospital",icon:"\u2B50",questions:[{id:"p3_1",type:"likert",text:"Hospital Escand\u00f3n tiene una reputaci\u00f3n s\u00f3lida entre mis colegas m\u00e9dicos."},{id:"p3_2",type:"likert",text:"La relaci\u00f3n calidad-precio de los servicios hospitalarios es competitiva."},{id:"p3_3",type:"likert",text:"El hospital tiene la infraestructura adecuada para procedimientos de alta complejidad."},{id:"p3_4",type:"likert",text:"Recomiendo activamente a Hospital Escand\u00f3n a otros m\u00e9dicos."},{id:"p3_5",type:"likert",text:"Mis pacientes expresan satisfacci\u00f3n con su estancia en el hospital."},{id:"p3_6",type:"likert",text:"El hospital est\u00e1 a la altura de las cl\u00ednicas de corta estancia en cuanto a conveniencia."},{id:"p3_7",type:"open",text:"Si un colega le pidiera una opini\u00f3n sincera sobre operar en Hospital Escand\u00f3n, \u00bfqu\u00e9 le dir\u00eda en una frase?",ph:"Su opini\u00f3n sincera..."}]},{id:"or_exp",title:"Experiencia en Quir\u00f3fano",icon:"\u{1F3D7}\uFE0F",questions:[{id:"p4_1",type:"likert5",text:"Disponibilidad de horarios de quir\u00f3fano cuando los necesito."},{id:"p4_2",type:"likert5",text:"Estado y mantenimiento del equipo quir\u00fargico."},{id:"p4_3",type:"likert5",text:"Disponibilidad de equipo especializado (torre laparosc\u00f3pica, arco en C, bistur\u00ed arm\u00f3nico, etc.)."},{id:"p4_4",type:"likert5",text:"Calidad del equipo de enfermer\u00eda quir\u00fargica e instrumentistas."},{id:"p4_5",type:"likert5",text:"Tiempo de rotaci\u00f3n entre cirug\u00edas (limpieza, preparaci\u00f3n de sala)."},{id:"p4_6",type:"likert5",text:"Servicio de anestesiolog\u00eda."},{id:"p4_7",type:"likert5",text:"Proceso de programaci\u00f3n quir\u00fargica (agilidad administrativa)."},{id:"p4_8",type:"likert5",text:"Disponibilidad de insumos y materiales de curaci\u00f3n."},{id:"p4_9",type:"single",text:"\u00bfHa cancelado o reprogramado alguna cirug\u00eda por motivos atribuibles al hospital?",options:["Nunca","1\u20132 veces en el \u00faltimo a\u00f1o","3 o m\u00e1s veces"]},{id:"p4_10",type:"open",text:"\u00bfQu\u00e9 equipo o tecnolog\u00eda considera indispensable que el hospital adquiera o renueve?",ph:"Equipo o tecnolog\u00eda necesaria..."}]},{id:"hospitality",title:"Hoteler\u00eda Hospitalaria",icon:"\u{1F6CF}\uFE0F",questions:[{id:"p5_1",type:"likert5",text:"Comodidad y estado de las habitaciones."},{id:"p5_2",type:"likert5",text:"Limpieza y mantenimiento general del \u00e1rea de hospitalizaci\u00f3n."},{id:"p5_3",type:"likert5",text:"Calidad del servicio de enfermer\u00eda en piso."},{id:"p5_4",type:"likert5",text:"Calidad y presentaci\u00f3n de los alimentos para pacientes."},{id:"p5_5",type:"likert5",text:"Atenci\u00f3n y comodidad para los familiares del paciente."},{id:"p5_6",type:"likert5",text:"Proceso de admisi\u00f3n y alta (tiempos, claridad, calidez)."},{id:"p5_7",type:"likert5",text:"Imagen general del hospital (fachada, se\u00f1alizaci\u00f3n, \u00e1reas comunes)."},{id:"p5_8",type:"single",text:"\u00bfAlg\u00fan paciente suyo le ha expresado incomodidad o insatisfacci\u00f3n con alguno de los aspectos anteriores?",options:["Nunca","Alguna vez","Con frecuencia"]},{id:"p5_9",type:"multi",text:"Si respondi\u00f3 \"alguna vez\" o \"con frecuencia\", \u00bfqu\u00e9 aspecto mencionaron m\u00e1s?",options:["Habitaci\u00f3n (espacio, mobiliario, ba\u00f1o)","Alimentaci\u00f3n","Trato de enfermer\u00eda","Limpieza","Atenci\u00f3n a familiares","Tiempos de espera (admisi\u00f3n/alta)"],hasOther:true},{id:"p5_10",type:"single",text:"\u00bfConsidera que la experiencia de hoteler\u00eda del hospital ha influido en que alg\u00fan paciente suyo haya preferido operarse en otra instituci\u00f3n?",options:["Definitivamente no","Probablemente no","Probablemente s\u00ed","Definitivamente s\u00ed"]},{id:"p5_11",type:"open",text:"\u00bfQu\u00e9 mejora espec\u00edfica en la experiencia del paciente tendr\u00eda el mayor impacto para que usted se sienta m\u00e1s seguro recomendando una estancia en Hospital Escand\u00f3n?",ph:"Su recomendaci\u00f3n..."}]},{id:"barriers",title:"Barreras Operativas",icon:"\u2699\uFE0F",questions:[{id:"p6_1",type:"likert",text:"Los procesos administrativos para programar una cirug\u00eda son \u00e1giles y claros."},{id:"p6_2",type:"likert",text:"La comunicaci\u00f3n con el \u00e1rea de programaci\u00f3n quir\u00fargica es eficiente."},{id:"p6_3",type:"likert",text:"El proceso de autorizaci\u00f3n con aseguradoras fluye sin complicaciones."},{id:"p6_4",type:"likert",text:"Los costos de renta de quir\u00f3fano, insumos y materiales me parecen competitivos."},{id:"p6_5",type:"likert",text:"Me siento respaldado por la Direcci\u00f3n cuando surgen complicaciones."},{id:"p6_6",type:"likert",text:"La disponibilidad de Banco de Sangre y servicios auxiliares es confiable."},{id:"p6_7",type:"open",text:"\u00bfCu\u00e1l es la barrera administrativa m\u00e1s frustrante que enfrenta al operar en Hospital Escand\u00f3n?",ph:"Describa la barrera..."},{id:"p6_8",type:"open",text:"Si pudiera cambiar UN proceso del hospital para facilitar su pr\u00e1ctica quir\u00fargica, \u00bfcu\u00e1l ser\u00eda?",ph:"El cambio m\u00e1s importante..."}]},{id:"competition",title:"Competencia",icon:"\u{1F4CA}",questions:[{id:"p7_1",type:"multi",text:"Adem\u00e1s de Hospital Escand\u00f3n, \u00bfen qu\u00e9 tipo de instituci\u00f3n realiza cirug\u00edas?",options:["Cl\u00ednica de corta estancia","Hospital privado grande","Hospital privado peque\u00f1o/mediano","Hospital p\u00fablico (IMSS, ISSSTE, SSA)","No opero en otro lugar"]},{id:"p7_2",type:"open",text:"\u00bfQu\u00e9 ventaja principal le ofrece esa otra instituci\u00f3n que Hospital Escand\u00f3n no le ofrece actualmente?",ph:"Ventaja principal..."},{id:"p7_3",type:"scale10",text:"En una escala del 1 al 10, \u00bfqu\u00e9 tan probable es que en los pr\u00f3ximos 12 meses aumente el n\u00famero de cirug\u00edas que realiza en Hospital Escand\u00f3n?"},{id:"p7_4",type:"open",text:"\u00bfQu\u00e9 necesitar\u00eda Hospital Escand\u00f3n ofrecerle para que traslade m\u00e1s cirug\u00edas aqu\u00ed?",ph:"Lo que necesitar\u00eda..."}]},{id:"incentives",title:"Incentivos",icon:"\u{1F4A1}",questions:[{id:"p8_1",type:"single",text:"\u00bfQu\u00e9 tan importante es para usted el costo de renta de quir\u00f3fano al elegir d\u00f3nde operar?",options:["Es el factor decisivo","Muy importante","Importante pero no determinante","Poco relevante"]},{id:"p8_2",type:"multi",text:"\u00bfCu\u00e1l de los siguientes incentivos le resultar\u00eda m\u00e1s atractivo? (M\u00e1ximo 2)",options:["Descuento en renta de quir\u00f3fano por volumen","Tarifa preferencial vespertinos/fines de semana","Paquetes quir\u00fargicos cerrados m\u00e1s competitivos","Facilidades de pago a MSI para pacientes","Apoyo en gesti\u00f3n con aseguradoras","Acceso prioritario a equipo especializado"],hasOther:true,max:2},{id:"p8_3",type:"single",text:"\u00bfConoce los paquetes quir\u00fargicos que ofrece actualmente Hospital Escand\u00f3n?",options:["S\u00ed, y los ofrezco a mis pacientes","S\u00ed, pero no los uso","No los conozco"]},{id:"p8_4",type:"open",text:"Si respondi\u00f3 \"S\u00ed, pero no los uso\", \u00bfpor qu\u00e9 motivo?",ph:"Motivo..."}]},{id:"opportunities",title:"Oportunidades",icon:"\u{1F680}",questions:[{id:"p9_1",type:"open",text:"\u00bfQu\u00e9 servicio o especialidad considera que el hospital deber\u00eda fortalecer para atraer m\u00e1s pacientes quir\u00fargicos a la zona Tacubaya/Escand\u00f3n?",ph:"Servicio o especialidad..."},{id:"p9_2",type:"single",text:"Si Hospital Escand\u00f3n implementara UN cambio importante en los pr\u00f3ximos 6 meses, \u00bfcu\u00e1l le generar\u00eda mayor impacto?",options:["Mejorar habitaciones y hoteler\u00eda","Adquirir equipo quir\u00fargico de \u00faltima generaci\u00f3n","Reducir costos de renta y materiales","Agilizar procesos administrativos","Mejorar el marketing e imagen p\u00fablica"],hasOther:true},{id:"p9_3",type:"single",text:"\u00bfEstar\u00eda dispuesto(a) a participar en una jornada quir\u00fargica mensual con tarifas especiales dirigida a pacientes de escasos recursos?",options:["S\u00ed, con mucho inter\u00e9s","S\u00ed, bajo ciertas condiciones","No me interesa"]}]},{id:"deep",title:"Preguntas de Profundidad",icon:"\u{1F50D}",questions:[{id:"deep_1",type:"open_long",text:"Imag\u00ednese que un paciente suyo necesita una cirug\u00eda programada ma\u00f1ana. Describa, paso a paso, c\u00f3mo decide en qu\u00e9 hospital operarlo. \u00bfQu\u00e9 pesa m\u00e1s en esa decisi\u00f3n?",ph:"Describa su proceso de decisi\u00f3n..."},{id:"deep_2",type:"open_long",text:"Si pudiera dise\u00f1ar el hospital ideal para su pr\u00e1ctica quir\u00fargica (sin limitaciones de presupuesto), \u00bfqu\u00e9 tres cosas tendr\u00eda que Hospital Escand\u00f3n no tiene hoy?",ph:"1.\n2.\n3."},{id:"deep_3",type:"open_long",text:"Piense en la \u00faltima vez que un paciente le dijo que prefer\u00eda operarse en otro lugar. \u00bfQu\u00e9 raz\u00f3n le dio? \u00bfUsted comparti\u00f3 esa opini\u00f3n internamente?",ph:"Describa la situaci\u00f3n..."},{id:"deep_4",type:"open_long",text:"\u00bfHay algo que Hospital Escand\u00f3n hace bien y que las cl\u00ednicas de corta estancia NO pueden replicar? \u00bfQu\u00e9 es?",ph:"Ventajas \u00fanicas del hospital..."},{id:"deep_5",type:"open_long",text:"Sea completamente honesto: si ma\u00f1ana usted necesitara una cirug\u00eda para un familiar cercano, \u00bfla realizar\u00eda en Hospital Escand\u00f3n? \u00bfPor qu\u00e9 s\u00ed o por qu\u00e9 no?",ph:"Su respuesta honesta..."}]}];
-var SUBS={consent:"Consentimiento",profile:"Informaci\u00f3n profesional",surgical:"Volumen y distribuci\u00f3n",perception:"Imagen institucional",or_exp:"Evaluaci\u00f3n operativa",hospitality:"Experiencia del paciente",barriers:"Fricciones administrativas",competition:"Panorama competitivo",incentives:"Modelo econ\u00f3mico",opportunities:"\u00c1reas de mejora",deep:"Insights profundos"};
-var currentSection=0,answers={};
-function esc(s){return s.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>')}
-function buildSections(){var c=document.getElementById('contentArea');c.innerHTML='';SECTIONS.forEach(function(sec,si){var h='<div class="section'+(si===0?' active':'')+'" id="sec_'+si+'">';h+='<div class="chapter-intro"><span class="chapter-tag">Secci\u00f3n '+(si<9?'0':'')+(si+1)+'</span>';var words=sec.title.split(' ');h+='<h1 class="chapter-title">'+words.map(function(w,i){return i===words.length-1?'<i>'+w+'</i>':w}).join(' ')+'</h1>';h+='<p class="chapter-desc">'+(SUBS[sec.id]||'')+'</p>';if(sec.id==='deep')h+='<p class="deep-note">Las siguientes preguntas son las m\u00e1s valiosas. Le pedimos total honestidad; recuerde que es an\u00f3nimo.</p>';h+='</div>';sec.questions.forEach(function(q,qi){h+='<div class="card"><span class="q-num">'+(si+1)+'.'+(qi+1)+'</span><p class="q-text">'+esc(q.text)+'</p>';if(q.type==='single'){h+='<div class="opts">';q.options.forEach(function(opt){h+='<button type="button" class="opt-btn" data-qid="'+q.id+'" data-val="'+esc(opt)+'" onclick="selectSingle(this)"><div class="radio-circle"><div class="radio-dot"></div></div><span>'+esc(opt)+'</span></button>'});if(q.hasOther){h+='<button type="button" class="opt-btn" data-qid="'+q.id+'" data-val="__other__" onclick="selectSingle(this)"><div class="radio-circle"><div class="radio-dot"></div></div><span>Otro</span></button>';h+='<input class="other-input" id="other_'+q.id+'" placeholder="Especifique..." oninput="answers[\''+q.id+'_other\']=this.value">'}h+='</div>'}if(q.type==='multi'){h+='<div class="opts">';if(q.max)h+='<p class="max-note">Seleccione m\u00e1ximo '+q.max+'</p>';q.options.forEach(function(opt){h+='<button type="button" class="opt-btn" data-qid="'+q.id+'" data-val="'+esc(opt)+'" data-max="'+(q.max||0)+'" onclick="toggleMulti(this)"><div class="check-box">\u2713</div><span>'+esc(opt)+'</span></button>'});if(q.hasOther){h+='<button type="button" class="opt-btn" data-qid="'+q.id+'" data-val="__other__" data-max="'+(q.max||0)+'" onclick="toggleMulti(this)"><div class="check-box">\u2713</div><span>Otro</span></button>';h+='<input class="other-input" id="other_'+q.id+'" placeholder="Especifique..." oninput="answers[\''+q.id+'_other\']=this.value">'}h+='</div>'}if(q.type==='likert'){h+='<div class="likert-wrap"><div class="likert-labels"><span class="likert-end">Muy en desacuerdo</span><span class="likert-end">Muy de acuerdo</span></div><div class="likert-btns">';for(var n=1;n<=5;n++)h+='<button type="button" class="l-btn" data-qid="'+q.id+'" data-val="'+n+'" onclick="selectLikert(this)">'+n+'</button>';h+='</div><div class="likert-subs"><span class="likert-sub">Muy en<br>desacuerdo</span><span class="likert-sub">En<br>desacuerdo</span><span class="likert-sub">Neutral</span><span class="likert-sub">De<br>acuerdo</span><span class="likert-sub">Muy de<br>acuerdo</span></div></div>'}if(q.type==='likert5'){h+='<div class="likert-wrap"><div class="likert-labels"><span class="likert-end">Muy deficiente</span><span class="likert-end">Excelente</span></div><div class="likert-btns">';for(var n=1;n<=5;n++)h+='<button type="button" class="l-btn color-'+n+'" data-qid="'+q.id+'" data-val="'+n+'" onclick="selectLikert(this)">'+n+'</button>';h+='</div><div class="likert-subs"><span class="likert-sub">Muy<br>deficiente</span><span class="likert-sub">Deficiente</span><span class="likert-sub">Aceptable</span><span class="likert-sub">Bueno</span><span class="likert-sub">Excelente</span></div></div>'}if(q.type==='scale10'){h+='<div class="likert-wrap"><div class="likert-labels"><span class="likert-end">Nada probable</span><span class="likert-end">Muy probable</span></div><div class="scale10-wrap">';for(var n=1;n<=10;n++){var hue=Math.round(((n-1)/9)*120);h+='<button type="button" class="s10-btn" data-qid="'+q.id+'" data-val="'+n+'" data-hue="'+hue+'" onclick="selectScale10(this)">'+n+'</button>'}h+='</div></div>'}if(q.type==='number')h+='<input type="number" inputmode="numeric" placeholder="'+(q.ph||'')+'" oninput="answers[\''+q.id+'\']=this.value">';if(q.type==='open')h+='<textarea placeholder="'+(q.ph||'')+'" oninput="answers[\''+q.id+'\']=this.value"></textarea>';if(q.type==='open_long')h+='<textarea class="tall" placeholder="'+(q.ph||'')+'" oninput="answers[\''+q.id+'\']=this.value"></textarea>';h+='</div>'});h+='</div>';c.innerHTML+=h});updateUI()}
-function selectSingle(btn){var qid=btn.dataset.qid,val=btn.dataset.val;answers[qid]=val;btn.closest('.opts').querySelectorAll('.opt-btn').forEach(function(b){b.classList.remove('selected')});btn.classList.add('selected');var oi=document.getElementById('other_'+qid);if(oi)oi.classList.toggle('visible',val==='__other__')}
-function toggleMulti(btn){var qid=btn.dataset.qid,val=btn.dataset.val,max=parseInt(btn.dataset.max)||0;if(!answers[qid])answers[qid]=[];var idx=answers[qid].indexOf(val);if(idx>-1){answers[qid].splice(idx,1);btn.classList.remove('selected')}else{if(max&&answers[qid].length>=max)return;answers[qid].push(val);btn.classList.add('selected')}var oi=document.getElementById('other_'+qid);if(oi)oi.classList.toggle('visible',answers[qid].includes('__other__'))}
-function selectLikert(btn){var qid=btn.dataset.qid;answers[qid]=parseInt(btn.dataset.val);btn.closest('.likert-btns').querySelectorAll('.l-btn').forEach(function(b){b.classList.remove('selected')});btn.classList.add('selected')}
-function selectScale10(btn){var qid=btn.dataset.qid,val=parseInt(btn.dataset.val),hue=btn.dataset.hue;answers[qid]=val;btn.closest('.scale10-wrap').querySelectorAll('.s10-btn').forEach(function(b){b.classList.remove('selected');b.style.background='';b.style.borderColor='';b.style.color=''});btn.classList.add('selected');btn.style.background='hsl('+hue+',70%,45%)';btn.style.borderColor='hsl('+hue+',70%,45%)';btn.style.color='#fff'}
-function showSection(idx){currentSection=idx;document.querySelectorAll('.section').forEach(function(s,i){s.classList.toggle('active',i===idx)});window.scrollTo({top:0,behavior:'smooth'});updateUI()}
-function nextSection(){if(currentSection<SECTIONS.length-1)showSection(currentSection+1);else submitSurvey()}
-function prevSection(){if(currentSection>0)showSection(currentSection-1)}
-function updateUI(){var total=SECTIONS.length,pct=Math.round((currentSection+1)/total*100);var pf=document.getElementById('progressFill');if(pf)pf.style.width=pct+'%';var pt=document.getElementById('progressText');if(pt)pt.textContent=(currentSection+1)+'/'+total;var bp=document.getElementById('btnPrev');if(bp)bp.disabled=currentSection===0;var bn=document.getElementById('btnNext');if(bn){if(currentSection===total-1){bn.textContent='Enviar \u2713';bn.className='f-btn f-btn-submit'}else{bn.textContent='Siguiente \u2192';bn.className='f-btn f-btn-primary'}}var sf=document.getElementById('sbProgressFill');if(sf)sf.style.width=pct+'%';var sp=document.getElementById('sbProgressPct');if(sp)sp.textContent=pct+'%';var dp=document.getElementById('dBtnPrev');if(dp)dp.style.visibility=currentSection===0?'hidden':'visible';var dn=document.getElementById('dBtnNext');if(dn){if(currentSection===total-1){dn.textContent='Enviar \u2713';dn.className='btn-pill btn-submit'}else{dn.textContent='Continuar \u2192';dn.className='btn-pill btn-primary'}}var hs=document.getElementById('headerSection');if(hs)hs.textContent='Secci\u00f3n '+(currentSection+1)+' de '+total;buildNav();buildSidebarNav()}
-function buildNav(){var c=document.getElementById('navItems');c.innerHTML='';SECTIONS.forEach(function(s,i){var cls='nav-btn'+(i===currentSection?' active':'');c.innerHTML+='<button class="'+cls+'" onclick="showSection('+i+');toggleNav()"><span class="nav-num" style="font-size:12px;opacity:.6;width:20px">'+(i<9?'0':'')+(i+1)+'</span><span style="flex:1;text-align:left">'+s.title+'</span></button>'})}
-function buildSidebarNav(){var c=document.getElementById('sbNav');if(!c)return;c.innerHTML='';SECTIONS.forEach(function(s,i){var cls=i===currentSection?' class="active"':'';c.innerHTML+='<li'+cls+' onclick="showSection('+i+')"><span class="sn">'+(i<9?'0':'')+(i+1)+'</span><span>'+s.title+'</span></li>'})}
-function toggleNav(){document.getElementById('navOverlay').classList.toggle('open')}
-function setResultStatus(state,message){var el=document.getElementById('resultsPreview');if(!el)return;el.className='results-preview '+state;el.textContent=message}
-function submitSurvey(){document.getElementById('sendingOverlay').classList.add('active');var row={consent:answers.consent||null,p1_1_especialidad:answers.p1_1||null,p1_2_anos_adscrito:answers.p1_2||null,p1_3_otros_hospitales:answers.p1_3||null,p1_4_porcentaje_he:answers.p1_4||null,p1_5_consultorio:answers.p1_5||null,p2_1_cirugias_total:answers.p2_1||null,p2_2_cirugias_he:answers.p2_2||null,p2_3_razones_otros:Array.isArray(answers.p2_3)?answers.p2_3.filter(function(v){return v!=='__other__'}).join('; '):null,p2_3_otro:answers.p2_3_other||null,p2_4_pacientes_otros:answers.p2_4||null,p2_5_razon_principal:answers.p2_5||null,p2_6_horarios:Array.isArray(answers.p2_6)?answers.p2_6.join('; '):null,p3_1_reputacion:answers.p3_1||null,p3_2_calidad_precio:answers.p3_2||null,p3_3_infraestructura:answers.p3_3||null,p3_4_recomienda:answers.p3_4||null,p3_5_satisfaccion_pacientes:answers.p3_5||null,p3_6_vs_corta_estancia:answers.p3_6||null,p3_7_opinion_sincera:answers.p3_7||null,p4_1_disponibilidad_horarios:answers.p4_1||null,p4_2_equipo_quirurgico:answers.p4_2||null,p4_3_equipo_especializado:answers.p4_3||null,p4_4_enfermeria_qx:answers.p4_4||null,p4_5_rotacion:answers.p4_5||null,p4_6_anestesiologia:answers.p4_6||null,p4_7_programacion:answers.p4_7||null,p4_8_insumos:answers.p4_8||null,p4_9_cancelaciones:answers.p4_9||null,p4_10_equipo_necesario:answers.p4_10||null,p5_1_habitaciones:answers.p5_1||null,p5_2_limpieza:answers.p5_2||null,p5_3_enfermeria_piso:answers.p5_3||null,p5_4_alimentos:answers.p5_4||null,p5_5_familiares:answers.p5_5||null,p5_6_admision_alta:answers.p5_6||null,p5_7_imagen_general:answers.p5_7||null,p5_8_insatisfaccion:answers.p5_8||null,p5_9_aspecto_mencionado:Array.isArray(answers.p5_9)?answers.p5_9.filter(function(v){return v!=='__other__'}).join('; '):null,p5_9_otro:answers.p5_9_other||null,p5_10_hoteleria_influye:answers.p5_10||null,p5_11_mejora_experiencia:answers.p5_11||null,p6_1_procesos_agiles:answers.p6_1||null,p6_2_comunicacion:answers.p6_2||null,p6_3_aseguradoras:answers.p6_3||null,p6_4_costos_competitivos:answers.p6_4||null,p6_5_respaldo_direccion:answers.p6_5||null,p6_6_banco_sangre:answers.p6_6||null,p6_7_barrera_frustrante:answers.p6_7||null,p6_8_cambio_proceso:answers.p6_8||null,p7_1_otras_instituciones:Array.isArray(answers.p7_1)?answers.p7_1.join('; '):null,p7_2_ventaja_otra:answers.p7_2||null,p7_3_probabilidad_aumentar:answers.p7_3||null,p7_4_que_necesita:answers.p7_4||null,p8_1_importancia_costo:answers.p8_1||null,p8_2_incentivos_atractivos:Array.isArray(answers.p8_2)?answers.p8_2.filter(function(v){return v!=='__other__'}).join('; '):null,p8_2_otro:answers.p8_2_other||null,p8_3_conoce_paquetes:answers.p8_3||null,p8_4_por_que_no_usa:answers.p8_4||null,p9_1_especialidad_fortalecer:answers.p9_1||null,p9_2_cambio_impacto:answers.p9_2==='__other__'?(answers.p9_2_other||'Otro'):(answers.p9_2||null),p9_2_otro:answers.p9_2_other||null,p9_3_jornada_social:answers.p9_3||null,deep_1_decision:answers.deep_1||null,deep_2_hospital_ideal:answers.deep_2||null,deep_3_paciente_otro:answers.deep_3||null,deep_4_ventaja_he:answers.deep_4||null,deep_5_familiar:answers.deep_5||null,user_agent:navigator.userAgent||null};document.getElementById('contentArea').style.display='none';document.getElementById('footerNav').style.display='none';var df=document.getElementById('desktopFooter');if(df)df.style.display='none';var mh=document.querySelector('.mobile-header');if(mh)mh.style.display='none';var sb=document.getElementById('sidebarDesktop');if(sb)sb.style.display='none';var st=document.querySelector('.sticky-top');if(st)st.style.display='none';var bb=document.querySelector('.brand-banner');if(bb)bb.style.display='none';var app=document.querySelector('.app');if(app)app.classList.add('is-complete');document.getElementById('thankYou').classList.add('active');setResultStatus('pending','Guardando respuestas...');var count=Object.keys(answers).filter(function(k){var v=answers[k];if(v===undefined||v===null||v==='')return false;if(Array.isArray(v)&&v.length===0)return false;return true}).length;document.getElementById('answerCount').textContent=count;supabase.from('respuestas_encuesta').insert([row]).then(function(res){document.getElementById('sendingOverlay').classList.remove('active');if(res.error){console.error('Supabase:',res.error);setResultStatus('error','Error al guardar: '+res.error.message)}else{setResultStatus('success','Guardado exitosamente')}});setTimeout(function(){document.getElementById('sendingOverlay').classList.remove('active')},5000)}
-var supabase=window.supabase.createClient('https://gggwswbgwihlokrnvktl.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjMwMjksImV4cCI6MjA4OTg5OTAyOX0.hyjmonvNM3b9aK4tM8hJGQv7ZF1-1absbczxUwiTCUg');
-buildSections();
+const SUPA_URL = 'https://gggwswbgwihlokrnvktl.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjMwMjksImV4cCI6MjA4OTg5OTAyOX0.hyjmonvNM3b9aK4tM8hJGQv7ZF1-1absbczxUwiTCUg';
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+async function loadKPIs() {
+  try {
+    const [rc, rp] = await Promise.all([
+      sb.from('entrevistas_cirujanos').select('id', { count: 'exact', head: true }),
+      sb.from('entrevistas_pacientes').select('id', { count: 'exact', head: true })
+    ]);
+    const nc = rc.count ?? 0;
+    const np = rp.count ?? 0;
+    document.getElementById('kpiCirujanos').textContent = nc;
+    document.getElementById('kpiPacientes').textContent = np;
+    document.getElementById('kpiTotal').textContent = nc + np;
+  } catch(e) {
+    console.warn('KPI error', e);
+    ['kpiCirujanos','kpiPacientes','kpiTotal'].forEach(id => {
+      document.getElementById(id).textContent = '?';
+    });
+  }
+}
+loadKPIs();
+
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+  document.getElementById('themeBtn').textContent = dark ? '☾' : '☀';
+  localStorage.setItem('he-theme', dark ? 'dark' : 'light');
+}
+function toggleTheme() {
+  applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark');
+}
+(function() {
+  const saved = localStorage.getItem('he-theme');
+  if (saved) { applyTheme(saved === 'dark'); }
+  else { applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches); }
+})();
 </script>
 </body>
 </html>

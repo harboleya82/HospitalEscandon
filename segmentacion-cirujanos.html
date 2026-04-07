@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Escandón — Perfiles de Cirujanos 2025 (v2)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: only light;
+  --bg-main: #F7F5F0;
+  --bg-card: #FFFFFF;
+  --bg-surface: #EDEAE3;
+  --text-primary: #1A1A18;
+  --text-secondary: #6B6960;
+  --text-muted: #9C978C;
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.18);
+  --accent-alto: #0F6E56;
+  --accent-alto-bg: #E1F5EE;
+  --accent-medio: #185FA5;
+  --accent-medio-bg: #E6F1FB;
+  --accent-bajo: #854F0B;
+  --accent-bajo-bg: #FAEEDA;
+  --accent-coral: #D85A30;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+}
+[data-theme="dark"] {
+  color-scheme: only dark;
+  --bg-main: #141412;
+  --bg-card: #1E1E1B;
+  --bg-surface: #252521;
+  --text-primary: #E8E5DD;
+  --text-secondary: #9C978C;
+  --text-muted: #6B6960;
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(255,255,255,0.15);
+  --accent-alto: #5DCAA5;
+  --accent-alto-bg: #0D2E24;
+  --accent-medio: #85B7EB;
+  --accent-medio-bg: #0D1F33;
+  --accent-bajo: #FAC775;
+  --accent-bajo-bg: #2A1E08;
+  --accent-coral: #F0997B;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body); background: var(--bg-main); color: var(--text-primary); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.page { max-width: 1400px; margin: 0 auto; padding: 2rem 2rem 4rem; }
+
+.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+.header-left h1 { font-family: var(--font-display); font-size: 32px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 6px; }
+.header-left p { font-size: 14px; color: var(--text-secondary); max-width: 560px; }
+.header-right { display: flex; gap: 8px; align-items: center; }
+.theme-toggle { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; color: var(--text-primary); }
+.theme-toggle:hover { border-color: var(--border-hover); box-shadow: var(--shadow-sm); }
+.export-btn { padding: 8px 18px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-card); font-family: var(--font-body); font-size: 13px; color: var(--text-primary); cursor: pointer; transition: all 0.2s; font-weight: 500; }
+.export-btn:hover { border-color: var(--border-hover); box-shadow: var(--shadow-sm); }
+
+.criteria-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 1.25rem 1.5rem; margin-bottom: 2rem; }
+.criteria-box h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.criteria-box p { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 0; }
+.criteria-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.criteria-tag { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: var(--radius-sm); }
+.tag-alto { background: var(--accent-alto-bg); color: var(--accent-alto); }
+.tag-medio { background: var(--accent-medio-bg); color: var(--accent-medio); }
+.tag-bajo { background: var(--accent-bajo-bg); color: var(--accent-bajo); }
+
+.metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 2rem; }
+.metric-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; transition: all 0.25s; }
+.metric-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.metric-card .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.metric-card .value { font-size: 28px; font-weight: 700; font-family: var(--font-display); line-height: 1; }
+.metric-card .sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+.filters-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 2rem; align-items: center; }
+.search-input { flex: 1; min-width: 220px; padding: 10px 16px 10px 40px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); font-family: var(--font-body); font-size: 14px; color: var(--text-primary); transition: all 0.2s; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239C978C' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85zm-5.242.156a5 5 0 110-10 5 5 0 010 10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 14px center; }
+.search-input:focus { outline: none; border-color: var(--accent-alto); box-shadow: 0 0 0 3px rgba(15,110,86,0.1); }
+.filter-select { padding: 10px 32px 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); font-family: var(--font-body); font-size: 13px; color: var(--text-primary); cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239C978C' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; transition: all 0.2s; }
+.filter-select:focus { outline: none; border-color: var(--accent-medio); }
+
+.chart-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm); }
+.chart-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+.chart-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 1rem; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 1rem; font-size: 12px; color: var(--text-secondary); }
+.chart-legend span { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+.section { margin-bottom: 2rem; }
+.section-head { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-surface); border-radius: var(--radius-lg); margin-bottom: 12px; cursor: pointer; user-select: none; transition: all 0.2s; }
+.section-head:hover { box-shadow: var(--shadow-sm); }
+.section-arrow { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-muted); transition: transform 0.3s; }
+.section.collapsed .section-arrow { transform: rotate(-90deg); }
+.section-head h2 { font-size: 16px; font-weight: 600; flex: 1; }
+.section-badge { font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: var(--radius-sm); }
+.section-stat { font-size: 12px; color: var(--text-secondary); }
+.badge-alto { background: var(--accent-alto-bg); color: var(--accent-alto); }
+.badge-medio { background: var(--accent-medio-bg); color: var(--accent-medio); }
+.badge-bajo { background: var(--accent-bajo-bg); color: var(--accent-bajo); }
+.section.collapsed .cards-grid { display: none; }
+
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); position: relative; overflow: hidden; }
+.card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 4px 0 0 4px; }
+.card.perf-alto::before { background: var(--accent-alto); }
+.card.perf-medio::before { background: var(--accent-medio); }
+.card.perf-bajo::before { background: var(--accent-bajo); }
+.card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--border-hover); }
+
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.doc-name { font-size: 14px; font-weight: 600; line-height: 1.3; }
+.doc-esp { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.rank-badge { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-surface); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--text-muted); flex-shrink: 0; }
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.stat-value { font-size: 16px; font-weight: 700; line-height: 1.3; }
+
+.bars-wrap { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar-name { font-size: 11px; color: var(--text-muted); width: 62px; text-align: right; flex-shrink: 0; }
+.bar-track { flex: 1; height: 7px; background: var(--bg-surface); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.fill-cir { background: linear-gradient(90deg, #185FA5, #85B7EB); }
+.fill-cons { background: linear-gradient(90deg, #1D9E75, #5DCAA5); }
+.fill-fact { background: linear-gradient(90deg, #D85A30, #F0997B); }
+.bar-val { font-size: 11px; color: var(--text-secondary); min-width: 52px; font-weight: 500; }
+
+.no-results { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 14px; }
+.footer { text-align: center; padding-top: 2rem; border-top: 1px solid var(--border); margin-top: 2rem; font-size: 12px; color: var(--text-muted); }
+.back-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .8rem; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-family: var(--font-body); font-size: 13px; font-weight: 500; text-decoration: none; transition: all .2s; }
+.back-btn:hover { border-color: var(--border-hover); box-shadow: var(--shadow-sm); }
+
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.card { animation: fadeInUp 0.4s ease-out both; }
+.cards-grid .card:nth-child(1) { animation-delay: 0s; }
+.cards-grid .card:nth-child(2) { animation-delay: 0.04s; }
+.cards-grid .card:nth-child(3) { animation-delay: 0.08s; }
+.cards-grid .card:nth-child(4) { animation-delay: 0.12s; }
+.cards-grid .card:nth-child(5) { animation-delay: 0.16s; }
+.cards-grid .card:nth-child(6) { animation-delay: 0.2s; }
+
+@media (max-width: 768px) {
+  .page { padding: 1rem; }
+  .header { flex-direction: column; gap: 1rem; }
+  .header-left h1 { font-size: 24px; }
+  .header-left p { font-size: 13px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .metrics-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .metric-card { padding: 1rem; }
+  .metric-card .value { font-size: 24px; }
+  .chart-section { padding: 1rem; }
+  .chart-section canvas { max-height: 300px; }
+  .chart-section > div[style*="height:400px"] { height: 280px !important; }
+  .chart-section > div[style*="height:680px"] { height: 320px !important; }
+  .filters-bar { gap: 8px; }
+  .search-input { min-width: 100%; }
+  .filter-select { flex: 1; min-width: 0; }
+  .section-head { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
+  .section-head h2 { font-size: 14px; }
+  .section-stat { font-size: 11px; width: 100%; order: 3; }
+  .criteria-box { padding: 1rem; }
+  .criteria-tags { gap: 6px; }
+  .criteria-tag { font-size: 11px; padding: 4px 10px; }
+  .card { padding: 1rem; }
+  .doc-name { font-size: 13px; }
+  .stat-value { font-size: 14px; }
+  .stats-grid { gap: 6px; }
+  .bar-name { width: 50px; font-size: 10px; }
+  .footer { font-size: 11px; }
+}
+@media (max-width: 480px) {
+  .page { padding: .75rem; }
+  .header-left h1 { font-size: 20px; }
+  .header-left p { font-size: 12px; }
+  .metrics-row { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .metric-card { padding: .75rem; }
+  .metric-card .label { font-size: 10px; letter-spacing: 0.3px; }
+  .metric-card .value { font-size: 20px; }
+  .metric-card .sub { font-size: 11px; }
+  .filter-select { font-size: 12px; padding: 8px 28px 8px 10px; }
+  .search-input { padding: 8px 12px 8px 36px; font-size: 13px; }
+  .section-head { padding: 8px 10px; }
+  .section-head h2 { font-size: 13px; }
+  .section-badge { font-size: 11px; padding: 3px 8px; }
+  .card { padding: .8rem; border-radius: 12px; }
+  .cards-grid { gap: 8px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 4px; }
+  .stat-label { font-size: 10px; }
+  .stat-value { font-size: 13px; }
+  .bar-row { gap: 4px; }
+  .bar-name { width: 44px; font-size: 9px; }
+  .bar-val { font-size: 10px; min-width: 44px; }
+  .chart-section canvas { max-height: 250px; }
+  .chart-section > div[style*="height:400px"] { height: 240px !important; }
+  .chart-section > div[style*="height:680px"] { height: 260px !important; }
+  .chart-title { font-size: 14px; }
+  .chart-subtitle { font-size: 11px; }
+  .chart-legend { gap: 10px; font-size: 11px; }
+  .criteria-box { padding: .8rem; }
+  .criteria-box p { font-size: 12px; }
+  .criteria-tags { flex-direction: column; gap: 4px; }
+}
+@media print {
+  body { background: white; }
+  .filters-bar, .theme-toggle, .export-btn, .chart-section { display: none; }
+  .card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+  .section.collapsed .cards-grid { display: grid !important; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>Perfiles de Cirujanos 2025</h1>
+      <p>Hospital Escandon -- Clasificacion de 55 cirujanos por volumen quirurgico. Criterio dominante: cirugias realizadas. Consultas y facturacion como contexto complementario.</p>
+    </div>
+    <div class="header-right">
+      <a href="index.html" class="back-btn">← Panel de Control</a>
+      <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" title="Cambiar tema">☀</button>
+      <button class="export-btn" onclick="window.print()">Imprimir / PDF</button>
+    </div>
+  </div>
+
+  <div class="criteria-box">
+    <h3>Criterio de clasificación</h3>
+    <p>Eje único basado en cirugías realizadas en 2025. Los cortes se definieron por rupturas naturales en la distribución de datos. Las consultas y la facturación hospitalaria se muestran como métricas de contexto pero no alteran el perfil.</p>
+    <div class="criteria-tags">
+      <span class="criteria-tag tag-alto">Alto: 29+ cirugías/año</span>
+      <span class="criteria-tag tag-medio">Medio: 6–28 cirugías/año</span>
+      <span class="criteria-tag tag-bajo">Bajo: 0–5 cirugías/año</span>
+    </div>
+  </div>
+
+  <div class="metrics-row" id="metricsRow"></div>
+
+  <div class="filters-bar">
+    <input type="text" class="search-input" id="search" placeholder="Buscar cirujano por nombre...">
+    <select class="filter-select" id="filterPerf">
+      <option value="all">Todos los perfiles</option>
+      <option value="Alto">Alto rendimiento</option>
+      <option value="Medio">Rendimiento medio</option>
+      <option value="Bajo">Bajo rendimiento</option>
+    </select>
+    <select class="filter-select" id="filterEsp"></select>
+    <select class="filter-select" id="sortBy">
+      <option value="cirugias">Ordenar: cirugías</option>
+      <option value="consultas">Ordenar: consultas</option>
+      <option value="facturacion">Ordenar: facturación</option>
+      <option value="total">Ordenar: actividad total</option>
+    </select>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Mapa quirúrgico: cirugías vs. consultas</div>
+    <div class="chart-subtitle">Cada burbuja representa un cirujano. El tamaño indica facturación hospitalaria. El perfil se define solo por el eje Y (cirugías).</div>
+    <div style="position:relative;width:100%;height:400px;">
+      <canvas id="bubbleChart"></canvas>
+    </div>
+    <div class="chart-legend">
+      <span><span class="legend-dot" style="background:#1D9E75"></span> Alto (29+ cx)</span>
+      <span><span class="legend-dot" style="background:#378ADD"></span> Medio (6–28 cx)</span>
+      <span><span class="legend-dot" style="background:#D85A30"></span> Bajo (1–5 cx)</span>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-title">Top 20 cirujanos: cirugías vs. consultas</div>
+    <div class="chart-subtitle">Comparativa de volumen quirúrgico (azul, criterio de perfil) contra consultas ambulatorias (verde, contexto). Nótese cómo algunos médicos tienen alta consulta pero pocas cirugías y viceversa.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:18px;margin-bottom:12px;font-size:12px;color:var(--text-secondary)">
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#185FA5;flex-shrink:0"></span> Cirugías (define el perfil)</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#1D9E75;flex-shrink:0"></span> Consultas (contexto)</span>
+    </div>
+    <div style="position:relative;width:100%;height:680px;">
+      <canvas id="barChart"></canvas>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="footer">
+    Hospital Escandon -- Consultoria Estrategica 2026 -- 55 cirujanos perfilados -- Datos: Estadísticas enero-diciembre 2025 -- Cuentas hospitalarias al 28/Feb/2026<br>
+    Criterio v2: clasificación por volumen quirúrgico con cortes naturales (29+ / 6-28 / 0-5). Fuentes: Listado Cirujanos 2026, Ctas Hosp Médicos v2, Comparativo Estadísticas Anuales HE.
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+
+let DATA = [];
+
+// Cargar datos desde JSON
+fetch('./data/cirujanos-2025.json')
+  .then(res => res.json())
+  .then(data => {
+    DATA = data;
+    DATA.forEach(d => { d.tot = d.co + d.ci; });
+
+    const maxCi = Math.max(...DATA.map(d => d.ci));
+    const maxCo = Math.max(...DATA.map(d => d.co));
+    const maxF = Math.max(...DATA.map(d => d.f));
+
+    const esps = ['all', ...new Set(DATA.map(d => d.e))].sort((a, b) => a === 'all' ? -1 : a.localeCompare(b));
+    const espSel = document.getElementById('filterEsp');
+    esps.forEach(e => { const o = document.createElement('option'); o.value = e; o.textContent = e === 'all' ? 'Todas las especialidades' : e; espSel.appendChild(o); });
+
+    function fmt(n) { return n.toLocaleString('es-MX'); }
+    function fmtM(n) { if (n >= 1e6) return '$' + (Math.round(n / 1e5) / 10) + 'M'; if (n >= 1e3) return '$' + fmt(Math.round(n / 1e3)) + 'K'; return '$' + fmt(Math.round(n)); }
+
+    function getFiltered() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const pf = document.getElementById('filterPerf').value;
+      const ef = document.getElementById('filterEsp').value;
+      const sb = document.getElementById('sortBy').value;
+      let filtered = DATA.filter(d => {
+        if (q && !d.n.toLowerCase().includes(q)) return false;
+        if (pf !== 'all' && d.p !== pf) return false;
+        if (ef !== 'all' && d.e !== ef) return false;
+        return true;
+      });
+      filtered.sort((a, b) => {
+        if (sb === 'cirugias') return b.ci - a.ci;
+        if (sb === 'consultas') return b.co - a.co;
+        if (sb === 'facturacion') return b.f - a.f;
+        return b.tot - a.tot;
+      });
+      return filtered;
+    }
+
+    function renderMetrics(filtered) {
+      const altos = filtered.filter(d => d.p === 'Alto');
+      const medios = filtered.filter(d => d.p === 'Medio');
+      const bajos = filtered.filter(d => d.p === 'Bajo');
+      const totalCir = filtered.reduce((s, d) => s + d.ci, 0);
+      const totalCons = filtered.reduce((s, d) => s + d.co, 0);
+      const totalFact = filtered.reduce((s, d) => s + d.f, 0);
+      const cirAlto = altos.reduce((s, d) => s + d.ci, 0);
+      const cirMedio = medios.reduce((s, d) => s + d.ci, 0);
+      const cirBajo = bajos.reduce((s, d) => s + d.ci, 0);
+
+      document.getElementById('metricsRow').innerHTML = `
+        <div class="metric-card"><div class="label">Alto rendimiento</div><div class="value" style="color:var(--accent-alto)">${altos.length}</div><div class="sub">${fmt(cirAlto)} cirugías (${totalCir ? Math.round(cirAlto/totalCir*100) : 0}%)</div></div>
+        <div class="metric-card"><div class="label">Rend. medio</div><div class="value" style="color:var(--accent-medio)">${medios.length}</div><div class="sub">${fmt(cirMedio)} cirugías (${totalCir ? Math.round(cirMedio/totalCir*100) : 0}%)</div></div>
+        <div class="metric-card"><div class="label">Bajo rend.</div><div class="value" style="color:var(--accent-bajo)">${bajos.length}</div><div class="sub">${fmt(cirBajo)} cirugías (${totalCir ? Math.round(cirBajo/totalCir*100) : 0}%)</div></div>
+        <div class="metric-card"><div class="label">Total cirugías</div><div class="value">${fmt(totalCir)}</div><div class="sub">criterio principal</div></div>
+        <div class="metric-card"><div class="label">Total consultas</div><div class="value">${fmt(totalCons)}</div><div class="sub">contexto</div></div>
+        <div class="metric-card"><div class="label">Facturación</div><div class="value">${fmtM(totalFact)}</div><div class="sub">ctas. hospitalarias</div></div>
+      `;
+    }
+
+    function renderSections(filtered) {
+      const altos = filtered.filter(d => d.p === 'Alto');
+      const medios = filtered.filter(d => d.p === 'Medio');
+      const bajos = filtered.filter(d => d.p === 'Bajo');
+      const totalCir = filtered.reduce((s, d) => s + d.ci, 0);
+
+      function makeCard(d, i, perfClass) {
+        const ciPct = maxCi ? Math.round(d.ci / maxCi * 100) : 0;
+        const coPct = maxCo ? Math.round(d.co / maxCo * 100) : 0;
+        const fPct = maxF ? Math.round(d.f / maxF * 100) : 0;
+        return `<div class="card perf-${perfClass}">
+          <div class="card-header">
+            <div><div class="doc-name">Dr. ${d.n}</div><div class="doc-esp">${d.e}</div></div>
+            <div class="rank-badge">${i + 1}</div>
+          </div>
+          <div class="stats-grid">
+            <div><div class="stat-label">Cirugías</div><div class="stat-value">${fmt(d.ci)}</div></div>
+            <div><div class="stat-label">Consultas</div><div class="stat-value">${fmt(d.co)}</div></div>
+            <div><div class="stat-label">Facturación</div><div class="stat-value">${fmtM(d.f)}</div></div>
+            <div><div class="stat-label">Actividad total</div><div class="stat-value">${fmt(d.tot)}</div></div>
+          </div>
+          <div class="bars-wrap">
+            <div class="bar-row"><div class="bar-name">Cirugías</div><div class="bar-track"><div class="bar-fill fill-cir" style="width:${Math.max(ciPct, 2)}%"></div></div><div class="bar-val">${fmt(d.ci)}</div></div>
+            <div class="bar-row"><div class="bar-name">Consultas</div><div class="bar-track"><div class="bar-fill fill-cons" style="width:${Math.max(coPct, 1)}%"></div></div><div class="bar-val">${fmt(d.co)}</div></div>
+            <div class="bar-row"><div class="bar-name">Facturac.</div><div class="bar-track"><div class="bar-fill fill-fact" style="width:${Math.max(fPct, 1)}%"></div></div><div class="bar-val">${fmtM(d.f)}</div></div>
+          </div>
+        </div>`;
+      }
+
+      function makeSection(title, items, perf, badgeClass, desc) {
+        if (!items.length) return '';
+        const secCir = items.reduce((s, d) => s + d.ci, 0);
+        return `<div class="section collapsed" id="sec-${perf}">
+          <div class="section-head" onclick="this.parentElement.classList.toggle('collapsed')">
+            <div class="section-arrow">▼</div>
+            <h2>${title}</h2>
+            <span class="section-stat">${desc} · ${fmt(secCir)} cirugías (${totalCir ? Math.round(secCir/totalCir*100) : 0}%)</span>
+            <span class="section-badge ${badgeClass}">${items.length} cirujanos</span>
+          </div>
+          <div class="cards-grid">${items.map((d, i) => makeCard(d, i, perf)).join('')}</div>
+        </div>`;
+      }
+
+      document.getElementById('sections').innerHTML =
+        makeSection('Alto rendimiento', altos, 'alto', 'badge-alto', '29+ cirugías/año') +
+        makeSection('Rendimiento medio', medios, 'medio', 'badge-medio', '6–28 cirugías/año') +
+        makeSection('Bajo rendimiento', bajos, 'bajo', 'badge-bajo', '0–5 cirugías/año') +
+        (filtered.length === 0 ? '<div class="no-results">No se encontraron cirujanos con estos filtros.</div>' : '');
+    }
+
+    function renderAll() {
+      const filtered = getFiltered();
+      renderMetrics(filtered);
+      renderSections(filtered);
+    }
+
+    ['search', 'filterPerf', 'filterEsp', 'sortBy'].forEach(id => {
+      document.getElementById(id).addEventListener(id === 'search' ? 'input' : 'change', renderAll);
+    });
+    renderAll();
+
+    function applyThemeColors(isDark) {
+      document.body.style.background = isDark ? '#141412' : '#F7F5F0';
+      document.body.style.color = isDark ? '#E8E5DD' : '#1A1A18';
+      document.documentElement.style.colorScheme = isDark ? 'only dark' : 'only light';
+    }
+    function setTheme(dark) {
+      document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+      applyThemeColors(dark);
+      const btn = document.getElementById('themeBtn') || document.querySelector('.theme-toggle');
+      if (btn) btn.textContent = dark ? '☾' : '☀';
+      localStorage.setItem('he-theme', dark ? 'dark' : 'light');
+    }
+    window.toggleTheme = function() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      setTheme(!isDark);
+      renderCharts();
+    };
+    const savedTheme = localStorage.getItem('he-theme');
+    if (savedTheme) { setTheme(savedTheme === 'dark'); }
+    else if (window.matchMedia('(prefers-color-scheme: dark)').matches) { setTheme(true); }
+
+    let bubbleChartInstance, barChartInstance;
+    function renderCharts() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      const textColor = isDark ? '#9C978C' : '#6B6960';
+      const colAlto = isDark ? 'rgba(93,202,165,0.75)' : 'rgba(29,158,117,0.75)';
+      const colMedio = isDark ? 'rgba(133,183,235,0.75)' : 'rgba(55,138,221,0.75)';
+      const colBajo = isDark ? 'rgba(240,153,123,0.75)' : 'rgba(216,90,48,0.75)';
+      const lineAlto = isDark ? 'rgba(93,202,165,0.25)' : 'rgba(29,158,117,0.15)';
+
+      if (bubbleChartInstance) bubbleChartInstance.destroy();
+      if (barChartInstance) barChartInstance.destroy();
+
+      const scatterData = DATA.map(d => ({
+        x: d.co, y: d.ci,
+        r: Math.max(Math.sqrt(d.f / 40000), 3),
+        label: d.n, perf: d.p, esp: d.e
+      }));
+
+      bubbleChartInstance = new Chart(document.getElementById('bubbleChart'), {
+        type: 'bubble',
+        data: {
+          datasets: [
+            { label: 'Alto', data: scatterData.filter(d => d.perf === 'Alto'), backgroundColor: colAlto, borderColor: 'transparent' },
+            { label: 'Medio', data: scatterData.filter(d => d.perf === 'Medio'), backgroundColor: colMedio, borderColor: 'transparent' },
+            { label: 'Bajo', data: scatterData.filter(d => d.perf === 'Bajo'), backgroundColor: colBajo, borderColor: 'transparent' }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          layout: { padding: 20 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: isDark ? '#2C2C2A' : '#FFF',
+              titleColor: isDark ? '#E8E5DD' : '#1A1A18',
+              bodyColor: isDark ? '#9C978C' : '#6B6960',
+              borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+              borderWidth: 1, cornerRadius: 8, padding: 12,
+              titleFont: { family: 'DM Sans', weight: '600', size: 13 },
+              bodyFont: { family: 'DM Sans', size: 12 },
+              callbacks: {
+                title: ctx => ctx[0].raw.label,
+                label: ctx => { const d = ctx.raw; return [d.esp, 'Cirugías: ' + d.y, 'Consultas: ' + d.x.toLocaleString('es-MX')]; }
+              }
+            },
+            annotation: undefined
+          },
+          scales: {
+            x: { title: { display: true, text: 'Consultas 2025 (contexto)', color: textColor, font: { family: 'DM Sans', size: 12 } }, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } } },
+            y: { title: { display: true, text: 'CIRUGÍAS 2025 (criterio de perfil)', color: textColor, font: { family: 'DM Sans', size: 12, weight: 'bold' } }, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } }, min: -5 }
+          }
+        }
+      });
+
+      const top20 = [...DATA].sort((a, b) => b.ci - a.ci).slice(0, 20);
+      const barLabels = top20.map(d => d.n.length > 28 ? d.n.slice(0, 26) + '…' : d.n);
+
+      const cirColor = isDark ? '#85B7EB' : '#185FA5';
+      const consColor = isDark ? '#5DCAA5' : '#1D9E75';
+
+      barChartInstance = new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+          labels: barLabels,
+          datasets: [
+            {
+              label: 'Cirugías',
+              data: top20.map(d => d.ci),
+              backgroundColor: cirColor,
+              borderRadius: 3,
+              barPercentage: 0.8,
+              categoryPercentage: 0.7
+            },
+            {
+              label: 'Consultas',
+              data: top20.map(d => d.co),
+              backgroundColor: consColor,
+              borderRadius: 3,
+              barPercentage: 0.8,
+              categoryPercentage: 0.7
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: isDark ? '#2C2C2A' : '#FFF',
+              titleColor: isDark ? '#E8E5DD' : '#1A1A18',
+              bodyColor: isDark ? '#9C978C' : '#6B6960',
+              borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+              borderWidth: 1, cornerRadius: 8, padding: 12,
+              titleFont: { family: 'DM Sans', weight: '600' },
+              bodyFont: { family: 'DM Sans' },
+              callbacks: {
+                title: ctx => top20[ctx[0].dataIndex].n,
+                afterTitle: ctx => top20[ctx[0].dataIndex].e,
+                label: ctx => {
+                  const d = top20[ctx.dataIndex];
+                  if (ctx.datasetIndex === 0) return 'Cirugías: ' + d.ci;
+                  return 'Consultas: ' + d.co.toLocaleString('es-MX');
+                },
+                afterBody: ctx => { const d = top20[ctx[0].dataIndex]; return ['Facturación: ' + fmtM(d.f), 'Perfil: ' + d.p]; }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 11 } }, title: { display: true, text: 'Volumen', color: textColor, font: { family: 'DM Sans', size: 12 } } },
+            y: { grid: { display: false }, ticks: { color: textColor, font: { family: 'DM Sans', size: 11 } } }
+          }
+        }
+      });
+    }
+    renderCharts();
+  })
+  .catch(err => {
+    console.error('Error cargando datos:', err);
+    // Mostrar error en la página
+    document.querySelector('.page').innerHTML = '<p style="text-align:center; padding:2rem; color:red;">Error cargando datos. Intenta recargar la página.</p>';
+  });
+</script>
+</body>
+</html>
