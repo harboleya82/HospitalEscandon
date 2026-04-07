@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrevista a Cirujanos — Hospital Escandón</title>
+<link rel="icon" href="https://hospitalescandon.org/img/core-img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#127850;--green-dark:#0B2D24;--green-mid:#154135;--gold:#AA8A4A;
+  --bg:#F7F6F3;--card:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;
+  --radius:16px;--shadow:0 2px 12px rgba(0,0,0,.06);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));color:#fff;padding:2rem 1.5rem 1.8rem;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-40%;right:-20%;width:300px;height:300px;background:radial-gradient(circle,rgba(170,138,74,.15),transparent 70%);border-radius:50%}
+.hero img{height:56px;margin-bottom:.8rem;filter:brightness(10)}
+.hero h1{font-family:'Playfair Display',serif;font-style:italic;font-size:1.6rem;font-weight:700;margin-bottom:.3rem}
+.hero p{font-size:.85rem;opacity:.8;max-width:500px;margin:0 auto}
+.hero .badge{display:inline-block;background:var(--gold);color:#fff;font-size:.7rem;font-weight:600;padding:.25rem .8rem;border-radius:20px;margin-top:.8rem;letter-spacing:.5px;text-transform:uppercase}
+
+/* PROGRESS */
+.progress-bar{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);padding:.6rem 1.5rem;display:flex;align-items:center;gap:.8rem;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.progress-bar .track{flex:1;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:3px;transition:width .4s ease}
+.progress-bar .label{font-size:.75rem;font-weight:600;color:var(--green);white-space:nowrap;min-width:80px;text-align:right}
+
+/* CONTAINER */
+.container{max-width:720px;margin:0 auto;padding:1.5rem}
+
+/* INTERVIEWER NOTE */
+.interviewer-note{background:linear-gradient(135deg,#fef9c3,#fef3c7);border:1px solid #f59e0b;border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:.82rem;color:#92400e}
+.interviewer-note strong{color:#78350f}
+
+/* SECTION */
+.section{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1.2rem;overflow:hidden;border:1px solid var(--border);transition:border-color .3s}
+.section.active{border-color:var(--green)}
+.section-header{padding:1.2rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:1rem;user-select:none;transition:background .2s}
+.section-header:hover{background:#f9fafb}
+.section-num{width:36px;height:36px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0}
+.section.completed .section-num{background:var(--gold)}
+.section.just-completed{animation:completePulse .5s ease}
+@keyframes completePulse{0%{border-color:var(--green);box-shadow:0 0 0 0 rgba(18,120,80,.3)}50%{box-shadow:0 0 0 8px rgba(18,120,80,0)}100%{border-color:var(--border);box-shadow:none}}
+.section-title{flex:1;font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;font-weight:700;color:var(--green-dark)}
+.section-arrow{width:24px;height:24px;transition:transform .3s;color:var(--muted)}
+.section.open .section-arrow{transform:rotate(180deg)}
+.section-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.section.open .section-body{max-height:5000px}
+.section-content{padding:0 1.5rem 1.5rem}
+
+/* QUESTIONS */
+.question{margin-bottom:1.5rem}
+.question:last-child{margin-bottom:0}
+.q-label{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:.5rem;display:flex;gap:.4rem;align-items:flex-start}
+.q-label .q-num{color:var(--gold);font-weight:700;flex-shrink:0}
+.q-hint{font-size:.78rem;color:var(--muted);margin-bottom:.5rem;font-style:italic}
+textarea{width:100%;min-height:100px;border:1.5px solid var(--border);border-radius:12px;padding:.8rem 1rem;font-family:'Inter',sans-serif;font-size:.88rem;resize:vertical;transition:border-color .2s,box-shadow .2s;background:#fafafa}
+textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(18,120,80,.1);background:#fff}
+textarea::placeholder{color:#c4c4c4}
+
+/* SUB-ITEMS (for probing questions) */
+.sub-items{background:#f0fdf4;border-radius:10px;padding:.8rem 1rem;margin-top:.5rem;font-size:.82rem;color:#166534}
+.sub-items strong{display:block;margin-bottom:.3rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--green)}
+.sub-items ul{padding-left:1.2rem;margin:0}
+.sub-items li{margin-bottom:.2rem}
+
+/* NAVIGATION */
+.nav-buttons{display:flex;gap:1rem;margin-top:1.5rem}
+.btn{flex:1;padding:.9rem;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-prev{background:#f3f4f6;color:var(--text)}
+.btn-prev:hover{background:#e5e7eb}
+.btn-next{background:var(--green);color:#fff}
+.btn-next:hover{background:#0e6040}
+.btn-submit{background:var(--gold);color:#fff}
+.btn-submit:hover{background:#917538}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* METADATA FORM */
+.meta-form{display:grid;gap:1rem;margin-bottom:1rem}
+.meta-field label{display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem;color:var(--text)}
+.meta-field input,.meta-field select{width:100%;padding:.7rem .9rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.88rem;transition:border-color .2s}
+.meta-field input:focus,.meta-field select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(18,120,80,.1)}
+
+/* SUCCESS */
+.success-screen{text-align:center;padding:3rem 1.5rem}
+.success-screen .checkmark{width:80px;height:80px;background:var(--green);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1.5rem}
+.success-screen .checkmark svg{width:40px;height:40px;stroke:#fff;stroke-width:3;fill:none}
+.success-screen h2{font-family:'Playfair Display',serif;font-style:italic;font-size:1.6rem;color:var(--green-dark);margin-bottom:.5rem}
+.success-screen p{color:var(--muted);font-size:.9rem}
+
+/* TIMER */
+.timer{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--green-dark);color:#fff;padding:.5rem 1rem;border-radius:20px;font-size:.8rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:200;display:flex;align-items:center;gap:.4rem}
+.timer svg{width:16px;height:16px;stroke:#fff;fill:none}
+
+@media(max-width:600px){
+  .hero h1{font-size:1.3rem}
+  .container{padding:1rem}
+  .section-content{padding:0 1rem 1rem}
+  .section-header{padding:1rem}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón">
+  <h1>Guía de Entrevista — Cirujanos</h1>
+  <p>Diagnóstico estratégico para la atracción de pacientes y utilización de infraestructura</p>
+  <div class="badge">Confidencial · Solo entrevistadores</div>
+</div>
+
+<div class="progress-bar">
+  <div class="track"><div class="fill" id="progressFill" style="width:0%"></div></div>
+  <div class="label" id="progressLabel">0 / 10</div>
+</div>
+
+<div class="container" id="app">
+
+  <!-- INTERVIEWER NOTE -->
+  <div class="interviewer-note">
+    <strong>📋 Nota para el entrevistador:</strong> Esta guía tiene como objetivo entender los factores que influyen en la decisión de los cirujanos sobre dónde operar a sus pacientes, así como identificar satisfacciones, insatisfacciones, barreras y oportunidades de mejora.<br><br>
+    <strong>Duración estimada:</strong> 45–60 minutos. Las respuestas son confidenciales y se analizan en conjunto.
+  </div>
+
+  <!-- METADATA -->
+  <div class="section open" id="sec-meta">
+    <div class="section-header" onclick="toggleSection('meta')">
+      <div class="section-num">⚙</div>
+      <div class="section-title">Datos de la entrevista</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="meta-form">
+        <div class="meta-field">
+          <label>Nombre del entrevistador</label>
+          <input type="text" id="m_entrevistador" placeholder="Ej: Heberto Arboleya">
+        </div>
+        <div class="meta-field">
+          <label>Nombre del cirujano entrevistado</label>
+          <input type="text" id="m_cirujano" placeholder="Nombre completo">
+        </div>
+        <div class="meta-field">
+          <label>Especialidad</label>
+          <input type="text" id="m_especialidad" placeholder="Ej: Cirugía General, Ortopedia...">
+        </div>
+        <div class="meta-field">
+          <label>Perfil del cirujano</label>
+          <select id="m_perfil">
+            <option value="">— Seleccionar —</option>
+            <option value="Alto">Alto (29+ cirugías/año)</option>
+            <option value="Medio">Medio (6–28 cirugías/año)</option>
+            <option value="Bajo">Bajo (1–5 cirugías/año)</option>
+          </select>
+        </div>
+        <div class="meta-field">
+          <label>Fecha de la entrevista</label>
+          <input type="date" id="m_fecha">
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 1: Contexto -->
+  <div class="section" id="sec-1">
+    <div class="section-header" onclick="toggleSection('1')">
+      <div class="section-num">1</div>
+      <div class="section-title">Contexto del Cirujano</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.1</span> ¿Qué tipo de cirugías realiza principalmente?</div>
+        <textarea id="q1_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.2</span> ¿En qué hospitales opera actualmente y aproximadamente en qué %?</div>
+        <textarea id="q1_2" placeholder="Anotar hospitales y porcentajes aproximados..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.3</span> ¿En dónde más da consultas a pacientes?</div>
+        <textarea id="q1_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.4</span> ¿Cómo distribuye su volumen quirúrgico entre hospitales?</div>
+        <textarea id="q1_4" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.5</span> ¿Qué tipo de pacientes atiende? (asegurados, no asegurados, niveles socioeconómicos)</div>
+        <textarea id="q1_5" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.6</span> ¿Qué porcentaje de sus cirugías realiza en el Hospital Escandón?</div>
+        <textarea id="q1_6" placeholder="Anotar porcentaje y contexto..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.7</span> ¿Ha cambiado esto en los últimos años? ¿Por qué?</div>
+        <textarea id="q1_7" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 2: Proceso de decisión -->
+  <div class="section" id="sec-2">
+    <div class="section-header" onclick="toggleSection('2')">
+      <div class="section-num">2</div>
+      <div class="section-title">Proceso de decisión</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.1</span> ¿Cómo decide en qué hospital operar a un paciente?</div>
+        <textarea id="q2_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.2</span> ¿Qué factores son más importantes en esa decisión?</div>
+        <textarea id="q2_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.3</span> Priorice los 3 factores más importantes</div>
+        <textarea id="q2_3" placeholder="1. ___  2. ___  3. ___"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.4</span> Si no lo menciona de manera espontánea, profundizar en:</div>
+        <div class="sub-items">
+          <strong>Temas para explorar:</strong>
+          <ul>
+            <li>Precio vs calidad vs conveniencia</li>
+            <li>Preferencia del paciente vs decisión del médico</li>
+          </ul>
+        </div>
+        <textarea id="q2_4" placeholder="Anotar lo que surja al profundizar..." style="margin-top:.5rem"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.5</span> ¿Hay pacientes que ve por primera vez en el Hospital Escandón que prefieren operarse en otro lugar? En caso afirmativo, ¿en qué lugares y por qué?</div>
+        <textarea id="q2_5" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 3: Satisfacciones -->
+  <div class="section" id="sec-3">
+    <div class="section-header" onclick="toggleSection('3')">
+      <div class="section-num">3</div>
+      <div class="section-title">Satisfacciones</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">3.1</span> ¿Qué es lo que más le gusta del Hospital Escandón?</div>
+        <textarea id="q3_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">3.2</span> ¿En qué casos funciona especialmente bien?</div>
+        <textarea id="q3_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">3.3</span> ¿Qué hace mejor que otros hospitales?</div>
+        <textarea id="q3_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 4: Insatisfacciones -->
+  <div class="section" id="sec-4">
+    <div class="section-header" onclick="toggleSection('4')">
+      <div class="section-num">4</div>
+      <div class="section-title">Insatisfacciones</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">4.1</span> ¿Qué le frustra del hospital?</div>
+        <textarea id="q4_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">4.2</span> ¿Qué dificulta traer pacientes?</div>
+        <textarea id="q4_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">4.3</span> Si pudiera cambiar 3 cosas, ¿cuáles serían?</div>
+        <textarea id="q4_3" placeholder="1. ___  2. ___  3. ___"></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 5: Barreras -->
+  <div class="section" id="sec-5">
+    <div class="section-header" onclick="toggleSection('5')">
+      <div class="section-num">5</div>
+      <div class="section-title">Barreras</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">5.1</span> ¿Qué le impide traer más pacientes o recomendarles operarse en el Hospital Escandón?</div>
+        <textarea id="q5_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">5.2</span> ¿En qué casos no trae o no recomienda el Hospital Escandón y por qué?</div>
+        <textarea id="q5_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">5.3</span> ¿Qué tendría que cambiar?</div>
+        <textarea id="q5_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 6: Competencia -->
+  <div class="section" id="sec-6">
+    <div class="section-header" onclick="toggleSection('6')">
+      <div class="section-num">6</div>
+      <div class="section-title">Competencia</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">6.1</span> ¿Cuáles considera que son los hospitales o clínicas que compiten directa o indirectamente con el Hospital Escandón?</div>
+        <textarea id="q6_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">6.2</span> ¿Cuál considera que es la competencia más importante y por qué?</div>
+        <textarea id="q6_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">6.3</span> ¿Qué hacen mejor o peor?</div>
+        <textarea id="q6_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 7: Comparación -->
+  <div class="section" id="sec-7">
+    <div class="section-header" onclick="toggleSection('7')">
+      <div class="section-num">7</div>
+      <div class="section-title">Comparación</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">7.1</span> ¿Cómo compara el Hospital Escandón vs la competencia en los siguientes rubros?</div>
+        <div class="sub-items">
+          <strong>Rubros a evaluar:</strong>
+          <ul>
+            <li>Infraestructura</li>
+            <li>Operación</li>
+            <li>Personal</li>
+            <li>Experiencia para el paciente</li>
+            <li>Experiencia para el médico</li>
+            <li>Prestigio</li>
+            <li>Precios</li>
+          </ul>
+        </div>
+        <textarea id="q7_1" placeholder="Anotar comparación por rubro..." style="margin-top:.5rem;min-height:150px"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">7.2</span> ¿A precios similares o inferiores a los del Hospital Escandón, existen opciones mejores o comparables? ¿Cuáles y por qué?</div>
+        <textarea id="q7_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">7.3</span> ¿Existen opciones un poco menos económicas pero que cree que ofrecen más valor? ¿Cuáles y por qué?</div>
+        <textarea id="q7_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 8: Paquetes -->
+  <div class="section" id="sec-8">
+    <div class="section-header" onclick="toggleSection('8')">
+      <div class="section-num">8</div>
+      <div class="section-title">Paquetes</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">8.1</span> ¿Para sus cirugías más comunes, el Hospital Escandón tiene paquetes o precios predeterminados?</div>
+        <textarea id="q8_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">8.2</span> ¿Qué tanto le ayudan a informar a sus pacientes y/o tomar decisiones de dónde operar?</div>
+        <textarea id="q8_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">8.3</span> ¿Para estas mismas cirugías otros hospitales tienen precios o paquetes?</div>
+        <textarea id="q8_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">8.4</span> ¿Cómo se comparan los competidores directos e indirectos del hospital en precio de estos paquetes y en lo que contienen?</div>
+        <textarea id="q8_4" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">8.5</span> ¿Nos puede compartir algunos de estos paquetes?</div>
+        <textarea id="q8_5" placeholder="Anotar si tiene documentos, fotos, o referencias..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 9: Relación -->
+  <div class="section" id="sec-9">
+    <div class="section-header" onclick="toggleSection('9')">
+      <div class="section-num">9</div>
+      <div class="section-title">Relación</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">9.1</span> ¿Se siente valorado como médico?</div>
+        <textarea id="q9_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">9.2</span> ¿Qué podría mejorar la relación?</div>
+        <textarea id="q9_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">9.3</span> ¿Le interesarían programas o beneficios? ¿Cómo cuáles?</div>
+        <textarea id="q9_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 10: Cierre -->
+  <div class="section" id="sec-10">
+    <div class="section-header" onclick="toggleSection('10')">
+      <div class="section-num">10</div>
+      <div class="section-title">Cierre</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">10.1</span> ¿Qué haría para que más pacientes tuvieran cirugías en el hospital?</div>
+        <textarea id="q10_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">10.2</span> ¿Qué debe cambiar para que el Hospital Escandón sea su hospital principal? ¿O si ya lo es, para que más de sus pacientes se operen ahí?</div>
+        <textarea id="q10_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">10.3</span> ¿Hay algún tema que le parezca importante que no hayamos tocado durante la entrevista?</div>
+        <textarea id="q10_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">📝</span> Observaciones del entrevistador</div>
+        <div class="q-hint">Impresiones generales, lenguaje corporal, nivel de apertura, temas sensibles, etc.</div>
+        <textarea id="q10_obs" placeholder="Notas libres del entrevistador..." style="min-height:120px"></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="nav-buttons">
+    <button class="btn btn-submit" onclick="submitInterview()" id="btnSubmit">Guardar entrevista</button>
+  </div>
+
+  <!-- SUCCESS SCREEN (hidden) -->
+  <div class="success-screen" id="successScreen" style="display:none">
+    <div class="checkmark"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <h2>Entrevista guardada</h2>
+    <p>Las respuestas se han almacenado correctamente.</p>
+    <button class="btn btn-next" onclick="resetForm()" style="max-width:300px;margin:1.5rem auto 0">Nueva entrevista</button>
+  </div>
+</div>
+
+<!-- TIMER -->
+<div class="timer" id="timer">
+  <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+  <span id="timerDisplay">00:00</span>
+</div>
+
+<script>
+// --- SUPABASE CONFIG ---
+const SUPABASE_URL = 'https://gggwswbgwihlokrnvktl.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1OTQ2NjAsImV4cCI6MjA1ODE3MDY2MH0.OdMApEXzn7IAHJOQ-DKWkYFaJTr-yfGFX6M3MN-P6WE';
+
+// --- TIMER ---
+let timerStart = Date.now();
+setInterval(() => {
+  const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+  const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const s = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+}, 1000);
+
+// --- SECTIONS ---
+const totalSections = 10;
+
+function toggleSection(id) {
+  const sec = document.getElementById(`sec-${id}`);
+  if (sec.classList.contains('open')) {
+    sec.classList.remove('open');
+  } else {
+    sec.classList.add('open');
+  }
+  updateProgress();
+}
+
+function isSectionComplete(sec) {
+  const textareas = sec.querySelectorAll('textarea');
+  if (textareas.length === 0) return false;
+  let allFilled = true;
+  textareas.forEach(t => { if (!t.value.trim()) allFilled = false; });
+  return allFilled;
+}
+
+function updateProgress() {
+  let completed = 0;
+  let firstIncomplete = null;
+  for (let i = 1; i <= totalSections; i++) {
+    const sec = document.getElementById(`sec-${i}`);
+    if (isSectionComplete(sec)) {
+      completed++;
+      sec.classList.add('completed');
+      // Auto-close if all questions filled
+      if (sec.classList.contains('open') && sec._autoCloseArmed) {
+        sec.classList.remove('open');
+        sec.classList.add('just-completed');
+        setTimeout(() => sec.classList.remove('just-completed'), 600);
+        sec._autoCloseArmed = false;
+        // Find and open next incomplete section
+        if (!firstIncomplete) {
+          for (let j = 1; j <= totalSections; j++) {
+            const next = document.getElementById(`sec-${j}`);
+            if (!isSectionComplete(next)) { firstIncomplete = next; break; }
+          }
+        }
+        if (firstIncomplete && !firstIncomplete.classList.contains('open')) {
+          firstIncomplete.classList.add('open');
+          setTimeout(() => firstIncomplete.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        }
+      }
+    } else {
+      sec.classList.remove('completed');
+      if (!firstIncomplete) firstIncomplete = sec;
+    }
+  }
+  const pct = Math.round((completed / totalSections) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${completed} / ${totalSections}`;
+}
+
+// Arm auto-close when a section is opened
+const origToggle = toggleSection;
+// (handled inline — when section opens, arm it)
+
+// Listen for Enter key to trigger auto-close check
+document.querySelectorAll('textarea').forEach(ta => {
+  ta.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const sec = this.closest('.section');
+      if (sec && sec.classList.contains('open')) sec._autoCloseArmed = true;
+      setTimeout(() => updateProgress(), 50);
+    }
+  });
+  // Still track progress on input (for progress bar / gold numbers) but don't arm auto-close
+  ta.addEventListener('input', function() {
+    updateProgressSilent();
+  });
+});
+
+// Progress update WITHOUT auto-close
+function updateProgressSilent() {
+  let completed = 0;
+  for (let i = 1; i <= totalSections; i++) {
+    const sec = document.getElementById(`sec-${i}`);
+    if (isSectionComplete(sec)) {
+      completed++;
+      sec.classList.add('completed');
+    } else {
+      sec.classList.remove('completed');
+    }
+  }
+  const pct = Math.round((completed / totalSections) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${completed} / ${totalSections}`;
+}
+
+// --- AUTOSAVE to localStorage ---
+function autoSave() {
+  const data = {};
+  document.querySelectorAll('textarea, input, select').forEach(el => {
+    if (el.id) data[el.id] = el.value;
+  });
+  try {
+    localStorage.setItem('entrevista_cirujanos_draft', JSON.stringify(data));
+  } catch(e) {}
+}
+
+function autoLoad() {
+  try {
+    const saved = localStorage.getItem('entrevista_cirujanos_draft');
+    if (saved) {
+      const data = JSON.parse(saved);
+      Object.keys(data).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = data[id];
+      });
+      updateProgress();
+    }
+  } catch(e) {}
+}
+
+// Autosave every 10 seconds
+setInterval(autoSave, 10000);
+document.querySelectorAll('textarea, input, select').forEach(el => {
+  el.addEventListener('change', autoSave);
+});
+
+// --- SUBMIT ---
+async function submitInterview() {
+  const btn = document.getElementById('btnSubmit');
+  
+  // Validate metadata
+  const entrevistador = document.getElementById('m_entrevistador').value.trim();
+  const cirujano = document.getElementById('m_cirujano').value.trim();
+  if (!entrevistador || !cirujano) {
+    alert('Por favor completa el nombre del entrevistador y del cirujano.');
+    document.getElementById('sec-meta').classList.add('open');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  // Collect all responses
+  const respuestas = {};
+  document.querySelectorAll('textarea').forEach(ta => {
+    if (ta.id && ta.value.trim()) {
+      respuestas[ta.id] = ta.value.trim();
+    }
+  });
+
+  const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+
+  const payload = {
+    tipo_entrevista: 'cirujanos',
+    entrevistador: entrevistador,
+    nombre_entrevistado: cirujano,
+    especialidad: document.getElementById('m_especialidad').value.trim(),
+    perfil: document.getElementById('m_perfil').value,
+    fecha_entrevista: document.getElementById('m_fecha').value || new Date().toISOString().split('T')[0],
+    duracion_segundos: elapsed,
+    respuestas: respuestas,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/entrevistas_cirujanos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      document.getElementById('app').querySelectorAll('.section, .nav-buttons, .interviewer-note').forEach(el => el.style.display = 'none');
+      document.getElementById('successScreen').style.display = 'block';
+      document.getElementById('timer').style.display = 'none';
+      try { localStorage.removeItem('entrevista_cirujanos_draft'); } catch(e) {}
+    } else {
+      const err = await res.text();
+      console.error('Error:', err);
+      alert('Error al guardar. La tabla "entrevistas_cirujanos" puede no existir aún en Supabase. Las respuestas se guardaron localmente.');
+      // Save locally as backup
+      try {
+        const backups = JSON.parse(localStorage.getItem('entrevistas_cirujanos_backup') || '[]');
+        backups.push(payload);
+        localStorage.setItem('entrevistas_cirujanos_backup', JSON.stringify(backups));
+      } catch(e) {}
+    }
+  } catch(e) {
+    console.error('Network error:', e);
+    alert('Sin conexión. Las respuestas se guardaron localmente como respaldo.');
+    try {
+      const backups = JSON.parse(localStorage.getItem('entrevistas_cirujanos_backup') || '[]');
+      backups.push(payload);
+      localStorage.setItem('entrevistas_cirujanos_backup', JSON.stringify(backups));
+    } catch(e2) {}
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Guardar entrevista';
+}
+
+function resetForm() {
+  document.querySelectorAll('textarea, input[type="text"], input[type="date"]').forEach(el => el.value = '');
+  document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  document.getElementById('app').querySelectorAll('.section, .nav-buttons, .interviewer-note').forEach(el => el.style.display = '');
+  document.getElementById('successScreen').style.display = 'none';
+  document.getElementById('timer').style.display = 'flex';
+  timerStart = Date.now();
+  updateProgress();
+  window.scrollTo(0, 0);
+  try { localStorage.removeItem('entrevista_cirujanos_draft'); } catch(e) {}
+}
+
+// --- INIT ---
+document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0];
+autoLoad();
+</script>
+</body>
+</html>
