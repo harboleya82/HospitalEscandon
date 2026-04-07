@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Cirujanos — Hospital Escandón</title>
+<link rel="icon" href="https://hospitalescandon.org/img/core-img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#127850;--green-dark:#0B2D24;--green-mid:#154135;--gold:#AA8A4A;
+  --bg:#F7F6F3;--card:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;
+  --radius:16px;--shadow:0 2px 16px rgba(0,0,0,.06);
+  --red:#dc2626;--amber:#d97706;--blue:#2563eb;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));color:#fff;padding:1.8rem 2rem;display:flex;align-items:center;gap:1.2rem;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-60%;right:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(170,138,74,.12),transparent 70%);border-radius:50%}
+.hero img{height:48px;filter:brightness(10)}
+.hero h1{font-family:'Playfair Display',serif;font-style:italic;font-size:1.5rem;font-weight:700}
+.hero p{font-size:.82rem;opacity:.75}
+.hero .right{margin-left:auto;text-align:right;z-index:1}
+.hero .badge{background:var(--gold);color:#fff;font-size:.68rem;font-weight:700;padding:.2rem .7rem;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);display:flex;gap:0;overflow-x:auto;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+nav button{flex:none;padding:.75rem 1.2rem;border:none;background:none;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+nav button.active{color:var(--green);border-bottom-color:var(--green)}
+nav button:hover{color:var(--text)}
+
+/* CONTAINER */
+.container{max-width:1100px;margin:0 auto;padding:1.5rem}
+
+/* PAGE */
+.page{display:none}
+.page.active{display:block}
+
+/* GRID */
+.row{display:grid;gap:1.2rem;margin-bottom:1.2rem}
+.r2{grid-template-columns:repeat(2,1fr)}
+.r3{grid-template-columns:repeat(3,1fr)}
+.r4{grid-template-columns:repeat(4,1fr)}
+
+/* KPI CARDS */
+.kpi{background:var(--card);border-radius:var(--radius);padding:1.2rem;box-shadow:var(--shadow);text-align:center;border:1px solid var(--border)}
+.kpi .val{font-size:2rem;font-weight:800;color:var(--green-dark);line-height:1.1}
+.kpi .label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:.3rem}
+.kpi .sub{font-size:.75rem;color:var(--muted);margin-top:.2rem}
+
+/* CARD */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.3rem;border:1px solid var(--border)}
+.card h3{font-family:'Playfair Display',serif;font-style:italic;font-size:1.05rem;font-weight:700;color:var(--green-dark);margin-bottom:.8rem}
+
+/* CHART */
+.chart-box{position:relative;height:280px}
+
+/* LOADING */
+.loading{text-align:center;padding:3rem;color:var(--muted)}
+.loading .spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* QUOTE CARD */
+.quote{background:#f0fdf4;border-left:4px solid var(--green);border-radius:0 12px 12px 0;padding:.8rem 1rem;margin-bottom:.8rem;font-size:.85rem;position:relative}
+.quote::before{content:'"';font-size:2rem;color:var(--green);opacity:.3;position:absolute;top:-.2rem;left:.5rem;font-family:serif}
+.quote .text{padding-left:1rem;font-style:italic;color:#374151}
+.quote .meta{font-size:.72rem;color:var(--muted);margin-top:.3rem;padding-left:1rem}
+.quote .meta .tag{display:inline-block;background:var(--green);color:#fff;padding:.1rem .4rem;border-radius:4px;font-weight:600;margin-right:.3rem}
+
+/* THEME PILL */
+.theme-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .7rem;border-radius:20px;font-size:.78rem;font-weight:600;margin:.2rem;transition:transform .1s}
+.theme-pill:hover{transform:scale(1.05)}
+.theme-pill .count{background:rgba(0,0,0,.15);padding:.1rem .4rem;border-radius:10px;font-size:.7rem}
+
+/* MATRIX TABLE */
+.matrix{width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem}
+.matrix th{background:var(--green-dark);color:#fff;padding:.6rem .8rem;text-align:left;font-weight:600;position:sticky;top:0}
+.matrix th:first-child{border-radius:8px 0 0 0}
+.matrix th:last-child{border-radius:0 8px 0 0}
+.matrix td{padding:.6rem .8rem;border-bottom:1px solid var(--border);vertical-align:top}
+.matrix tr:hover td{background:#f9fafb}
+.matrix .cell-pos{color:#059669;font-weight:500}
+.matrix .cell-neg{color:#dc2626;font-weight:500}
+.matrix .cell-neut{color:var(--muted)}
+
+/* COMPETITOR BAR */
+.comp-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.comp-bar .name{width:140px;font-size:.8rem;font-weight:600;text-align:right;flex-shrink:0}
+.comp-bar .bar-track{flex:1;height:24px;background:#f3f4f6;border-radius:6px;overflow:hidden}
+.comp-bar .bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:.5rem;font-size:.72rem;font-weight:700;color:#fff;transition:width .6s ease}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:2.5rem;color:var(--muted)}
+.empty svg{width:60px;height:60px;stroke:var(--border);fill:none;margin-bottom:1rem}
+.empty h3{color:var(--text);margin-bottom:.3rem}
+
+/* PROFILE FILTER */
+.filters{display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap}
+.filter-btn{padding:.4rem .9rem;border:2px solid var(--border);border-radius:20px;background:var(--card);font-family:'Inter',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s}
+.filter-btn.active{border-color:var(--green);background:var(--green);color:#fff}
+
+/* TIMELINE */
+.timeline-item{display:flex;gap:1rem;margin-bottom:1rem;position:relative;padding-left:1.5rem}
+.timeline-item::before{content:'';position:absolute;left:0;top:.4rem;width:10px;height:10px;border-radius:50%;background:var(--green)}
+.timeline-item::after{content:'';position:absolute;left:4px;top:1.2rem;width:2px;height:calc(100% + .5rem);background:var(--border)}
+.timeline-item:last-child::after{display:none}
+.timeline-item .t-date{font-size:.72rem;font-weight:600;color:var(--gold);min-width:70px}
+.timeline-item .t-content{flex:1;font-size:.85rem}
+
+@media(max-width:768px){
+  .r2,.r3,.r4{grid-template-columns:1fr}
+  .hero{flex-direction:column;text-align:center}
+  .hero .right{margin-left:0;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón">
+  <div>
+    <h1>Dashboard — Entrevistas Cirujanos</h1>
+    <p>Análisis cualitativo de la investigación de campo</p>
+  </div>
+  <div class="right">
+    <div class="badge" id="badgeCount">Cargando...</div>
+    <p style="font-size:.72rem;margin-top:.3rem;opacity:.7" id="lastUpdate"></p>
+  </div>
+</div>
+
+<nav id="nav"></nav>
+
+<div class="container">
+
+  <!-- TAB 1: PANORAMA -->
+  <div class="page active" id="p-panorama">
+    <div class="row r4" style="margin-bottom:1.2rem">
+      <div class="kpi"><div class="label">Entrevistas</div><div class="val" id="kpi_total">–</div><div class="sub" id="kpi_total_sub">cargando</div></div>
+      <div class="kpi"><div class="label">Duración promedio</div><div class="val" id="kpi_dur">–</div><div class="sub">minutos</div></div>
+      <div class="kpi"><div class="label">Perfiles</div><div class="val" id="kpi_perfiles">–</div><div class="sub" id="kpi_perfiles_sub"></div></div>
+      <div class="kpi"><div class="label">Especialidades</div><div class="val" id="kpi_esp">–</div><div class="sub">distintas</div></div>
+    </div>
+    <div class="row r2">
+      <div class="card">
+        <h3>Entrevistas por perfil</h3>
+        <div class="chart-box" style="height:220px"><canvas id="cPerfiles"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Entrevistas por especialidad</h3>
+        <div class="chart-box" style="height:220px"><canvas id="cEspecialidades"></canvas></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Cronología de entrevistas</h3>
+      <div id="timeline"></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SATISFACCIONES -->
+  <div class="page" id="p-satisfacciones">
+    <div class="filters" id="filtersSat"></div>
+    <div class="row r2">
+      <div class="card">
+        <h3>¿Qué valoran más? — Temas recurrentes</h3>
+        <div id="themesSat"></div>
+      </div>
+      <div class="card">
+        <h3>¿Qué hace mejor que otros?</h3>
+        <div id="themesBetter"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Citas destacadas — Satisfacciones</h3>
+      <div id="quotesSat"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: PROBLEMAS -->
+  <div class="page" id="p-problemas">
+    <div class="filters" id="filtersProb"></div>
+    <div class="row r2">
+      <div class="card">
+        <h3>Insatisfacciones — Temas recurrentes</h3>
+        <div id="themesInsatisf"></div>
+      </div>
+      <div class="card">
+        <h3>Barreras para traer pacientes</h3>
+        <div id="themesBarreras"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Top 3 cambios solicitados</h3>
+      <div id="themesCambios"></div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Citas destacadas — Problemas y barreras</h3>
+      <div id="quotesProb"></div>
+    </div>
+  </div>
+
+  <!-- TAB 4: COMPETENCIA -->
+  <div class="page" id="p-competencia">
+    <div class="filters" id="filtersComp"></div>
+    <div class="card" style="margin-bottom:1.2rem">
+      <h3>Competidores mencionados — Frecuencia</h3>
+      <div id="compBars"></div>
+    </div>
+    <div class="card" style="margin-bottom:1.2rem">
+      <h3>Matriz de comparación: HE vs Competencia</h3>
+      <div style="overflow-x:auto">
+        <table class="matrix" id="matrixComp">
+          <thead>
+            <tr>
+              <th>Rubro</th>
+              <th>Positivo para HE</th>
+              <th>Negativo para HE</th>
+              <th>Neutral / mixto</th>
+            </tr>
+          </thead>
+          <tbody id="matrixBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row r2">
+      <div class="card">
+        <h3>Opciones más baratas que mencionan</h3>
+        <div id="quotesBaratas"></div>
+      </div>
+      <div class="card">
+        <h3>Opciones con "más valor" que mencionan</h3>
+        <div id="quotesValor"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: DECISIÓN Y PAQUETES -->
+  <div class="page" id="p-decision">
+    <div class="filters" id="filtersDec"></div>
+    <div class="row r2">
+      <div class="card">
+        <h3>Factores de decisión — Frecuencia</h3>
+        <div class="chart-box" style="height:280px"><canvas id="cFactores"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Percepción de paquetes quirúrgicos</h3>
+        <div id="themesPaquetes"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>¿Por qué pacientes se van a operar fuera?</h3>
+      <div id="quotesFuga"></div>
+    </div>
+  </div>
+
+  <!-- TAB 6: RELACIÓN Y CIERRE -->
+  <div class="page" id="p-relacion">
+    <div class="filters" id="filtersRel"></div>
+    <div class="row r2">
+      <div class="card">
+        <h3>¿Se sienten valorados?</h3>
+        <div class="chart-box" style="height:200px"><canvas id="cValorados"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Programas / beneficios de interés</h3>
+        <div id="themesBeneficios"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Propuestas de los cirujanos para atraer más pacientes</h3>
+      <div id="quotesPropuestas"></div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Observaciones del entrevistador</h3>
+      <div id="quotesObs"></div>
+    </div>
+  </div>
+
+  <!-- TAB 7: TODAS LAS RESPUESTAS -->
+  <div class="page" id="p-raw">
+    <div class="filters" id="filtersRaw"></div>
+    <div class="card">
+      <h3>Detalle de entrevistas</h3>
+      <div id="rawList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============== CONFIG ==============
+const SUPABASE_URL = 'https://gggwswbgwihlokrnvktl.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1OTQ2NjAsImV4cCI6MjA1ODE3MDY2MH0.OdMApEXzn7IAHJOQ-DKWkYFaJTr-yfGFX6M3MN-P6WE';
+
+const TABS = [
+  { id: 'panorama', label: 'Panorama' },
+  { id: 'satisfacciones', label: 'Satisfacciones' },
+  { id: 'problemas', label: 'Problemas' },
+  { id: 'competencia', label: 'Competencia' },
+  { id: 'decision', label: 'Decisión' },
+  { id: 'relacion', label: 'Relación' },
+  { id: 'raw', label: 'Respuestas' },
+];
+
+// Question labels for display
+const Q_LABELS = {
+  q1_1:'Tipo de cirugías',q1_2:'Hospitales donde opera',q1_3:'Dónde da consultas',q1_4:'Distribución volumen',q1_5:'Tipo de pacientes',q1_6:'% en HE',q1_7:'Cambio últimos años',
+  q2_1:'Cómo decide hospital',q2_2:'Factores importantes',q2_3:'Top 3 factores',q2_4:'Precio/calidad/conveniencia',q2_5:'Pacientes que se van',
+  q3_1:'Lo que más le gusta',q3_2:'Funciona bien',q3_3:'Mejor que otros',
+  q4_1:'Frustraciones',q4_2:'Dificulta traer pacientes',q4_3:'3 cambios',
+  q5_1:'Impide traer pacientes',q5_2:'Casos que no recomienda',q5_3:'Qué debe cambiar',
+  q6_1:'Competidores',q6_2:'Competencia principal',q6_3:'Mejor o peor',
+  q7_1:'Comparación por rubros',q7_2:'Opciones más baratas',q7_3:'Opciones más valor',
+  q8_1:'Paquetes HE',q8_2:'Ayudan a informar',q8_3:'Paquetes competencia',q8_4:'Comparación paquetes',q8_5:'Compartir paquetes',
+  q9_1:'Se siente valorado',q9_2:'Mejorar relación',q9_3:'Programas interés',
+  q10_1:'Propuesta más pacientes',q10_2:'HE como hospital principal',q10_3:'Temas pendientes',q10_obs:'Observaciones entrevistador'
+};
+
+let allData = [];
+let filteredData = [];
+let activeFilter = 'Todos';
+let charts = {};
+
+// ============== NAV ==============
+const nav = document.getElementById('nav');
+TABS.forEach((t, i) => {
+  const btn = document.createElement('button');
+  btn.textContent = t.label;
+  btn.className = i === 0 ? 'active' : '';
+  btn.onclick = () => {
+    nav.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(`p-${t.id}`).classList.add('active');
+  };
+  nav.appendChild(btn);
+});
+
+// ============== FETCH DATA ==============
+async function fetchData() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/entrevistas_cirujanos?select=*&order=created_at.desc`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error('Table not found');
+    allData = await res.json();
+  } catch (e) {
+    console.warn('Supabase fetch failed, using empty data:', e);
+    allData = [];
+  }
+  filteredData = [...allData];
+  render();
+}
+
+// ============== FILTERS ==============
+function buildFilters(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  const profiles = ['Todos', ...new Set(allData.map(d => d.perfil).filter(Boolean))];
+  profiles.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (p === activeFilter ? ' active' : '');
+    btn.textContent = p;
+    btn.onclick = () => {
+      activeFilter = p;
+      filteredData = p === 'Todos' ? [...allData] : allData.filter(d => d.perfil === p);
+      render();
+    };
+    container.appendChild(btn);
+  });
+}
+
+// ============== HELPERS ==============
+function getResp(entry, key) {
+  return (entry.respuestas && entry.respuestas[key]) || '';
+}
+
+function getAllResponses(key) {
+  return filteredData.map(d => getResp(d, key)).filter(Boolean);
+}
+
+function countFreq(arr) {
+  const freq = {};
+  arr.forEach(v => { const k = v.trim().toLowerCase(); if (k) freq[k] = (freq[k] || 0) + 1; });
+  return Object.entries(freq).sort((a, b) => b[1] - a[1]);
+}
+
+function extractThemes(responses, keywords) {
+  const counts = {};
+  keywords.forEach(k => counts[k.label] = 0);
+  responses.forEach(r => {
+    const low = r.toLowerCase();
+    keywords.forEach(k => {
+      if (k.terms.some(t => low.includes(t))) counts[k.label]++;
+    });
+  });
+  return Object.entries(counts).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+}
+
+function renderThemes(containerId, themes, colors) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (themes.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin datos suficientes aún.</p>';
+    return;
+  }
+  el.innerHTML = themes.map(([label, count], i) =>
+    `<span class="theme-pill" style="background:${colors[i % colors.length]}20;color:${colors[i % colors.length]};border:1px solid ${colors[i % colors.length]}40">${label} <span class="count">${count}</span></span>`
+  ).join('');
+}
+
+function renderQuotes(containerId, key, max = 6) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const quotes = filteredData.filter(d => getResp(d, key)).slice(0, max);
+  if (quotes.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas disponibles.</p>';
+    return;
+  }
+  el.innerHTML = quotes.map(d => `
+    <div class="quote">
+      <div class="text">${getResp(d, key)}</div>
+      <div class="meta"><span class="tag">${d.perfil || '?'}</span> ${d.nombre_entrevistado || 'Anónimo'} · ${d.especialidad || ''}</div>
+    </div>
+  `).join('');
+}
+
+function renderMultiQuotes(containerId, keys, max = 6) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const quotes = [];
+  filteredData.forEach(d => {
+    keys.forEach(key => {
+      const text = getResp(d, key);
+      if (text) quotes.push({ text, perfil: d.perfil, nombre: d.nombre_entrevistado, esp: d.especialidad });
+    });
+  });
+  if (quotes.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas disponibles.</p>';
+    return;
+  }
+  el.innerHTML = quotes.slice(0, max).map(q => `
+    <div class="quote">
+      <div class="text">${q.text}</div>
+      <div class="meta"><span class="tag">${q.perfil || '?'}</span> ${q.nombre || 'Anónimo'} · ${q.esp || ''}</div>
+    </div>
+  `).join('');
+}
+
+function getOrCreate(id, config) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, config);
+}
+
+// ============== RENDER ==============
+function render() {
+  // Build all filter sections
+  ['filtersSat','filtersProb','filtersComp','filtersDec','filtersRel','filtersRaw'].forEach(buildFilters);
+
+  const n = filteredData.length;
+
+  // ---- PANORAMA ----
+  document.getElementById('kpi_total').textContent = n;
+  document.getElementById('kpi_total_sub').textContent = n === 0 ? 'sin entrevistas' : 'realizadas';
+  document.getElementById('badgeCount').textContent = `${allData.length} entrevista${allData.length !== 1 ? 's' : ''}`;
+
+  if (n > 0) {
+    const avgDur = Math.round(filteredData.reduce((s, d) => s + (d.duracion_segundos || 0), 0) / n / 60);
+    document.getElementById('kpi_dur').textContent = avgDur;
+
+    const perfiles = {};
+    filteredData.forEach(d => { const p = d.perfil || 'Sin perfil'; perfiles[p] = (perfiles[p] || 0) + 1; });
+    document.getElementById('kpi_perfiles').textContent = Object.keys(perfiles).length;
+    document.getElementById('kpi_perfiles_sub').textContent = Object.entries(perfiles).map(([k, v]) => `${k}: ${v}`).join(' · ');
+
+    const esps = new Set(filteredData.map(d => d.especialidad).filter(Boolean));
+    document.getElementById('kpi_esp').textContent = esps.size;
+
+    // Charts
+    const pLabels = Object.keys(perfiles);
+    const pColors = pLabels.map(l => l === 'Alto' ? '#059669' : l === 'Medio' ? '#d97706' : l === 'Bajo' ? '#dc2626' : '#6b7280');
+    getOrCreate('cPerfiles', {
+      type: 'doughnut',
+      data: { labels: pLabels, datasets: [{ data: Object.values(perfiles), backgroundColor: pColors, borderWidth: 2, borderColor: '#fff' }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+    });
+
+    const espCount = {};
+    filteredData.forEach(d => { const e = d.especialidad || 'Sin esp.'; espCount[e] = (espCount[e] || 0) + 1; });
+    const espSorted = Object.entries(espCount).sort((a, b) => b[1] - a[1]);
+    getOrCreate('cEspecialidades', {
+      type: 'bar',
+      data: { labels: espSorted.map(e => e[0]), datasets: [{ data: espSorted.map(e => e[1]), backgroundColor: '#2563eb', borderRadius: 6 }] },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { stepSize: 1 } } } }
+    });
+
+    // Timeline
+    const timeline = document.getElementById('timeline');
+    const sorted = [...filteredData].sort((a, b) => new Date(a.fecha_entrevista) - new Date(b.fecha_entrevista));
+    timeline.innerHTML = sorted.map(d => `
+      <div class="timeline-item">
+        <div class="t-date">${d.fecha_entrevista || '?'}</div>
+        <div class="t-content"><strong>${d.nombre_entrevistado || 'Anónimo'}</strong> · ${d.especialidad || ''} · <span style="color:${d.perfil === 'Alto' ? '#059669' : d.perfil === 'Medio' ? '#d97706' : '#dc2626'}">${d.perfil || '?'}</span> · ${Math.round((d.duracion_segundos || 0) / 60)} min</div>
+      </div>
+    `).join('');
+
+    document.getElementById('lastUpdate').textContent = `Última: ${allData[0]?.fecha_entrevista || ''}`;
+  } else {
+    document.getElementById('kpi_dur').textContent = '–';
+    document.getElementById('kpi_perfiles').textContent = '–';
+    document.getElementById('kpi_esp').textContent = '–';
+    document.getElementById('timeline').innerHTML = '<div class="empty"><h3>Sin entrevistas aún</h3><p>Las entrevistas aparecerán aquí conforme se registren.</p></div>';
+  }
+
+  // ---- SATISFACCIONES ----
+  const satKeywords = [
+    { label: 'Trato / calidez', terms: ['trato', 'calid', 'amab', 'human', 'cariñ'] },
+    { label: 'Precio / costo', terms: ['precio', 'costo', 'económ', 'barat', 'accesib'] },
+    { label: 'Ubicación', terms: ['ubicación', 'ubicacion', 'cercan', 'zona', 'tacubaya'] },
+    { label: 'Infraestructura', terms: ['infraestructura', 'instalacion', 'equip', 'moderno'] },
+    { label: 'Misión social', terms: ['misión', 'mision', 'social', 'no lucro', 'asistencia'] },
+    { label: 'Personal', terms: ['personal', 'enferm', 'equipo'] },
+    { label: 'Flexibilidad', terms: ['flexib', 'disponib', 'horario', 'fácil'] },
+    { label: 'Confianza', terms: ['confianza', 'segur', 'tranquil'] },
+  ];
+  const satResponses = [...getAllResponses('q3_1'), ...getAllResponses('q3_2')];
+  renderThemes('themesSat', extractThemes(satResponses, satKeywords), ['#059669','#2563eb','#7c3aed','#d97706','#ec4899','#0891b2','#84cc16','#f59e0b']);
+
+  const betterResponses = getAllResponses('q3_3');
+  renderThemes('themesBetter', extractThemes(betterResponses, satKeywords), ['#059669','#2563eb','#7c3aed','#d97706','#ec4899','#0891b2','#84cc16','#f59e0b']);
+
+  renderMultiQuotes('quotesSat', ['q3_1', 'q3_2', 'q3_3'], 8);
+
+  // ---- PROBLEMAS ----
+  const probKeywords = [
+    { label: 'Equipo médico caro', terms: ['equipo caro', 'renta', 'material', 'insumo', 'caro'] },
+    { label: 'Infraestructura vieja', terms: ['viejo', 'antiguo', 'deterioro', 'remodelac', 'infraestructura'] },
+    { label: 'Burocracia / procesos', terms: ['burocracia', 'proceso', 'trámit', 'tramit', 'lento', 'papele'] },
+    { label: 'Falta de tecnología', terms: ['tecnología', 'tecnologia', 'equipo', 'imagen', 'tomógrafo'] },
+    { label: 'Horarios limitados', terms: ['horario', 'disponib', 'turno', 'sábado', 'sabado', 'domingo'] },
+    { label: 'Percepción / imagen', terms: ['percepción', 'percepcion', 'imagen', 'reputación', 'reputacion', 'marca'] },
+    { label: 'Estacionamiento', terms: ['estacionamiento', 'parking', 'estacionar'] },
+    { label: 'Comunicación', terms: ['comunicación', 'comunicacion', 'informac', 'contact'] },
+  ];
+  renderThemes('themesInsatisf', extractThemes(getAllResponses('q4_1'), probKeywords), ['#dc2626','#d97706','#7c3aed','#2563eb','#059669','#ec4899','#6b7280','#0891b2']);
+  renderThemes('themesBarreras', extractThemes([...getAllResponses('q5_1'), ...getAllResponses('q5_2')], probKeywords), ['#dc2626','#d97706','#7c3aed','#2563eb','#059669','#ec4899','#6b7280','#0891b2']);
+  renderQuotes('themesCambios', 'q4_3', 8);
+  renderMultiQuotes('quotesProb', ['q4_1', 'q4_2', 'q5_1', 'q5_2'], 8);
+
+  // ---- COMPETENCIA ----
+  const compKeywords = [
+    { label: 'Hospital de Jesús', terms: ['hospital de jesús', 'hospital de jesus', 'de jesus'] },
+    { label: 'Clínicas corta estancia', terms: ['corta estancia', 'clínica priv', 'clinica priv', 'ambulatori'] },
+    { label: 'Ángeles / Mocel', terms: ['ángeles', 'angeles', 'mocel'] },
+    { label: 'Diomed', terms: ['diomed'] },
+    { label: 'CMQ Escandón', terms: ['cmq', 'quirúrgico escandón', 'quirurgico escandon'] },
+    { label: 'Médica Sur', terms: ['médica sur', 'medica sur'] },
+    { label: 'Salud Digna', terms: ['salud digna'] },
+    { label: 'Otro', terms: ['star médica', 'star medica', 'dalinde', 'español'] },
+  ];
+  const compResp = [...getAllResponses('q6_1'), ...getAllResponses('q6_2')];
+  const compThemes = extractThemes(compResp, compKeywords);
+  const maxComp = compThemes.length > 0 ? compThemes[0][1] : 1;
+  const compColors = ['#1e40af', '#2563eb', '#3b82f6', '#60a5fa', '#7c3aed', '#a855f7', '#059669', '#6b7280'];
+  const compBarsEl = document.getElementById('compBars');
+  if (compThemes.length > 0) {
+    compBarsEl.innerHTML = compThemes.map(([label, count], i) =>
+      `<div class="comp-bar"><div class="name">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${(count / maxComp) * 100}%;background:${compColors[i % compColors.length]}">${count}</div></div></div>`
+    ).join('');
+  } else {
+    compBarsEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin datos aún.</p>';
+  }
+
+  // Comparison matrix
+  const rubros = ['Infraestructura', 'Operación', 'Personal', 'Experiencia paciente', 'Experiencia médico', 'Prestigio', 'Precios'];
+  const matrixBody = document.getElementById('matrixBody');
+  const compRubros = getAllResponses('q7_1');
+  matrixBody.innerHTML = rubros.map(r => {
+    let pos = 0, neg = 0, neut = 0;
+    compRubros.forEach(resp => {
+      const low = resp.toLowerCase();
+      const rLow = r.toLowerCase();
+      if (low.includes(rLow.substring(0, 5))) {
+        if (/mejor|bien|bueno|superior|excelente|ventaja/.test(low)) pos++;
+        else if (/peor|mal|inferior|problema|desventaja|falta/.test(low)) neg++;
+        else neut++;
+      }
+    });
+    return `<tr><td style="font-weight:600">${r}</td><td class="cell-pos">${pos || '–'}</td><td class="cell-neg">${neg || '–'}</td><td class="cell-neut">${neut || '–'}</td></tr>`;
+  }).join('');
+
+  renderQuotes('quotesBaratas', 'q7_2', 6);
+  renderQuotes('quotesValor', 'q7_3', 6);
+
+  // ---- DECISIÓN ----
+  const decKeywords = [
+    { label: 'Precio', terms: ['precio', 'costo', 'económ'] },
+    { label: 'Calidad', terms: ['calidad', 'resultado', 'éxito'] },
+    { label: 'Conveniencia', terms: ['convenien', 'cercan', 'ubicac', 'facil'] },
+    { label: 'Pref. del paciente', terms: ['paciente pref', 'paciente decid', 'paciente quiere', 'pide'] },
+    { label: 'Seguro / cobertura', terms: ['seguro', 'asegurad', 'cobertura', 'póliza'] },
+    { label: 'Equipo disponible', terms: ['equipo', 'material', 'instrumental'] },
+    { label: 'Experiencia previa', terms: ['experiencia', 'anterior', 'siempre'] },
+    { label: 'Relación con hospital', terms: ['relación', 'relacion', 'conoz', 'confianza'] },
+  ];
+  const decResp = [...getAllResponses('q2_1'), ...getAllResponses('q2_2'), ...getAllResponses('q2_3')];
+  const decThemes = extractThemes(decResp, decKeywords);
+  if (decThemes.length > 0) {
+    getOrCreate('cFactores', {
+      type: 'bar',
+      data: { labels: decThemes.map(t => t[0]), datasets: [{ data: decThemes.map(t => t[1]), backgroundColor: ['#1e40af','#2563eb','#3b82f6','#60a5fa','#7c3aed','#a855f7','#059669','#d97706'], borderRadius: 6 }] },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { stepSize: 1 } } } }
+    });
+  }
+
+  renderThemes('themesPaquetes', extractThemes([...getAllResponses('q8_1'), ...getAllResponses('q8_2')], [
+    { label: 'Tiene paquetes', terms: ['sí tiene', 'si tiene', 'tiene paquete'] },
+    { label: 'No tiene / no sabe', terms: ['no tiene', 'no sabe', 'desconoz'] },
+    { label: 'Ayudan a decidir', terms: ['ayuda', 'útil', 'util', 'inform'] },
+    { label: 'No son competitivos', terms: ['caro', 'no compet', 'más caro', 'mas caro'] },
+  ]), ['#059669', '#dc2626', '#2563eb', '#d97706']);
+
+  renderMultiQuotes('quotesFuga', ['q2_5', 'q5_1', 'q5_2'], 8);
+
+  // ---- RELACIÓN ----
+  const valorResp = getAllResponses('q9_1');
+  let valPos = 0, valNeg = 0, valMix = 0;
+  valorResp.forEach(r => {
+    const low = r.toLowerCase();
+    if (/sí|si |valorado|apreciad|bien/.test(low) && !/no /.test(low)) valPos++;
+    else if (/no |poco|falta|insufic/.test(low)) valNeg++;
+    else valMix++;
+  });
+  if (valorResp.length > 0) {
+    getOrCreate('cValorados', {
+      type: 'doughnut',
+      data: { labels: ['Sí, valorado', 'No / poco', 'Mixto'], datasets: [{ data: [valPos, valNeg, valMix], backgroundColor: ['#059669', '#dc2626', '#d97706'], borderWidth: 2, borderColor: '#fff' }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+
+  renderThemes('themesBeneficios', extractThemes(getAllResponses('q9_3'), [
+    { label: 'Descuentos / tarifas', terms: ['descuento', 'tarifa', 'precio preferent'] },
+    { label: 'Equipo incluido', terms: ['equipo', 'material', 'instrumental', 'incluido'] },
+    { label: 'Reconocimiento', terms: ['reconocimiento', 'certificado', 'diploma'] },
+    { label: 'Educación / congresos', terms: ['educación', 'educacion', 'congreso', 'capacitación', 'capacitacion'] },
+    { label: 'Referencia de pacientes', terms: ['referencia', 'canalización', 'canalizacion', 'enviar pacient'] },
+    { label: 'Consultorio', terms: ['consultorio', 'espacio', 'oficina'] },
+  ]), ['#2563eb', '#059669', '#7c3aed', '#d97706', '#ec4899', '#0891b2']);
+
+  renderMultiQuotes('quotesPropuestas', ['q10_1', 'q10_2'], 8);
+  renderQuotes('quotesObs', 'q10_obs', 8);
+
+  // ---- RAW ----
+  const rawList = document.getElementById('rawList');
+  if (filteredData.length === 0) {
+    rawList.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg><h3>Sin entrevistas registradas</h3><p>Las entrevistas aparecerán aquí conforme se guarden desde la guía de entrevista.</p></div>';
+  } else {
+    rawList.innerHTML = filteredData.map(d => {
+      const respHtml = Object.entries(d.respuestas || {}).map(([k, v]) =>
+        `<div style="margin-bottom:.5rem"><strong style="color:var(--gold);font-size:.75rem">${Q_LABELS[k] || k}:</strong><br><span style="font-size:.85rem">${v}</span></div>`
+      ).join('');
+      return `
+        <div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+            <div><strong style="font-size:1rem">${d.nombre_entrevistado || 'Anónimo'}</strong> · <span style="color:var(--muted)">${d.especialidad || ''}</span></div>
+            <span class="theme-pill" style="background:${d.perfil === 'Alto' ? '#05966920' : d.perfil === 'Medio' ? '#d9770620' : '#dc262620'};color:${d.perfil === 'Alto' ? '#059669' : d.perfil === 'Medio' ? '#d97706' : '#dc2626'}">${d.perfil || '?'}</span>
+          </div>
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:.8rem">Entrevistó: ${d.entrevistador || '?'} · ${d.fecha_entrevista || '?'} · ${Math.round((d.duracion_segundos || 0) / 60)} min</div>
+          ${respHtml}
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+// ============== INIT ==============
+fetchData();
+</script>
+</body>
+</html>
