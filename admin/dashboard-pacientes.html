@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Pacientes — Hospital Escandón</title>
+<link rel="icon" href="https://hospitalescandon.org/img/core-img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#127850;--green-dark:#0B2D24;--green-mid:#154135;--gold:#AA8A4A;
+  --bg:#F7F6F3;--card:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;
+  --radius:16px;--shadow:0 2px 16px rgba(0,0,0,.06);
+  --rose:#9f1239;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.hero{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));color:#fff;padding:1.8rem 2rem;display:flex;align-items:center;gap:1.2rem;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-60%;right:-10%;width:400px;height:400px;background:radial-gradient(circle,rgba(170,138,74,.12),transparent 70%);border-radius:50%}
+.hero img{height:48px;filter:brightness(10)}
+.hero h1{font-family:'Playfair Display',serif;font-style:italic;font-size:1.5rem;font-weight:700}
+.hero p{font-size:.82rem;opacity:.75}
+.hero .right{margin-left:auto;text-align:right;z-index:1}
+.hero .badge{background:var(--gold);color:#fff;font-size:.68rem;font-weight:700;padding:.2rem .7rem;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+
+nav{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);display:flex;gap:0;overflow-x:auto;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+nav button{flex:none;padding:.75rem 1.2rem;border:none;background:none;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+nav button.active{color:var(--green);border-bottom-color:var(--green)}
+nav button:hover{color:var(--text)}
+
+.container{max-width:1100px;margin:0 auto;padding:1.5rem}
+.page{display:none}.page.active{display:block}
+.row{display:grid;gap:1.2rem;margin-bottom:1.2rem}
+.r2{grid-template-columns:repeat(2,1fr)}.r3{grid-template-columns:repeat(3,1fr)}.r4{grid-template-columns:repeat(4,1fr)}
+
+.kpi{background:var(--card);border-radius:var(--radius);padding:1.2rem;box-shadow:var(--shadow);text-align:center;border:1px solid var(--border)}
+.kpi .val{font-size:2rem;font-weight:800;color:var(--green-dark);line-height:1.1}
+.kpi .label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:.3rem}
+.kpi .sub{font-size:.75rem;color:var(--muted);margin-top:.2rem}
+
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.3rem;border:1px solid var(--border)}
+.card h3{font-family:'Playfair Display',serif;font-style:italic;font-size:1.05rem;font-weight:700;color:var(--green-dark);margin-bottom:.8rem}
+.chart-box{position:relative;height:280px}
+
+.quote{background:#f0fdf4;border-left:4px solid var(--green);border-radius:0 12px 12px 0;padding:.8rem 1rem;margin-bottom:.8rem;font-size:.85rem;position:relative}
+.quote::before{content:'"';font-size:2rem;color:var(--green);opacity:.3;position:absolute;top:-.2rem;left:.5rem;font-family:serif}
+.quote .text{padding-left:1rem;font-style:italic;color:#374151}
+.quote .meta{font-size:.72rem;color:var(--muted);margin-top:.3rem;padding-left:1rem}
+.quote .meta .tag{display:inline-block;background:var(--green);color:#fff;padding:.1rem .4rem;border-radius:4px;font-weight:600;margin-right:.3rem}
+
+.theme-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .7rem;border-radius:20px;font-size:.78rem;font-weight:600;margin:.2rem;transition:transform .1s}
+.theme-pill:hover{transform:scale(1.05)}
+.theme-pill .count{background:rgba(0,0,0,.15);padding:.1rem .4rem;border-radius:10px;font-size:.7rem}
+
+.filters{display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap}
+.filter-btn{padding:.4rem .9rem;border:2px solid var(--border);border-radius:20px;background:var(--card);font-family:'Inter',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s}
+.filter-btn.active{border-color:var(--green);background:var(--green);color:#fff}
+
+.comp-bar{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
+.comp-bar .name{width:140px;font-size:.8rem;font-weight:600;text-align:right;flex-shrink:0}
+.comp-bar .bar-track{flex:1;height:24px;background:#f3f4f6;border-radius:6px;overflow:hidden}
+.comp-bar .bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:.5rem;font-size:.72rem;font-weight:700;color:#fff;transition:width .6s ease}
+
+.empty{text-align:center;padding:2.5rem;color:var(--muted)}
+.empty svg{width:60px;height:60px;stroke:var(--border);fill:none;margin-bottom:1rem}
+.empty h3{color:var(--text);margin-bottom:.3rem}
+
+.timeline-item{display:flex;gap:1rem;margin-bottom:1rem;position:relative;padding-left:1.5rem}
+.timeline-item::before{content:'';position:absolute;left:0;top:.4rem;width:10px;height:10px;border-radius:50%;background:var(--green)}
+.timeline-item::after{content:'';position:absolute;left:4px;top:1.2rem;width:2px;height:calc(100% + .5rem);background:var(--border)}
+.timeline-item:last-child::after{display:none}
+.timeline-item .t-date{font-size:.72rem;font-weight:600;color:var(--gold);min-width:70px}
+.timeline-item .t-content{flex:1;font-size:.85rem}
+
+/* Journey map */
+.journey{display:flex;gap:0;overflow-x:auto;padding-bottom:.5rem}
+.journey-step{flex:none;width:180px;text-align:center;padding:1rem .8rem;position:relative}
+.journey-step::after{content:'→';position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:1.2rem;color:var(--border)}
+.journey-step:last-child::after{display:none}
+.journey-step .icon{font-size:1.5rem;margin-bottom:.4rem}
+.journey-step .step-title{font-size:.78rem;font-weight:700;color:var(--green-dark);margin-bottom:.3rem}
+.journey-step .step-body{font-size:.72rem;color:var(--muted)}
+
+@media(max-width:768px){
+  .r2,.r3,.r4{grid-template-columns:1fr}
+  .hero{flex-direction:column;text-align:center}
+  .hero .right{margin-left:0;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón">
+  <div>
+    <h1>Dashboard — Entrevistas Pacientes</h1>
+    <p>Análisis cualitativo de la investigación de campo</p>
+  </div>
+  <div class="right">
+    <div class="badge" id="badgeCount">Cargando...</div>
+    <p style="font-size:.72rem;margin-top:.3rem;opacity:.7" id="lastUpdate"></p>
+  </div>
+</div>
+
+<nav id="nav"></nav>
+
+<div class="container">
+
+  <!-- PANORAMA -->
+  <div class="page active" id="p-panorama">
+    <div class="row r4">
+      <div class="kpi"><div class="label">Entrevistas</div><div class="val" id="kpi_total">–</div><div class="sub" id="kpi_total_sub">cargando</div></div>
+      <div class="kpi"><div class="label">Duración prom.</div><div class="val" id="kpi_dur">–</div><div class="sub">minutos</div></div>
+      <div class="kpi"><div class="label">Ambulatorios</div><div class="val" id="kpi_amb">–</div><div class="sub">sección 5A</div></div>
+      <div class="kpi"><div class="label">Quirúrgicos</div><div class="val" id="kpi_qx">–</div><div class="sub">sección 5B</div></div>
+    </div>
+    <div class="row r2">
+      <div class="card">
+        <h3>Tipo de paciente entrevistado</h3>
+        <div class="chart-box" style="height:220px"><canvas id="cTipo"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>¿Cómo conocieron el hospital?</h3>
+        <div class="chart-box" style="height:220px"><canvas id="cConocio"></canvas></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Cronología de entrevistas</h3>
+      <div id="timeline"></div>
+    </div>
+  </div>
+
+  <!-- DECISIÓN -->
+  <div class="page" id="p-decision">
+    <div class="filters" id="filtersDec"></div>
+    <div class="row r2">
+      <div class="card">
+        <h3>¿Por qué eligieron el Hospital Escandón?</h3>
+        <div id="themesEleccion"></div>
+      </div>
+      <div class="card">
+        <h3>¿Influye que sea sin fines de lucro?</h3>
+        <div class="chart-box" style="height:200px"><canvas id="cNoLucro"></canvas></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Citas — Proceso de decisión</h3>
+      <div id="quotesDecision"></div>
+    </div>
+  </div>
+
+  <!-- EXPERIENCIA -->
+  <div class="page" id="p-experiencia">
+    <div class="filters" id="filtersExp"></div>
+    <div class="row r2">
+      <div class="card">
+        <h3>Lo que más les gustó</h3>
+        <div id="themesGusto"></div>
+      </div>
+      <div class="card">
+        <h3>Quejas y molestias</h3>
+        <div id="themesQuejas"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Evaluación: espera, costos, trato, instalaciones</h3>
+      <div id="quotesEvaluacion"></div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>¿Casi no regresan? — Momentos críticos</h3>
+      <div id="quotesCriticos"></div>
+    </div>
+  </div>
+
+  <!-- USO SERVICIOS -->
+  <div class="page" id="p-servicios">
+    <div class="filters" id="filtersServ"></div>
+    <div class="row r2">
+      <div class="card">
+        <h3>Servicios realizados fuera y motivo</h3>
+        <div id="themesFuera"></div>
+        <div id="quotesFuera" style="margin-top:1rem"></div>
+      </div>
+      <div class="card">
+        <h3>¿Qué debe cambiar para usar más servicios?</h3>
+        <div id="quotesMasServ"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMBULATORIOS / QUIRÚRGICOS -->
+  <div class="page" id="p-profundizacion">
+    <div class="filters" id="filtersProf"></div>
+    <div class="row r2">
+      <div class="card" style="border-top:4px solid #2563eb">
+        <h3>5A — Hallazgos ambulatorios</h3>
+        <div id="quotesAmb"></div>
+      </div>
+      <div class="card" style="border-top:4px solid var(--rose)">
+        <h3>5B — Hallazgos quirúrgicos</h3>
+        <div id="quotesQx"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Papel del cirujano en la decisión (quirúrgicos)</h3>
+      <div id="quotesCirujanoDecide"></div>
+    </div>
+  </div>
+
+  <!-- COMPETENCIA -->
+  <div class="page" id="p-competencia">
+    <div class="filters" id="filtersComp"></div>
+    <div class="card" style="margin-bottom:1.2rem">
+      <h3>Alternativas mencionadas por los pacientes</h3>
+      <div id="compBars"></div>
+    </div>
+    <div class="row r2">
+      <div class="card">
+        <h3>Opciones más baratas</h3>
+        <div id="quotesBaratas"></div>
+      </div>
+      <div class="card">
+        <h3>Opciones más caras pero mejores</h3>
+        <div id="quotesCaras"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROPUESTAS -->
+  <div class="page" id="p-propuestas">
+    <div class="filters" id="filtersProp"></div>
+    <div class="row r3">
+      <div class="card">
+        <h3>¿Qué mejoraría?</h3>
+        <div id="quotesMejora"></div>
+      </div>
+      <div class="card">
+        <h3>¿Qué para que lo usen más?</h3>
+        <div id="quotesUsen"></div>
+      </div>
+      <div class="card">
+        <h3>¿Qué para atraer más pacientes?</h3>
+        <div id="quotesAtraer"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1.2rem">
+      <h3>Observaciones del entrevistador</h3>
+      <div id="quotesObs"></div>
+    </div>
+  </div>
+
+  <!-- RAW -->
+  <div class="page" id="p-raw">
+    <div class="filters" id="filtersRaw"></div>
+    <div class="card">
+      <h3>Detalle de entrevistas</h3>
+      <div id="rawList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://gggwswbgwihlokrnvktl.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1OTQ2NjAsImV4cCI6MjA1ODE3MDY2MH0.OdMApEXzn7IAHJOQ-DKWkYFaJTr-yfGFX6M3MN-P6WE';
+
+const TABS = [
+  { id: 'panorama', label: 'Panorama' },
+  { id: 'decision', label: 'Decisión' },
+  { id: 'experiencia', label: 'Experiencia' },
+  { id: 'servicios', label: 'Servicios' },
+  { id: 'profundizacion', label: 'Amb. / Qx.' },
+  { id: 'competencia', label: 'Competencia' },
+  { id: 'propuestas', label: 'Propuestas' },
+  { id: 'raw', label: 'Respuestas' },
+];
+
+const Q_LABELS = {
+  q1_1:'Último servicio',q1_2:'Cuándo',q1_3:'Para quién',q1_4:'Seguro o pago directo',q1_5:'Primera vez?',q1_6:'Otros servicios usados',
+  q2_1:'Cómo conoció HE',q2_2:'Quién recomendó',q2_3:'Por qué HE y no otro',q2_4:'Factores más importantes',q2_5:'Otras opciones',q2_6:'Decisión difícil',q2_7:'Influencia sin fines de lucro',
+  q3_1:'Lo que más gustó',q3_2:'Funciona bien',q3_3:'No gustó / molestia',q3_4:'Qué mejorar',q3_5:'Espera/costos/trato/instalaciones',q3_6:'Casi no regresa',
+  q4_1:'Todos servicios en HE?',q4_2:'Qué hizo fuera',q4_3:'Dónde hace estudios',q4_4:'Qué cambiar para más servicios',
+  q5a_1:'Proceso desde cita',q5a_2:'Volvería con médico',q5a_3:'Recomendaría HE',q5a_4:'Necesita cirugía?',q5a_5:'Otras opciones discutidas',q5a_6:'Opinión de opciones',q5a_7:'Elegiría HE para cirugía?',q5a_8:'Cirugías recientes familia',
+  q5b_1:'Por qué operarse en HE',q5b_2:'Papel del cirujano',q5b_3:'Cómo conoció cirujano',q5b_4:'Otras opciones cirujano',q5b_5:'Otros hospitales considerados',q5b_6:'Cuáles y por qué',q5b_7:'Mismo cirujano?',q5b_8:'Ventajas/desventajas',q5b_9:'Si cirujano recomendara otro',q5b_10:'Experiencia antes/durante/después',q5b_11:'Recomendaría operarse en HE',
+  q6_1:'Otros hospitales que usan',q6_2:'Principal alternativa',q6_3:'Mejor o peor',q6_4:'Opciones más baratas',q6_5:'Opciones más caras',
+  q7_1:'Qué mejoraría',q7_2:'Qué para que lo usen más',q7_3:'Qué para atraer pacientes',q7_4:'Temas adicionales',q7_obs:'Observaciones entrevistador'
+};
+
+let allData = [], filteredData = [], activeFilter = 'Todos', charts = {};
+
+// NAV
+const nav = document.getElementById('nav');
+TABS.forEach((t, i) => {
+  const btn = document.createElement('button');
+  btn.textContent = t.label;
+  btn.className = i === 0 ? 'active' : '';
+  btn.onclick = () => {
+    nav.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(`p-${t.id}`).classList.add('active');
+  };
+  nav.appendChild(btn);
+});
+
+// FETCH
+async function fetchData() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/entrevistas_pacientes?select=*&order=created_at.desc`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!res.ok) throw new Error('Table not found');
+    allData = await res.json();
+  } catch (e) { allData = []; }
+  filteredData = [...allData];
+  render();
+}
+
+// HELPERS
+function buildFilters(id) {
+  const el = document.getElementById(id); if (!el) return;
+  el.innerHTML = '';
+  const types = ['Todos', ...new Set(allData.map(d => d.tipo_paciente).filter(Boolean))];
+  types.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (t === activeFilter ? ' active' : '');
+    btn.textContent = t;
+    btn.onclick = () => { activeFilter = t; filteredData = t === 'Todos' ? [...allData] : allData.filter(d => d.tipo_paciente === t); render(); };
+    el.appendChild(btn);
+  });
+}
+
+function getResp(e, k) { return (e.respuestas && e.respuestas[k]) || ''; }
+function getAllR(k) { return filteredData.map(d => getResp(d, k)).filter(Boolean); }
+
+function extractThemes(responses, keywords) {
+  const counts = {};
+  keywords.forEach(k => counts[k.label] = 0);
+  responses.forEach(r => {
+    const low = r.toLowerCase();
+    keywords.forEach(k => { if (k.terms.some(t => low.includes(t))) counts[k.label]++; });
+  });
+  return Object.entries(counts).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+}
+
+function renderThemes(id, themes, colors) {
+  const el = document.getElementById(id); if (!el) return;
+  if (!themes.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin datos aún.</p>'; return; }
+  el.innerHTML = themes.map(([l, c], i) => `<span class="theme-pill" style="background:${colors[i%colors.length]}20;color:${colors[i%colors.length]};border:1px solid ${colors[i%colors.length]}40">${l} <span class="count">${c}</span></span>`).join('');
+}
+
+function renderQuotes(id, key, max = 6) {
+  const el = document.getElementById(id); if (!el) return;
+  const qs = filteredData.filter(d => getResp(d, key)).slice(0, max);
+  if (!qs.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas.</p>'; return; }
+  el.innerHTML = qs.map(d => `<div class="quote"><div class="text">${getResp(d, key)}</div><div class="meta"><span class="tag">${d.tipo_paciente || '?'}</span> ${d.identificador_paciente || '?'} · ${d.fecha_entrevista || ''}</div></div>`).join('');
+}
+
+function renderMultiQ(id, keys, max = 6) {
+  const el = document.getElementById(id); if (!el) return;
+  const qs = [];
+  filteredData.forEach(d => keys.forEach(k => { const t = getResp(d, k); if (t) qs.push({ text: t, tipo: d.tipo_paciente, pac: d.identificador_paciente, fecha: d.fecha_entrevista }); }));
+  if (!qs.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas.</p>'; return; }
+  el.innerHTML = qs.slice(0, max).map(q => `<div class="quote"><div class="text">${q.text}</div><div class="meta"><span class="tag">${q.tipo || '?'}</span> ${q.pac || '?'} · ${q.fecha || ''}</div></div>`).join('');
+}
+
+function getOrCreate(id, config) { if (charts[id]) charts[id].destroy(); const ctx = document.getElementById(id); if (!ctx) return; charts[id] = new Chart(ctx, config); }
+
+const COLORS_POS = ['#059669','#2563eb','#7c3aed','#d97706','#ec4899','#0891b2','#84cc16','#f59e0b'];
+const COLORS_NEG = ['#dc2626','#d97706','#7c3aed','#2563eb','#059669','#ec4899','#6b7280','#0891b2'];
+
+// RENDER
+function render() {
+  ['filtersDec','filtersExp','filtersServ','filtersProf','filtersComp','filtersProp','filtersRaw'].forEach(buildFilters);
+  const n = filteredData.length;
+
+  document.getElementById('kpi_total').textContent = n;
+  document.getElementById('kpi_total_sub').textContent = n === 0 ? 'sin entrevistas' : 'realizadas';
+  document.getElementById('badgeCount').textContent = `${allData.length} entrevista${allData.length !== 1 ? 's' : ''}`;
+
+  const amb = filteredData.filter(d => d.seccion_5_tipo === '5A_Ambulatorio').length;
+  const qx = filteredData.filter(d => d.seccion_5_tipo === '5B_Quirurgico').length;
+  document.getElementById('kpi_amb').textContent = amb;
+  document.getElementById('kpi_qx').textContent = qx;
+
+  if (n > 0) {
+    document.getElementById('kpi_dur').textContent = Math.round(filteredData.reduce((s, d) => s + (d.duracion_segundos || 0), 0) / n / 60);
+    document.getElementById('lastUpdate').textContent = `Última: ${allData[0]?.fecha_entrevista || ''}`;
+
+    // Tipo chart
+    const tipos = {}; filteredData.forEach(d => { const t = d.tipo_paciente || 'Sin tipo'; tipos[t] = (tipos[t]||0)+1; });
+    getOrCreate('cTipo', { type: 'doughnut', data: { labels: Object.keys(tipos), datasets: [{ data: Object.values(tipos), backgroundColor: ['#2563eb','#059669','#d97706','#7c3aed','#ec4899'], borderWidth: 2, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' } } } });
+
+    // Cómo conoció
+    const conocioKW = [
+      { label: 'Recomendación familiar', terms: ['familia', 'papá', 'mamá', 'hermano', 'pariente', 'abuel'] },
+      { label: 'Recomendación médico', terms: ['doctor', 'médico', 'medico', 'recomendó', 'recomendo', 'refir'] },
+      { label: 'Cercanía / zona', terms: ['cercan', 'zona', 'cerca', 'vivo', 'colonia', 'tacubaya'] },
+      { label: 'Internet / redes', terms: ['internet', 'google', 'facebook', 'red social', 'web', 'página'] },
+      { label: 'Urgencia', terms: ['urgencia', 'emergencia', 'accidente'] },
+      { label: 'De toda la vida', terms: ['toda la vida', 'siempre', 'años', 'generacion', 'generación'] },
+    ];
+    const conocioThemes = extractThemes([...getAllR('q2_1'), ...getAllR('q2_2')], conocioKW);
+    if (conocioThemes.length > 0) {
+      getOrCreate('cConocio', { type: 'bar', data: { labels: conocioThemes.map(t => t[0]), datasets: [{ data: conocioThemes.map(t => t[1]), backgroundColor: COLORS_POS, borderRadius: 6 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { stepSize: 1 } } } } });
+    }
+
+    // Timeline
+    const sorted = [...filteredData].sort((a, b) => new Date(a.fecha_entrevista) - new Date(b.fecha_entrevista));
+    document.getElementById('timeline').innerHTML = sorted.map(d => `<div class="timeline-item"><div class="t-date">${d.fecha_entrevista || '?'}</div><div class="t-content"><strong>${d.identificador_paciente || '?'}</strong> · ${d.tipo_paciente || ''} · ${d.seccion_5_tipo === '5B_Quirurgico' ? '🔪 Qx' : '🩺 Amb'} · ${Math.round((d.duracion_segundos||0)/60)} min</div></div>`).join('');
+  } else {
+    document.getElementById('kpi_dur').textContent = '–';
+    document.getElementById('timeline').innerHTML = '<div class="empty"><h3>Sin entrevistas aún</h3><p>Aparecerán conforme se registren.</p></div>';
+  }
+
+  // DECISIÓN
+  const eleccionKW = [
+    { label: 'Precio / accesible', terms: ['precio', 'económ', 'barat', 'accesib', 'costo'] },
+    { label: 'Recomendación', terms: ['recomend', 'refir', 'sugir'] },
+    { label: 'Cercanía', terms: ['cercan', 'cerca', 'zona'] },
+    { label: 'Confianza', terms: ['confianza', 'confí', 'confi', 'segur'] },
+    { label: 'Calidad', terms: ['calidad', 'buen', 'excelent'] },
+    { label: 'Sin fines de lucro', terms: ['sin fines', 'no lucr', 'asistencia', 'social'] },
+    { label: 'Médico específico', terms: ['doctor', 'médico', 'cirujano', 'especialista'] },
+  ];
+  renderThemes('themesEleccion', extractThemes([...getAllR('q2_3'), ...getAllR('q2_4')], eleccionKW), COLORS_POS);
+
+  const noLucro = getAllR('q2_7');
+  let nlPos=0, nlNeg=0, nlMix=0;
+  noLucro.forEach(r => { const l=r.toLowerCase(); if (/mucho|sí|si |import|influy|decisiv/.test(l) && !/no /.test(l)) nlPos++; else if (/no |nada|poco|cero/.test(l)) nlNeg++; else nlMix++; });
+  if (noLucro.length) getOrCreate('cNoLucro', { type: 'doughnut', data: { labels: ['Sí influyó','No influyó','Parcial'], datasets: [{ data: [nlPos,nlNeg,nlMix], backgroundColor: ['#059669','#dc2626','#d97706'], borderWidth: 2, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' } } } });
+
+  renderMultiQ('quotesDecision', ['q2_3','q2_4','q2_5','q2_6'], 8);
+
+  // EXPERIENCIA
+  const gustoKW = [
+    { label: 'Trato / calidez', terms: ['trato', 'amab', 'calid', 'atencion', 'atención'] },
+    { label: 'Precio', terms: ['precio', 'costo', 'económ', 'barat'] },
+    { label: 'Instalaciones', terms: ['instalacion', 'limpi', 'modern'] },
+    { label: 'Rapidez', terms: ['rápid', 'rapid', 'eficien', 'sin espera'] },
+    { label: 'Personal', terms: ['personal', 'enferm', 'equipo'] },
+    { label: 'Confianza / seguridad', terms: ['confianza', 'segur', 'tranquil'] },
+  ];
+  renderThemes('themesGusto', extractThemes([...getAllR('q3_1'), ...getAllR('q3_2')], gustoKW), COLORS_POS);
+
+  const quejaKW = [
+    { label: 'Espera larga', terms: ['esper', 'tard', 'demor', 'lento', 'hora'] },
+    { label: 'Precio / costos', terms: ['precio', 'caro', 'costo', 'cobr'] },
+    { label: 'Instalaciones viejas', terms: ['viejo', 'antigu', 'deterioro', 'feo'] },
+    { label: 'Falta de equipo', terms: ['equipo', 'aparato', 'tecnolog'] },
+    { label: 'Estacionamiento', terms: ['estacionamiento', 'parking'] },
+    { label: 'Comunicación', terms: ['comunicaci', 'inform', 'no explicar'] },
+    { label: 'Limpieza', terms: ['limpi', 'suci', 'higien'] },
+  ];
+  renderThemes('themesQuejas', extractThemes([...getAllR('q3_3'), ...getAllR('q3_4')], quejaKW), COLORS_NEG);
+  renderQuotes('quotesEvaluacion', 'q3_5', 8);
+  renderQuotes('quotesCriticos', 'q3_6', 8);
+
+  // SERVICIOS
+  const fueraKW = [
+    { label: 'Laboratorio', terms: ['laboratorio', 'lab', 'sangre', 'análisis', 'analisis'] },
+    { label: 'Imagen / rayos X', terms: ['imagen', 'rayos', 'tomograf', 'ultrasoni', 'resonanci'] },
+    { label: 'Salud Digna', terms: ['salud digna'] },
+    { label: 'Farmacia', terms: ['farmacia', 'medicament'] },
+    { label: 'Rehabilitación', terms: ['rehabilitaci', 'terapia física', 'terapia fisica'] },
+  ];
+  renderThemes('themesFuera', extractThemes([...getAllR('q4_2'), ...getAllR('q4_3')], fueraKW), COLORS_NEG);
+  renderMultiQ('quotesFuera', ['q4_2', 'q4_3'], 6);
+  renderQuotes('quotesMasServ', 'q4_4', 6);
+
+  // PROFUNDIZACIÓN 5A / 5B
+  renderMultiQ('quotesAmb', ['q5a_1','q5a_2','q5a_3','q5a_7','q5a_8'], 8);
+  renderMultiQ('quotesQx', ['q5b_1','q5b_10','q5b_11'], 8);
+  renderMultiQ('quotesCirujanoDecide', ['q5b_2','q5b_9'], 8);
+
+  // COMPETENCIA
+  const compKW = [
+    { label: 'Salud Digna', terms: ['salud digna'] },
+    { label: 'IMSS / ISSSTE', terms: ['imss', 'issste', 'seguro social'] },
+    { label: 'Hospital de Jesús', terms: ['de jesús', 'de jesus'] },
+    { label: 'Ángeles', terms: ['ángeles', 'angeles'] },
+    { label: 'Médica Sur', terms: ['médica sur', 'medica sur'] },
+    { label: 'Star Médica', terms: ['star médica', 'star medica'] },
+    { label: 'Similares / farmacias', terms: ['similar', 'farmacia', 'consultorio adjunto'] },
+    { label: 'Otro privado', terms: ['clínica', 'clinica', 'otro hospital'] },
+  ];
+  const compResp = [...getAllR('q6_1'), ...getAllR('q6_2')];
+  const compThemes = extractThemes(compResp, compKW);
+  const maxC = compThemes.length > 0 ? compThemes[0][1] : 1;
+  const compEl = document.getElementById('compBars');
+  if (compThemes.length > 0) {
+    compEl.innerHTML = compThemes.map(([l,c], i) => `<div class="comp-bar"><div class="name">${l}</div><div class="bar-track"><div class="bar-fill" style="width:${(c/maxC)*100}%;background:${COLORS_POS[i%COLORS_POS.length]}">${c}</div></div></div>`).join('');
+  } else { compEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin datos.</p>'; }
+
+  renderQuotes('quotesBaratas', 'q6_4', 6);
+  renderQuotes('quotesCaras', 'q6_5', 6);
+
+  // PROPUESTAS
+  renderQuotes('quotesMejora', 'q7_1', 8);
+  renderQuotes('quotesUsen', 'q7_2', 8);
+  renderQuotes('quotesAtraer', 'q7_3', 8);
+  renderQuotes('quotesObs', 'q7_obs', 8);
+
+  // RAW
+  const rawEl = document.getElementById('rawList');
+  if (!filteredData.length) { rawEl.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg><h3>Sin entrevistas</h3><p>Aparecerán conforme se guarden.</p></div>'; return; }
+  rawEl.innerHTML = filteredData.map(d => {
+    const rHtml = Object.entries(d.respuestas || {}).map(([k,v]) => `<div style="margin-bottom:.5rem"><strong style="color:var(--gold);font-size:.75rem">${Q_LABELS[k]||k}:</strong><br><span style="font-size:.85rem">${v}</span></div>`).join('');
+    return `<div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem"><div style="display:flex;justify-content:space-between;margin-bottom:.8rem"><div><strong>${d.identificador_paciente||'?'}</strong> · <span style="color:var(--muted)">${d.tipo_paciente||''}</span></div><span class="theme-pill" style="background:#2563eb20;color:#2563eb">${d.seccion_5_tipo==='5B_Quirurgico'?'Quirúrgico':'Ambulatorio'}</span></div><div style="font-size:.75rem;color:var(--muted);margin-bottom:.8rem">${d.entrevistador||'?'} · ${d.fecha_entrevista||'?'} · ${Math.round((d.duracion_segundos||0)/60)} min</div>${rHtml}</div>`;
+  }).join('');
+}
+
+fetchData();
+</script>
+</body>
+</html>
