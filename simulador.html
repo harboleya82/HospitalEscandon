@@ -204,7 +204,7 @@ tr:hover td{background:#f0fdf4}
 
 <div class="alert alert-red"><div><strong>Corrección importante:</strong> El dato real es <strong>2.6 cirugías/día</strong> (945÷365), no 10.5. El Dr. Samperio es intensivista — su facturación de $10.5M viene de 2 pacientes de UCI de larga estancia, no de volumen quirúrgico. <span class="src-inline">Ctas Hosp Médicos v2 + Reuniones equipo hospitalario</span></div></div>
 
-<div class="row r2" style="margin-bottom:1rem">
+<div style="margin-bottom:1rem">
 <div class="card" style="border:2px solid var(--green)">
 <h2>Datos del Informe Anual 2024 (fuente oficial) <span class="src">Informe Anual 2024, hospitalescandon.org</span></h2>
 <div class="row r4" style="margin-bottom:.8rem">
@@ -237,26 +237,25 @@ tr:hover td{background:#f0fdf4}
 </div>
 </div>
 </div>
+
+<div class="row r3">
 <div class="card">
 <h2>Estructura de ingresos <span class="src">Ctas Hosp Médicos v2</span></h2>
-<div class="chart-box" style="height:220px"><canvas id="cDonut"></canvas></div>
+<div class="chart-box" style="height:200px"><canvas id="cDonut"></canvas></div>
 <div class="donut-legend">
 <span><span class="dot" style="background:var(--green)"></span>Cirujanos $49.7M</span>
 <span><span class="dot" style="background:#64748b"></span>Intensivistas/Internistas $33.8M</span>
 <span><span class="dot" style="background:#94a3b8"></span>Otros médicos $14.3M</span>
 </div>
 </div>
-</div>
-
-<div class="row r2">
 <div class="card">
 <h2>Tendencia de cirugías (10 años) <span class="src">Comparativo Estadísticas Anuales HE 2016-2025</span></h2>
-<div class="chart-box" style="height:220px"><canvas id="cCxTrend"></canvas></div>
+<div class="chart-box" style="height:200px"><canvas id="cCxTrend"></canvas></div>
 <p style="font-size:.75rem;color:var(--muted);margin-top:.3rem"><span class="tag t-fact">HECHO</span> 2024 fue el pico histórico (1,026). 2025 retrocedió a niveles de 2019.</p>
 </div>
 <div class="card">
 <h2>El embudo: pacientes que entran vs. los que llegan a cirugía</h2>
-<div class="chart-box" style="height:220px"><canvas id="cFunnel"></canvas></div>
+<div class="chart-box" style="height:200px"><canvas id="cFunnel"></canvas></div>
 <p style="font-size:.75rem;color:var(--muted);margin-top:.3rem"><span class="tag t-risk">BRECHA</span> 5,727 urgencias y 42,125 consultas → solo 945 cirugías (2.2%). La conversión es el problema central.</p>
 </div>
 </div>
