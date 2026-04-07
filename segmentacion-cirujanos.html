@@ -297,11 +297,68 @@ body { font-family: var(--font-body); background: var(--bg-main); color: var(--t
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 
+const CIRUJANOS_JSON = [
+  {"n":"ALFAN GUZMAN FELIPE","e":"GINECOLOGIA","co":1799,"ci":82,"f":2128894,"p":"Alto"},
+  {"n":"ALCANTARA MENA NALLELY PERLA SUSANA","e":"UROLOGIA","co":604,"ci":67,"f":4214389,"p":"Alto"},
+  {"n":"TOTO MORALES JULIAN GABRIEL","e":"CIRUGIA GENERAL","co":76,"ci":64,"f":2749244,"p":"Alto"},
+  {"n":"JIMENEZ CANET ATILANO ALEJANDRO","e":"CIRUGIA GENERAL","co":224,"ci":63,"f":2362778,"p":"Alto"},
+  {"n":"ORRICO GALVEZ RUBEN DARIO","e":"ORTOPEDIA","co":1229,"ci":62,"f":2224873,"p":"Alto"},
+  {"n":"GAMBOA RAMIREZ FERNANDO","e":"ANGIOLOGIA","co":1168,"ci":51,"f":1354213,"p":"Alto"},
+  {"n":"ZEA PRADO FRANCISCO","e":"GINECOLOGIA","co":1044,"ci":47,"f":1461914,"p":"Alto"},
+  {"n":"ROJAS MACUIL PAULO ROBERTO","e":"GASTROENTEROLOGIA","co":978,"ci":45,"f":381188,"p":"Alto"},
+  {"n":"GARCIA TORRES LUIS JERONIMO","e":"CX CABEZA Y CUELLO","co":175,"ci":44,"f":2561954,"p":"Alto"},
+  {"n":"MARQUEZ UGALDE MIGUEL ANGEL","e":"CIRUGIA GENERAL","co":0,"ci":43,"f":4583886,"p":"Alto"},
+  {"n":"CANALES ZAMORA OSCAR ALEJANDRO","e":"ORTOPEDIA","co":663,"ci":37,"f":1911602,"p":"Alto"},
+  {"n":"ROMAN PROA PRISCILLA","e":"GINECOLOGIA","co":835,"ci":29,"f":1360610,"p":"Alto"},
+  {"n":"ARGUELLES LOPEZ PATRICIA ELIZABETH","e":"CIRUGIA PLASTICA","co":211,"ci":29,"f":777983,"p":"Alto"},
+  {"n":"RIVERA OLIVA DORI DAISY","e":"UROLOGIA","co":625,"ci":24,"f":658416,"p":"Medio"},
+  {"n":"ORTIZ RAMIREZ JUAN EDUARDO","e":"CX MAXILOFACIAL","co":103,"ci":21,"f":1008011,"p":"Medio"},
+  {"n":"HERRERA MEILLON HECTOR","e":"CIRUGIA GENERAL","co":84,"ci":19,"f":1072513,"p":"Medio"},
+  {"n":"CHAVEZ GARRIDO DIANA","e":"ANGIOLOGIA","co":309,"ci":18,"f":450979,"p":"Medio"},
+  {"n":"PALAFOX CARRAL IGNACIO","e":"ORTOPEDIA","co":466,"ci":16,"f":1084831,"p":"Medio"},
+  {"n":"ICAZBALCETA ARGAEZ ANDREA ARANXA","e":"GINECOLOGIA","co":444,"ci":16,"f":516323,"p":"Medio"},
+  {"n":"BACA CARDOSO CINDY JACQUELINE","e":"CIRUGIA GENERAL","co":0,"ci":15,"f":1050108,"p":"Medio"},
+  {"n":"SANCHEZ DE LA BARQUERA GEORGE B.","e":"ORTOPEDIATRIA","co":1,"ci":15,"f":643178,"p":"Medio"},
+  {"n":"ALVAREZ OJEDA JORGE YAIR","e":"ORTOPEDIA","co":243,"ci":15,"f":516789,"p":"Medio"},
+  {"n":"SANCHEZ ARCEGA RICARDO YOZAFAT","e":"NEUROCIRUGIA","co":637,"ci":13,"f":954517,"p":"Medio"},
+  {"n":"TORREJON HERNANDEZ CARLOS ADRIAN","e":"CIRUGIA GENERAL","co":44,"ci":13,"f":704539,"p":"Medio"},
+  {"n":"PALACIOS RIVERA DORIS MICHELLE","e":"CIRUGIA GENERAL","co":69,"ci":13,"f":445307,"p":"Medio"},
+  {"n":"MELGAREJO LOPEZ JUAN CARLOS","e":"CIRUGIA GENERAL","co":10,"ci":12,"f":1964856,"p":"Medio"},
+  {"n":"ZAITSEV ZAITSEVA ANASTASIA","e":"OTORRINOLARINGOLOGIA","co":703,"ci":12,"f":276948,"p":"Medio"},
+  {"n":"FLORIAN MORENO MONICA BEATRIZ","e":"ORTOPEDIA","co":368,"ci":10,"f":354371,"p":"Medio"},
+  {"n":"AYALA HIDALGO JUAN ANTONIO","e":"CIRUGIA PEDIATRICA","co":11,"ci":9,"f":1572244,"p":"Medio"},
+  {"n":"GUZMAN AMOROSO LUIS ANTONIO","e":"ORTOPEDIATRIA","co":0,"ci":9,"f":0,"p":"Medio"},
+  {"n":"BURGOS SANTOS OMAR GABRIEL","e":"CIRUGIA PEDIATRICA","co":129,"ci":8,"f":111434,"p":"Medio"},
+  {"n":"CASTILLA SERRANO HORACIO ALFONSO","e":"OTORRINOLARINGOLOGIA","co":890,"ci":7,"f":200520,"p":"Medio"},
+  {"n":"MORALES SANCHEZ JUAN MANUEL","e":"NEUROCIRUGIA","co":495,"ci":6,"f":348576,"p":"Medio"},
+  {"n":"LOZANO BONILLA FERNANDO","e":"COLOPROCTOLOGIA","co":102,"ci":6,"f":302411,"p":"Medio"},
+  {"n":"VAZQUEZ ARROYO DAVID","e":"UROLOGIA","co":363,"ci":5,"f":210282,"p":"Bajo"},
+  {"n":"CONDE GUTIERREZ MARTHA","e":"CIRUGIA PEDIATRICA","co":0,"ci":5,"f":91166,"p":"Bajo"},
+  {"n":"RIVERA MARTINEZ HECTOR ABAD","e":"NEUMOLOGIA","co":111,"ci":3,"f":544562,"p":"Bajo"},
+  {"n":"TRUJILLO ORTIZ LUIS","e":"UROLOGIA","co":0,"ci":3,"f":252737,"p":"Bajo"},
+  {"n":"RIVERA BAENA SHARLA EDDA","e":"ORTOPEDIA","co":151,"ci":2,"f":202889,"p":"Bajo"},
+  {"n":"BARRERA ORDUÑO ORLANDO ENRIQUE","e":"ORTOPEDIA","co":640,"ci":2,"f":65454,"p":"Bajo"},
+  {"n":"BALDERAS JUAREZ JOANA","e":"NEFROLOGIA","co":0,"ci":1,"f":3230252,"p":"Bajo"},
+  {"n":"GOMEZ CUEVAS CARLOS FERNANDO","e":"CX ONCOLOGICA","co":57,"ci":1,"f":20990,"p":"Bajo"},
+  {"n":"GOMEZ ACOSTA SANDRA AIDEE","e":"ENDOCRINOLOGIA","co":276,"ci":1,"f":1224,"p":"Bajo"},
+  {"n":"HERNANDEZ TREJO ANDRES","e":"CIRUGIA GENERAL","co":186,"ci":0,"f":1525590,"p":"Bajo"},
+  {"n":"ALONSO GARCIA RAQUEL","e":"ONCOLOGIA","co":83,"ci":0,"f":469554,"p":"Bajo"},
+  {"n":"CRESPO MARTINEZ EDWIN JAVIER","e":"CX CARDIOTORACICA","co":6,"ci":0,"f":443965,"p":"Bajo"},
+  {"n":"SAAVEDRA FUENTES NADIA ELIZABETH","e":"NEFROLOGIA","co":209,"ci":0,"f":266591,"p":"Bajo"},
+  {"n":"NUÑEZ DELGADO ERIKA","e":"NEUMOLOGIA","co":737,"ci":0,"f":22549,"p":"Bajo"},
+  {"n":"GOVEA MENDOZA BRENDA","e":"GASTROENTEROLOGIA","co":605,"ci":0,"f":2700,"p":"Bajo"},
+  {"n":"FLORES GONZALEZ MARIA FERNANDA","e":"ENDOCRINOLOGIA","co":350,"ci":0,"f":150,"p":"Bajo"},
+  {"n":"BURGESS VALDEZ FLAQUER ALFRED PAUL","e":"CIRUGIA GENERAL","co":1,"ci":0,"f":0,"p":"Bajo"},
+  {"n":"GARCIA ZAVALA CAROLINA","e":"CIRUGIA PLASTICA","co":0,"ci":0,"f":0,"p":"Bajo"},
+  {"n":"FUENTES ERNULT LUISA VICTORIA","e":"GASTROENTEROLOGIA","co":15,"ci":0,"f":0,"p":"Bajo"},
+  {"n":"MUÑOZ GONZALEZ DAVID EDUARDO","e":"GINECO-ONCOLOGIA","co":23,"ci":0,"f":0,"p":"Bajo"},
+  {"n":"TORRES GONZALEZ CINTIA LILIANA","e":"UROLOGIA","co":62,"ci":0,"f":0,"p":"Bajo"}
+];
+
 let DATA = [];
 
-// Cargar datos desde JSON
-fetch('./data/cirujanos-2025.json')
-  .then(res => res.json())
+// Datos incrustados directamente (evita problema CORS con file://)
+Promise.resolve(CIRUJANOS_JSON)
   .then(data => {
     DATA = data;
     DATA.forEach(d => { d.tot = d.co + d.ci; });
