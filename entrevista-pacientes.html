@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrevista a Pacientes — Hospital Escandón</title>
+<link rel="icon" href="https://hospitalescandon.org/img/core-img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#127850;--green-dark:#0B2D24;--green-mid:#154135;--gold:#AA8A4A;
+  --bg:#F7F6F3;--card:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;
+  --radius:16px;--shadow:0 2px 12px rgba(0,0,0,.06);
+  --rose:#9f1239;--rose-light:#fff1f2;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+
+.hero{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));color:#fff;padding:2rem 1.5rem 1.8rem;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-40%;right:-20%;width:300px;height:300px;background:radial-gradient(circle,rgba(170,138,74,.15),transparent 70%);border-radius:50%}
+.hero img{height:56px;margin-bottom:.8rem;filter:brightness(10)}
+.hero h1{font-family:'Playfair Display',serif;font-style:italic;font-size:1.6rem;font-weight:700;margin-bottom:.3rem}
+.hero p{font-size:.85rem;opacity:.8;max-width:500px;margin:0 auto}
+.hero .badge{display:inline-block;background:var(--gold);color:#fff;font-size:.7rem;font-weight:600;padding:.25rem .8rem;border-radius:20px;margin-top:.8rem;letter-spacing:.5px;text-transform:uppercase}
+
+.progress-bar{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);padding:.6rem 1.5rem;display:flex;align-items:center;gap:.8rem;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.progress-bar .track{flex:1;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:3px;transition:width .4s ease}
+.progress-bar .label{font-size:.75rem;font-weight:600;color:var(--green);white-space:nowrap;min-width:80px;text-align:right}
+
+.container{max-width:720px;margin:0 auto;padding:1.5rem}
+
+.interviewer-note{background:linear-gradient(135deg,#fef9c3,#fef3c7);border:1px solid #f59e0b;border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:.82rem;color:#92400e}
+.interviewer-note strong{color:#78350f}
+.confidentiality-note{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #60a5fa;border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:.82rem;color:#1e40af}
+.confidentiality-note strong{color:#1e3a5f}
+
+.section{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1.2rem;overflow:hidden;border:1px solid var(--border);transition:border-color .3s}
+.section.active{border-color:var(--green)}
+.section-header{padding:1.2rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:1rem;user-select:none;transition:background .2s}
+.section-header:hover{background:#f9fafb}
+.section-num{width:36px;height:36px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0}
+.section.completed .section-num{background:var(--gold)}
+.section.just-completed{animation:completePulse .5s ease}
+@keyframes completePulse{0%{border-color:var(--green);box-shadow:0 0 0 0 rgba(18,120,80,.3)}50%{box-shadow:0 0 0 8px rgba(18,120,80,0)}100%{border-color:var(--border);box-shadow:none}}
+.section-title{flex:1;font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;font-weight:700;color:var(--green-dark)}
+.section-arrow{width:24px;height:24px;transition:transform .3s;color:var(--muted)}
+.section.open .section-arrow{transform:rotate(180deg)}
+.section-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.section.open .section-body{max-height:8000px}
+.section-content{padding:0 1.5rem 1.5rem}
+
+.question{margin-bottom:1.5rem}
+.question:last-child{margin-bottom:0}
+.q-label{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:.5rem;display:flex;gap:.4rem;align-items:flex-start}
+.q-label .q-num{color:var(--gold);font-weight:700;flex-shrink:0}
+.q-hint{font-size:.78rem;color:var(--muted);margin-bottom:.5rem;font-style:italic}
+textarea{width:100%;min-height:100px;border:1.5px solid var(--border);border-radius:12px;padding:.8rem 1rem;font-family:'Inter',sans-serif;font-size:.88rem;resize:vertical;transition:border-color .2s,box-shadow .2s;background:#fafafa}
+textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(18,120,80,.1);background:#fff}
+textarea::placeholder{color:#c4c4c4}
+
+.sub-items{background:#f0fdf4;border-radius:10px;padding:.8rem 1rem;margin-top:.5rem;font-size:.82rem;color:#166534}
+.sub-items strong{display:block;margin-bottom:.3rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--green)}
+.sub-items ul{padding-left:1.2rem;margin:0}
+.sub-items li{margin-bottom:.2rem}
+
+/* TOGGLE for 5A / 5B */
+.toggle-group{display:flex;gap:0;border-radius:12px;overflow:hidden;border:2px solid var(--green);margin-bottom:1.2rem}
+.toggle-btn{flex:1;padding:.8rem;border:none;background:#f3f4f6;font-family:'Inter',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted);text-align:center}
+.toggle-btn.active{background:var(--green);color:#fff}
+.toggle-btn:hover:not(.active){background:#e5e7eb}
+.toggle-content{display:none}
+.toggle-content.active{display:block}
+
+.nav-buttons{display:flex;gap:1rem;margin-top:1.5rem}
+.btn{flex:1;padding:.9rem;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-submit{background:var(--gold);color:#fff}
+.btn-submit:hover{background:#917538}
+.btn-next{background:var(--green);color:#fff}
+.btn-next:hover{background:#0e6040}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+.meta-form{display:grid;gap:1rem;margin-bottom:1rem}
+.meta-field label{display:block;font-size:.82rem;font-weight:600;margin-bottom:.3rem;color:var(--text)}
+.meta-field input,.meta-field select{width:100%;padding:.7rem .9rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.88rem;transition:border-color .2s}
+.meta-field input:focus,.meta-field select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(18,120,80,.1)}
+
+.success-screen{text-align:center;padding:3rem 1.5rem}
+.success-screen .checkmark{width:80px;height:80px;background:var(--green);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1.5rem}
+.success-screen .checkmark svg{width:40px;height:40px;stroke:#fff;stroke-width:3;fill:none}
+.success-screen h2{font-family:'Playfair Display',serif;font-style:italic;font-size:1.6rem;color:var(--green-dark);margin-bottom:.5rem}
+.success-screen p{color:var(--muted);font-size:.9rem}
+
+.timer{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--green-dark);color:#fff;padding:.5rem 1rem;border-radius:20px;font-size:.8rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:200;display:flex;align-items:center;gap:.4rem}
+.timer svg{width:16px;height:16px;stroke:#fff;fill:none}
+
+/* Conditional note */
+.cond-note{background:var(--rose-light);border:1px solid #fda4af;border-radius:10px;padding:.6rem 1rem;margin:.5rem 0;font-size:.8rem;color:var(--rose);font-weight:500}
+
+@media(max-width:600px){
+  .hero h1{font-size:1.3rem}
+  .container{padding:1rem}
+  .section-content{padding:0 1rem 1rem}
+  .section-header{padding:1rem}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <img src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón">
+  <h1>Guía de Entrevista — Pacientes</h1>
+  <p>Diagnóstico estratégico para la atracción de pacientes y utilización de infraestructura</p>
+  <div class="badge">Confidencial · Solo entrevistadores</div>
+</div>
+
+<div class="progress-bar">
+  <div class="track"><div class="fill" id="progressFill" style="width:0%"></div></div>
+  <div class="label" id="progressLabel">0 / 7</div>
+</div>
+
+<div class="container" id="app">
+
+  <!-- INTERVIEWER NOTE -->
+  <div class="interviewer-note">
+    <strong>📋 Nota para el entrevistador:</strong> El objetivo de esta entrevista es entender oportunidades de mejora para el Hospital Escandón que permitan que más pacientes utilicen sus servicios.<br><br>
+    <strong>Duración estimada:</strong> 30–45 minutos.
+  </div>
+
+  <!-- CONFIDENTIALITY SCRIPT -->
+  <div class="confidentiality-note">
+    <strong>🔒 Leer al paciente antes de empezar:</strong><br>
+    "Esta entrevista es completamente confidencial. Sus respuestas serán analizadas en conjunto junto con las de otros pacientes, por lo que en ningún momento se reportará información individual. No se compartirá con el hospital ninguna información que lo identifique. Nos interesa especialmente conocer su opinión real, tanto positiva como negativa, para poder mejorar."
+  </div>
+
+  <!-- METADATA -->
+  <div class="section open" id="sec-meta">
+    <div class="section-header" onclick="toggleSection('meta')">
+      <div class="section-num">⚙</div>
+      <div class="section-title">Datos de la entrevista</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="meta-form">
+        <div class="meta-field">
+          <label>Nombre del entrevistador</label>
+          <input type="text" id="m_entrevistador" placeholder="Ej: Heberto Arboleya">
+        </div>
+        <div class="meta-field">
+          <label>Identificador del paciente (iniciales o código)</label>
+          <input type="text" id="m_paciente" placeholder="Ej: PAC-001 o J.G.M.">
+        </div>
+        <div class="meta-field">
+          <label>Tipo de paciente</label>
+          <select id="m_tipo_paciente">
+            <option value="">— Seleccionar —</option>
+            <option value="Ambulatorio">Ambulatorio (consulta)</option>
+            <option value="Quirúrgico">Quirúrgico (cirugía)</option>
+            <option value="Urgencias">Urgencias</option>
+            <option value="Hospitalización">Hospitalización</option>
+          </select>
+        </div>
+        <div class="meta-field">
+          <label>Fecha de la entrevista</label>
+          <input type="date" id="m_fecha">
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 1: Contexto del Paciente -->
+  <div class="section" id="sec-1">
+    <div class="section-header" onclick="toggleSection('1')">
+      <div class="section-num">1</div>
+      <div class="section-title">Contexto del Paciente</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.1</span> ¿Cuál fue el último servicio que utilizó en el Hospital Escandón?</div>
+        <textarea id="q1_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.2</span> ¿Cuándo fue?</div>
+        <textarea id="q1_2" placeholder="Anotar fecha o periodo aproximado..." style="min-height:60px"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.3</span> ¿Fue para usted o para un familiar?</div>
+        <div class="q-hint">Nota: si fue para un familiar, el resto de la entrevista se referirá al caso del familiar en la opinión de su cuidador.</div>
+        <textarea id="q1_3" placeholder="Anotar respuesta..." style="min-height:60px"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.4</span> ¿Tenía seguro o pagó directamente?</div>
+        <textarea id="q1_4" placeholder="Anotar respuesta..." style="min-height:60px"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.5</span> ¿Era la primera vez o ya había acudido antes?</div>
+        <textarea id="q1_5" placeholder="Anotar respuesta..." style="min-height:60px"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">1.6</span> ¿Qué otros servicios ha utilizado del Hospital Escandón?</div>
+        <textarea id="q1_6" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 2: Conocimiento y decisión -->
+  <div class="section" id="sec-2">
+    <div class="section-header" onclick="toggleSection('2')">
+      <div class="section-num">2</div>
+      <div class="section-title">Conocimiento y decisión</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.1</span> ¿Cómo conoció por primera vez el Hospital Escandón?</div>
+        <textarea id="q2_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.2</span> ¿Quién se lo recomendó o cómo se enteró?</div>
+        <textarea id="q2_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.3</span> ¿Por qué decidió en esta última ocasión atenderse ahí y no en otro lugar?</div>
+        <textarea id="q2_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.4</span> ¿Cuáles fueron los factores más importantes?</div>
+        <textarea id="q2_4" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.5</span> ¿Consideró otras opciones para atenderse? ¿Cuáles y por qué?</div>
+        <textarea id="q2_5" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.6</span> ¿Fue una decisión difícil?</div>
+        <textarea id="q2_6" placeholder="Anotar respuesta..." style="min-height:70px"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">2.7</span> ¿Qué tanto influyó en su decisión que el Hospital Escandón no tenga fines de lucro?</div>
+        <textarea id="q2_7" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 3: Experiencia -->
+  <div class="section" id="sec-3">
+    <div class="section-header" onclick="toggleSection('3')">
+      <div class="section-num">3</div>
+      <div class="section-title">Experiencia</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">3.1</span> ¿Qué fue lo que más le gustó del Hospital Escandón?</div>
+        <textarea id="q3_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">3.2</span> ¿En qué aspectos funciona bien?</div>
+        <textarea id="q3_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">3.3</span> ¿Qué no le gustó o le generó molestia?</div>
+        <textarea id="q3_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">3.4</span> ¿Qué se podría mejorar?</div>
+        <textarea id="q3_4" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">3.5</span> ¿Qué opina en general de: tiempos de espera, costos, trato, instalaciones?</div>
+        <textarea id="q3_5" placeholder="Anotar respuesta por cada tema..." style="min-height:120px"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">3.6</span> ¿Hubo algo que casi lo hiciera no regresar?</div>
+        <textarea id="q3_6" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 4: Uso de servicios -->
+  <div class="section" id="sec-4">
+    <div class="section-header" onclick="toggleSection('4')">
+      <div class="section-num">4</div>
+      <div class="section-title">Uso de servicios</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">4.1</span> Para la última razón de su visita, ¿todos los servicios que necesitó los realizó dentro del Hospital Escandón?</div>
+        <textarea id="q4_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">4.2</span> ¿Qué hizo fuera y por qué?</div>
+        <textarea id="q4_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">4.3</span> En general, más allá de este último caso, ¿dónde realiza sus estudios y por qué?</div>
+        <textarea id="q4_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">4.4</span> ¿Qué tendría que cambiar para que use más servicios dentro del Hospital Escandón?</div>
+        <textarea id="q4_4" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 5: Toggle 5A / 5B -->
+  <div class="section" id="sec-5">
+    <div class="section-header" onclick="toggleSection('5')">
+      <div class="section-num">5</div>
+      <div class="section-title">Profundización por tipo de paciente</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="btn5A" onclick="switchToggle('5A')">5A · Ambulatorio</button>
+        <button class="toggle-btn" id="btn5B" onclick="switchToggle('5B')">5B · Quirúrgico</button>
+      </div>
+
+      <!-- 5A: Ambulatorios -->
+      <div class="toggle-content active" id="content5A">
+        <div class="question">
+          <div class="q-label"><span class="q-num">5A.1</span> ¿Cómo fue el proceso desde que pidió la cita?</div>
+          <div class="sub-items">
+            <strong>Si no lo menciona, explorar:</strong>
+            <ul>
+              <li>Agendamiento</li>
+              <li>Espera</li>
+              <li>Atención médica</li>
+              <li>Claridad</li>
+            </ul>
+          </div>
+          <textarea id="q5a_1" placeholder="Anotar respuesta..." style="margin-top:.5rem"></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5A.2</span> ¿Volvería con el mismo médico?</div>
+          <textarea id="q5a_2" placeholder="Anotar respuesta..." style="min-height:70px"></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5A.3</span> ¿Recomendaría el Hospital Escandón? ¿Por qué?</div>
+          <textarea id="q5a_3" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5A.4</span> ¿Su padecimiento necesita o podría necesitar cirugía u hospitalización?</div>
+          <textarea id="q5a_4" placeholder="Anotar respuesta..." style="min-height:70px"></textarea>
+        </div>
+        <div class="question">
+          <div class="cond-note">↳ Si la respuesta anterior es <strong>SÍ</strong>:</div>
+          <div class="q-label"><span class="q-num">5A.5</span> ¿Ha discutido con su médico otras opciones además del Hospital Escandón? ¿Cuáles?</div>
+          <textarea id="q5a_5" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5A.6</span> ¿Qué opina el médico y usted de esas otras opciones?</div>
+          <textarea id="q5a_6" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="cond-note">↳ Si la respuesta a 5A.4 es <strong>NO</strong>:</div>
+          <div class="q-label"><span class="q-num">5A.7</span> Si hoy tuviera que elegir un hospital para una cirugía u hospitalización, ¿elegiría el Hospital Escandón? ¿Por qué sí o no? ¿Qué otras opciones consideraría?</div>
+          <textarea id="q5a_7" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5A.8</span> ¿En los últimos años usted o algún familiar han tenido alguna cirugía? ¿Consideraron al Hospital Escandón y por qué sí o por qué no? ¿Dónde se operaron y por qué?</div>
+          <textarea id="q5a_8" placeholder="Anotar respuesta..."></textarea>
+        </div>
+      </div>
+
+      <!-- 5B: Quirúrgicos -->
+      <div class="toggle-content" id="content5B">
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.1</span> ¿Cómo y por qué decidió operarse en el Hospital Escandón?</div>
+          <textarea id="q5b_1" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.2</span> ¿Qué papel tuvo su cirujano en la decisión de operarse en el Hospital Escandón?</div>
+          <textarea id="q5b_2" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.3</span> ¿Cómo conoció a su cirujano?</div>
+          <textarea id="q5b_3" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.4</span> ¿Consideró otras opciones de cirujano? ¿Cómo decidió con cuál operarse?</div>
+          <textarea id="q5b_4" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.5</span> ¿Consideró otros hospitales para la operación?</div>
+          <textarea id="q5b_5" placeholder="Anotar respuesta..." style="min-height:70px"></textarea>
+        </div>
+        <div class="question">
+          <div class="cond-note">↳ Si la respuesta anterior es <strong>SÍ</strong>:</div>
+          <div class="q-label"><span class="q-num">5B.6</span> ¿Cuáles consideró y por qué?</div>
+          <textarea id="q5b_6" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.7</span> ¿Las opciones eran con el mismo cirujano o con otros?</div>
+          <textarea id="q5b_7" placeholder="Anotar respuesta..." style="min-height:70px"></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.8</span> ¿Cómo se comparaban las opciones? ¿Ventajas y desventajas?</div>
+          <textarea id="q5b_8" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.9</span> ¿Si su cirujano le hubiera recomendado operarse en otro hospital habría cambiado su decisión?</div>
+          <textarea id="q5b_9" placeholder="Anotar respuesta..."></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.10</span> ¿Cómo fue la experiencia antes, durante y después de la cirugía?</div>
+          <textarea id="q5b_10" placeholder="Anotar respuesta..." style="min-height:120px"></textarea>
+        </div>
+        <div class="question">
+          <div class="q-label"><span class="q-num">5B.11</span> ¿Recomendaría usted a un familiar operarse en el Hospital Escandón? ¿Con el mismo cirujano? ¿Por qué sí o por qué no?</div>
+          <textarea id="q5b_11" placeholder="Anotar respuesta..."></textarea>
+        </div>
+      </div>
+
+    </div></div>
+  </div>
+
+  <!-- SECTION 6: Competencia -->
+  <div class="section" id="sec-6">
+    <div class="section-header" onclick="toggleSection('6')">
+      <div class="section-num">6</div>
+      <div class="section-title">Competencia</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">6.1</span> ¿Qué otros hospitales utilizan usted o su familia?</div>
+        <div class="sub-items">
+          <strong>Separar por tipo:</strong>
+          <ul>
+            <li>Consulta</li>
+            <li>Estudios</li>
+            <li>Cirugías</li>
+            <li>Urgencias</li>
+          </ul>
+        </div>
+        <textarea id="q6_1" placeholder="Anotar respuesta por tipo..." style="margin-top:.5rem;min-height:120px"></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">6.2</span> ¿Cuál es la principal alternativa por tipo de servicio? ¿Por qué?</div>
+        <textarea id="q6_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">6.3</span> ¿Qué hacen mejor o peor?</div>
+        <textarea id="q6_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">6.4</span> ¿Hay opciones más baratas? ¿Cuáles? ¿Cómo se comparan en calidad médica, trato, instalaciones, confianza, facilidad?</div>
+        <textarea id="q6_4" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">6.5</span> ¿Hay opciones más caras pero mejores? ¿Cuáles?</div>
+        <textarea id="q6_5" placeholder="Anotar respuesta..."></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SECTION 7: Cierre -->
+  <div class="section" id="sec-7">
+    <div class="section-header" onclick="toggleSection('7')">
+      <div class="section-num">7</div>
+      <div class="section-title">Cierre</div>
+      <svg class="section-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="section-body"><div class="section-content">
+      <div class="question">
+        <div class="q-label"><span class="q-num">7.1</span> ¿Qué haría para mejorar el Hospital Escandón?</div>
+        <textarea id="q7_1" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">7.2</span> ¿Qué debería cambiar para que lo utilicen más?</div>
+        <textarea id="q7_2" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">7.3</span> ¿Qué debería cambiar para atraer más pacientes?</div>
+        <textarea id="q7_3" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">7.4</span> ¿Hay algún tema adicional que considere importante y que no hemos discutido?</div>
+        <textarea id="q7_4" placeholder="Anotar respuesta..."></textarea>
+      </div>
+      <div class="question">
+        <div class="q-label"><span class="q-num">📝</span> Observaciones del entrevistador</div>
+        <div class="q-hint">Impresiones generales, nivel socioeconómico percibido, emociones, nivel de apertura, temas sensibles, etc.</div>
+        <textarea id="q7_obs" placeholder="Notas libres del entrevistador..." style="min-height:120px"></textarea>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="nav-buttons">
+    <button class="btn btn-submit" onclick="submitInterview()" id="btnSubmit">Guardar entrevista</button>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="successScreen" style="display:none">
+    <div class="checkmark"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <h2>Entrevista guardada</h2>
+    <p>Las respuestas se han almacenado correctamente.</p>
+    <button class="btn btn-next" onclick="resetForm()" style="max-width:300px;margin:1.5rem auto 0">Nueva entrevista</button>
+  </div>
+</div>
+
+<!-- TIMER -->
+<div class="timer" id="timer">
+  <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+  <span id="timerDisplay">00:00</span>
+</div>
+
+<script>
+// --- SUPABASE CONFIG ---
+const SUPABASE_URL = 'https://gggwswbgwihlokrnvktl.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1OTQ2NjAsImV4cCI6MjA1ODE3MDY2MH0.OdMApEXzn7IAHJOQ-DKWkYFaJTr-yfGFX6M3MN-P6WE';
+
+// --- TIMER ---
+let timerStart = Date.now();
+setInterval(() => {
+  const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+  const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const s = String(elapsed % 60).padStart(2, '0');
+  document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+}, 1000);
+
+// --- 5A / 5B TOGGLE ---
+function switchToggle(which) {
+  document.getElementById('btn5A').classList.toggle('active', which === '5A');
+  document.getElementById('btn5B').classList.toggle('active', which === '5B');
+  document.getElementById('content5A').classList.toggle('active', which === '5A');
+  document.getElementById('content5B').classList.toggle('active', which === '5B');
+}
+
+// --- SECTIONS ---
+const totalSections = 7;
+
+function toggleSection(id) {
+  const sec = document.getElementById(`sec-${id}`);
+  sec.classList.toggle('open');
+  updateProgress();
+}
+
+function isSectionComplete(sec) {
+  // For section 5, only check visible (active toggle) textareas
+  if (sec.id === 'sec-5') {
+    const activeContent = sec.querySelector('.toggle-content.active');
+    if (!activeContent) return false;
+    const textareas = activeContent.querySelectorAll('textarea');
+    if (textareas.length === 0) return false;
+    let allFilled = true;
+    textareas.forEach(t => { if (!t.value.trim()) allFilled = false; });
+    return allFilled;
+  }
+  const textareas = sec.querySelectorAll('textarea');
+  if (textareas.length === 0) return false;
+  let allFilled = true;
+  textareas.forEach(t => { if (!t.value.trim()) allFilled = false; });
+  return allFilled;
+}
+
+function updateProgress() {
+  let completed = 0;
+  let firstIncomplete = null;
+  for (let i = 1; i <= totalSections; i++) {
+    const sec = document.getElementById(`sec-${i}`);
+    if (isSectionComplete(sec)) {
+      completed++;
+      sec.classList.add('completed');
+      if (sec.classList.contains('open') && sec._autoCloseArmed) {
+        sec.classList.remove('open');
+        sec.classList.add('just-completed');
+        setTimeout(() => sec.classList.remove('just-completed'), 600);
+        sec._autoCloseArmed = false;
+        if (!firstIncomplete) {
+          for (let j = 1; j <= totalSections; j++) {
+            const next = document.getElementById(`sec-${j}`);
+            if (!isSectionComplete(next)) { firstIncomplete = next; break; }
+          }
+        }
+        if (firstIncomplete && !firstIncomplete.classList.contains('open')) {
+          firstIncomplete.classList.add('open');
+          setTimeout(() => firstIncomplete.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        }
+      }
+    } else {
+      sec.classList.remove('completed');
+      if (!firstIncomplete) firstIncomplete = sec;
+    }
+  }
+  const pct = Math.round((completed / totalSections) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${completed} / ${totalSections}`;
+}
+
+document.querySelectorAll('textarea').forEach(ta => {
+  ta.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      const sec = this.closest('.section');
+      if (sec && sec.classList.contains('open')) sec._autoCloseArmed = true;
+      setTimeout(() => updateProgress(), 50);
+    }
+  });
+  ta.addEventListener('input', function() {
+    updateProgressSilent();
+  });
+});
+
+function updateProgressSilent() {
+  let completed = 0;
+  for (let i = 1; i <= totalSections; i++) {
+    const sec = document.getElementById(`sec-${i}`);
+    if (isSectionComplete(sec)) {
+      completed++;
+      sec.classList.add('completed');
+    } else {
+      sec.classList.remove('completed');
+    }
+  }
+  const pct = Math.round((completed / totalSections) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${completed} / ${totalSections}`;
+}
+
+// --- AUTOSAVE ---
+function autoSave() {
+  const data = {};
+  document.querySelectorAll('textarea, input, select').forEach(el => {
+    if (el.id) data[el.id] = el.value;
+  });
+  // Also save which toggle is active
+  data._toggle5 = document.getElementById('btn5B').classList.contains('active') ? '5B' : '5A';
+  try { localStorage.setItem('entrevista_pacientes_draft', JSON.stringify(data)); } catch(e) {}
+}
+
+function autoLoad() {
+  try {
+    const saved = localStorage.getItem('entrevista_pacientes_draft');
+    if (saved) {
+      const data = JSON.parse(saved);
+      Object.keys(data).forEach(id => {
+        if (id === '_toggle5') {
+          switchToggle(data[id]);
+          return;
+        }
+        const el = document.getElementById(id);
+        if (el) el.value = data[id];
+      });
+      updateProgress();
+    }
+  } catch(e) {}
+}
+
+setInterval(autoSave, 10000);
+document.querySelectorAll('textarea, input, select').forEach(el => {
+  el.addEventListener('change', autoSave);
+});
+
+// --- SUBMIT ---
+async function submitInterview() {
+  const btn = document.getElementById('btnSubmit');
+  
+  const entrevistador = document.getElementById('m_entrevistador').value.trim();
+  const paciente = document.getElementById('m_paciente').value.trim();
+  if (!entrevistador || !paciente) {
+    alert('Por favor completa el nombre del entrevistador y el identificador del paciente.');
+    document.getElementById('sec-meta').classList.add('open');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const respuestas = {};
+  document.querySelectorAll('textarea').forEach(ta => {
+    if (ta.id && ta.value.trim()) {
+      respuestas[ta.id] = ta.value.trim();
+    }
+  });
+
+  const seccion5_tipo = document.getElementById('btn5B').classList.contains('active') ? '5B_Quirurgico' : '5A_Ambulatorio';
+  const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+
+  const payload = {
+    tipo_entrevista: 'pacientes',
+    entrevistador: entrevistador,
+    identificador_paciente: paciente,
+    tipo_paciente: document.getElementById('m_tipo_paciente').value,
+    seccion_5_tipo: seccion5_tipo,
+    fecha_entrevista: document.getElementById('m_fecha').value || new Date().toISOString().split('T')[0],
+    duracion_segundos: elapsed,
+    respuestas: respuestas,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/entrevistas_pacientes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      document.getElementById('app').querySelectorAll('.section, .nav-buttons, .interviewer-note, .confidentiality-note').forEach(el => el.style.display = 'none');
+      document.getElementById('successScreen').style.display = 'block';
+      document.getElementById('timer').style.display = 'none';
+      try { localStorage.removeItem('entrevista_pacientes_draft'); } catch(e) {}
+    } else {
+      const err = await res.text();
+      console.error('Error:', err);
+      alert('Error al guardar. La tabla "entrevistas_pacientes" puede no existir aún en Supabase. Las respuestas se guardaron localmente.');
+      try {
+        const backups = JSON.parse(localStorage.getItem('entrevistas_pacientes_backup') || '[]');
+        backups.push(payload);
+        localStorage.setItem('entrevistas_pacientes_backup', JSON.stringify(backups));
+      } catch(e) {}
+    }
+  } catch(e) {
+    console.error('Network error:', e);
+    alert('Sin conexión. Las respuestas se guardaron localmente como respaldo.');
+    try {
+      const backups = JSON.parse(localStorage.getItem('entrevistas_pacientes_backup') || '[]');
+      backups.push(payload);
+      localStorage.setItem('entrevistas_pacientes_backup', JSON.stringify(backups));
+    } catch(e2) {}
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Guardar entrevista';
+}
+
+function resetForm() {
+  document.querySelectorAll('textarea, input[type="text"], input[type="date"]').forEach(el => el.value = '');
+  document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  document.getElementById('app').querySelectorAll('.section, .nav-buttons, .interviewer-note, .confidentiality-note').forEach(el => el.style.display = '');
+  document.getElementById('successScreen').style.display = 'none';
+  document.getElementById('timer').style.display = 'flex';
+  switchToggle('5A');
+  timerStart = Date.now();
+  updateProgress();
+  window.scrollTo(0, 0);
+  try { localStorage.removeItem('entrevista_pacientes_draft'); } catch(e) {}
+}
+
+// --- INIT ---
+document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0];
+autoLoad();
+</script>
+</body>
+</html>
