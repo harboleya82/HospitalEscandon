@@ -123,6 +123,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .pend-razon{font-size:.75rem;color:var(--gold);background:rgba(170,138,74,.1);border-radius:6px;padding:.25rem .6rem;display:inline-block;margin-bottom:.5rem}
 [data-theme="dark"] .pend-razon{background:rgba(170,138,74,.15)}
 
+/* CONFIRM FORM */
+.btn-conf-toggle{width:100%;margin-top:.6rem;padding:.4rem .7rem;border:1.5px dashed var(--green);background:transparent;border-radius:8px;color:var(--green);font-size:.74rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.2px}
+.btn-conf-toggle:hover{background:rgba(18,120,80,.07)}
+[data-theme="dark"] .btn-conf-toggle{color:#5DCAA5;border-color:#5DCAA5}
+.conf-form{background:#f0fdf4;border-radius:10px;padding:.8rem;margin-top:.5rem;border:1px solid rgba(18,120,80,.2)}
+[data-theme="dark"] .conf-form{background:#0d2410;border-color:rgba(93,202,165,.2)}
+.cf-field{margin-bottom:.55rem}
+.cf-field>label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.5px}
+.cf-field input[type="date"],.cf-field input[type="time"],.cf-field input[type="text"]{width:100%;padding:.42rem .65rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.82rem;background:var(--card);color:var(--text);transition:border-color .2s}
+.cf-field input:focus{outline:none;border-color:var(--green)}
+[data-theme="dark"] .cf-field input{background:#132a1e;border-color:rgba(255,255,255,.15);color:var(--text)}
+.cf-row2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.cf-radio-group{display:flex;gap:.4rem}
+.cf-radio-opt{font-size:.78rem;display:inline-flex;align-items:center;gap:.3rem;cursor:pointer;padding:.3rem .65rem;border:1.5px solid var(--border);border-radius:20px;background:var(--card);transition:all .2s;user-select:none}
+.cf-radio-opt input{display:none}
+.cf-radio-opt.sel{border-color:var(--green);background:rgba(18,120,80,.08);color:var(--green);font-weight:600}
+[data-theme="dark"] .cf-radio-opt{background:#132a1e}
+[data-theme="dark"] .cf-radio-opt.sel{background:#0d2410;color:#5DCAA5;border-color:#5DCAA5}
+.btn-conf-save{width:100%;margin-top:.5rem;padding:.5rem;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:background .2s}
+.btn-conf-save:hover{background:#0e6040}
+
 /* RESPONSIVE */
 @media(max-width:640px){
   .controls{flex-direction:column;align-items:flex-start}
@@ -276,12 +297,74 @@ async function loadCompleted(){
     if(res.ok){
       const rows = await res.json();
       completedNames = new Set(rows.map(r=>normalize(r.nombre_entrevistado||'')));
-      const count = CITAS.filter(c=>isCompleted(c.nombre)).length + PENDIENTES.filter(p=>isCompleted(p.nombre)).length;
+      const allNames = [...CITAS, ...PENDIENTES];
+      const count = allNames.filter(c=>isCompleted(c.nombre)).length;
       document.getElementById('statComp').textContent = count;
+      updateStats();
       render();
     }
   }catch(e){ console.warn('Supabase offline',e); render(); }
 }
+
+// ─── LOCAL CONFIRMED CITAS ───────────────────────────────────────────
+function loadConfirmed(){ try{ return JSON.parse(localStorage.getItem('he-citas-confirmed')||'[]'); }catch(e){ return []; } }
+function saveConfirmed(arr){ localStorage.setItem('he-citas-confirmed', JSON.stringify(arr)); }
+
+function getEffectiveCitas(){
+  const confirmed = loadConfirmed();
+  const extra = PENDIENTES
+    .filter(p => confirmed.find(c => c.nombre === p.nombre))
+    .map(p => { const c = confirmed.find(c => c.nombre === p.nombre); return Object.assign({},p,{fecha:c.fecha,hora:c.hora,forma:c.forma,lugar:c.lugar}); });
+  return CITAS.concat(extra);
+}
+function getEffectivePendientes(){
+  const confirmed = loadConfirmed();
+  return PENDIENTES.filter(p => !confirmed.find(c => c.nombre === p.nombre));
+}
+
+function safeId(nombre){ return nombre.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+// Calendar days derived from all citas (auto-extends when new citas confirmed)
+function getCalDays(){
+  const citas = getEffectiveCitas();
+  const map = new Map();
+  citas.forEach(c => {
+    if(!map.has(c.fecha)){
+      const d = new Date(c.fecha+'T12:00:00');
+      const dow = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()];
+      const date = d.getDate()+' '+['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()];
+      map.set(c.fecha, {dow,date,key:c.fecha});
+    }
+  });
+  return [...map.values()].sort((a,b)=>a.key.localeCompare(b.key));
+}
+
+// Confirm form toggle + save
+window.toggleConfirm = function(id){
+  const f = document.getElementById('cf-'+id);
+  if(!f) return;
+  f.style.display = f.style.display==='none' ? 'block' : 'none';
+};
+window.selectForma = function(id, val){
+  document.querySelectorAll('.cf-radio-opt[data-grp="'+id+'"]').forEach(el => {
+    el.classList.toggle('sel', el.dataset.val===val);
+    const inp = el.querySelector('input');
+    if(inp) inp.checked = el.dataset.val===val;
+  });
+};
+window.doConfirm = function(nombre, id){
+  const fecha  = document.getElementById('cf-fecha-'+id)?.value;
+  const hora   = document.getElementById('cf-hora-'+id)?.value;
+  const lugar  = document.getElementById('cf-lugar-'+id)?.value || 'Hospital Escandón';
+  const formaEl = document.querySelector('.cf-radio-opt.sel[data-grp="'+id+'"]');
+  const forma  = formaEl ? formaEl.dataset.val : 'Presencial';
+  if(!fecha||!hora){ alert('Por favor ingresa fecha y hora.'); return; }
+  const arr = loadConfirmed().filter(c=>c.nombre!==nombre);
+  arr.push({nombre, fecha, hora:hora.substring(0,5), forma, lugar});
+  saveConfirmed(arr);
+  updateStats();
+  render();
+};
 
 // ─── HELPERS ─────────────────────────────────────────────────────────
 function fmt(n){
@@ -318,6 +401,7 @@ function citaCard(c, compact=false){
 function pendCard(p){
   const comp = isCompleted(p.nombre);
   const cls = perfilClass(p.perfil);
+  const id = safeId(p.nombre);
   return `<div class="pend-card" data-perfil="${p.perfil}">
     <div class="pend-nombre">${p.nombre}</div>
     <div class="pend-esp">${p.esp}</div>
@@ -332,18 +416,43 @@ function pendCard(p){
       <div class="kpi-item"><div class="k-val">${ticket(p.ci,p.f)}</div><div class="k-lbl">Ticket</div></div>
     </div>
     ${!comp?`<a href="${interviewUrl(p)}" class="cita-link" style="margin-top:.5rem">Iniciar entrevista →</a>`:'<div class="cita-link" style="color:var(--muted);cursor:default;margin-top:.5rem">Entrevista registrada ✓</div>'}
+    <button class="btn-conf-toggle" onclick="toggleConfirm('${id}')">📅 Confirmar cita</button>
+    <div id="cf-${id}" class="conf-form" style="display:none">
+      <div class="cf-field">
+        <label>Forma</label>
+        <div class="cf-radio-group">
+          <label class="cf-radio-opt sel" data-grp="${id}" data-val="Presencial" onclick="selectForma('${id}','Presencial')"><input type="radio" checked>Presencial</label>
+          <label class="cf-radio-opt" data-grp="${id}" data-val="Zoom" onclick="selectForma('${id}','Zoom')"><input type="radio">Zoom</label>
+        </div>
+      </div>
+      <div class="cf-row2">
+        <div class="cf-field"><label>Fecha</label><input type="date" id="cf-fecha-${id}" min="2026-04-08"></div>
+        <div class="cf-field"><label>Hora</label><input type="time" id="cf-hora-${id}"></div>
+      </div>
+      <div class="cf-field"><label>Lugar</label><input type="text" id="cf-lugar-${id}" value="Hospital Escandón"></div>
+      <button class="btn-conf-save" onclick="doConfirm('${p.nombre.replace(/'/g,"\\'")}','${id}')">✓ Guardar cita</button>
+    </div>
   </div>`;
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────────
-function filteredCitas(){ return currentFilter==='todos'?CITAS:CITAS.filter(c=>c.perfil===currentFilter); }
-function filteredPend(){ return currentFilter==='todos'?PENDIENTES:PENDIENTES.filter(p=>p.perfil===currentFilter); }
+function filteredCitas(){ const all=getEffectiveCitas(); return currentFilter==='todos'?all:all.filter(c=>c.perfil===currentFilter); }
+function filteredPend(){ const all=getEffectivePendientes(); return currentFilter==='todos'?all:all.filter(p=>p.perfil===currentFilter); }
+
+function updateStats(){
+  const eff = getEffectiveCitas();
+  const pend = getEffectivePendientes();
+  document.getElementById('statConf').textContent = eff.length;
+  document.getElementById('statPend').textContent = pend.length;
+}
 
 function renderCal(){
   const citas = filteredCitas();
   const pends = filteredPend();
+  const days = getCalDays();
   const grid = document.getElementById('calGrid');
-  grid.innerHTML = CAL_DAYS.map(d=>{
+  grid.style.gridTemplateColumns = `repeat(${days.length},1fr)`;
+  grid.innerHTML = days.map(d=>{
     const day_citas = citas.filter(c=>c.fecha===d.key).sort((a,b)=>a.hora.localeCompare(b.hora));
     return `<div class="cal-day">
       <div class="cal-day-header"><div class="dow">${d.dow}</div><div class="date">${d.date}</div></div>
@@ -356,7 +465,8 @@ function renderCal(){
 function renderList(){
   const citas = filteredCitas().slice().sort((a,b)=>a.fecha.localeCompare(b.fecha)||a.hora.localeCompare(b.hora));
   const pends = filteredPend();
-  const DAYS_ES = {'2026-04-09':'Jue 9 Abr','2026-04-10':'Vie 10 Abr','2026-04-13':'Lun 13 Abr','2026-04-14':'Mar 14 Abr','2026-04-15':'Mié 15 Abr','2026-04-16':'Jue 16 Abr'};
+  const daysMap = Object.fromEntries(getCalDays().map(d=>[d.key, d.dow+' '+d.date]));
+  const DAYS_ES = daysMap;
   const comp_c = isCompleted.bind(null);
   document.getElementById('listBody').innerHTML = citas.map(c=>{
     const comp = isCompleted(c.nombre);
@@ -415,6 +525,7 @@ function setFilter(f, btn){
 // (handled in entrevista-cirujanos.html)
 
 // ─── INIT ────────────────────────────────────────────────────────────
+updateStats();
 render();
 loadCompleted();
 </script>

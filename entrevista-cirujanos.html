@@ -767,8 +767,20 @@ document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0
     }
   }
   if(dr || esp){
-    // Open meta section if pre-filled from agenda
     document.getElementById('sec-meta').classList.add('open');
+  }
+  // Auto-fill entrevistador desde la sesión activa
+  const entrevEl = document.getElementById('m_entrevistador');
+  if(entrevEl && !entrevEl.value){
+    try{
+      const sess = JSON.parse(localStorage.getItem('sb-gggwswbgwihlokrnvktl-auth-token')||'{}');
+      const email = sess?.user?.email || '';
+      const fullName = sess?.user?.user_metadata?.full_name || sess?.user?.user_metadata?.name || '';
+      if(fullName){ entrevEl.value = fullName; }
+      else if(email){
+        entrevEl.value = email.split('@')[0].split(/[._-]/).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+      }
+    }catch(e){}
   }
 })();
 autoLoad();
