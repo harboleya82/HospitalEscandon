@@ -105,7 +105,8 @@ nav button:hover{color:var(--text)}
 </style>
 </head>
 <body>
-<script>(function(){try{var k='sb-gggwswbgwihlokrnvktl-auth-token',s=JSON.parse(localStorage.getItem(k)||'{}');if(!s.access_token||(s.expires_at&&Math.floor(Date.now()/1000)>s.expires_at)){localStorage.removeItem(k);sessionStorage.setItem('he-auth-dest',location.href);location.replace(window.location.pathname.indexOf('/admin/')!==-1?'../login.html':'login.html');}}catch(e){location.replace('login.html');}})();</script>
+<script>(function(){try{var K='sb-gggwswbgwihlokrnvktl-auth-token',LA='he-last-activity',AL='he-session-alive',LIMIT=21600000,url='../login.html';if(!sessionStorage.getItem(AL)){localStorage.removeItem(K);localStorage.removeItem(LA);sessionStorage.setItem('he-auth-dest',location.href);location.replace(url);return;}var s=JSON.parse(localStorage.getItem(K)||'{}');if(!s.access_token||(s.expires_at&&Math.floor(Date.now()/1000)>s.expires_at)){sessionStorage.removeItem(AL);localStorage.removeItem(K);location.replace(url);return;}var last=parseInt(localStorage.getItem(LA)||'0');if(last&&(Date.now()-last)>LIMIT){localStorage.removeItem(K);localStorage.removeItem(LA);sessionStorage.removeItem(AL);location.replace(url);return;}}catch(e){location.replace('../login.html');}})();</script>
+<script src="../js/session.js"></script>
 
 <div class="hero">
   <img src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón">

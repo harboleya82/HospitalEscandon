@@ -121,11 +121,13 @@ async function doLogin(e){
     return;
   }
 
+  // Establecer centinela de sesión (se borra al cerrar el tab/navegador)
+  sessionStorage.setItem('he-session-alive', '1');
+  localStorage.setItem('he-last-activity', Date.now().toString());
   goHome();
 }
 
 function goHome(){
-  // Redirect to original destination or index
   const dest = sessionStorage.getItem('he-auth-dest') || 'index.html';
   sessionStorage.removeItem('he-auth-dest');
   window.location.replace(dest);
