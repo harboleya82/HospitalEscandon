@@ -779,40 +779,51 @@ autoLoad();
     document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0];
   }
 
-  // Entrevistador: llenar solo si el campo quedó vacío tras autoLoad
+  // Entrevistador: guardar cuando se edita manualmente
   const entrevEl = document.getElementById('m_entrevistador');
-  if(entrevEl && !entrevEl.value.trim()){
-    // Prioridad 1: nombre guardado localmente (se guarda la primera vez que se escribe)
-    const savedName = localStorage.getItem('he-user-name') || '';
-    if(savedName){
-      entrevEl.value = savedName;
-    } else {
-      // Prioridad 2: full_name en user_metadata de Supabase
-      // Prioridad 3: email formateado como fallback
-      try{
-        const sess = JSON.parse(localStorage.getItem('sb-gggwswbgwihlokrnvktl-auth-token')||'{}');
-        const email = sess?.user?.email || '';
-        const fullName = sess?.user?.user_metadata?.full_name
-                      || sess?.user?.user_metadata?.name || '';
-        if(fullName){
-          entrevEl.value = fullName;
-          localStorage.setItem('he-user-name', fullName); // guardar para próximas veces
-        } else if(email){
-          entrevEl.value = email.split('@')[0]
-            .split(/[._-]/)
-            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(' ');
-        }
-      }catch(e){}
-    }
-  }
-
-  // Guardar nombre en localStorage cuando el usuario lo escribe/edita
   if(entrevEl){
     entrevEl.addEventListener('blur', function(){
       const v = this.value.trim();
       if(v) localStorage.setItem('he-user-name', v);
     });
+  }
+
+  // Llenar entrevistador si quedó vacío — consulta fresca a Supabase
+  // (necesario cuando el nombre se actualizó vía SQL después del último login)
+  if(entrevEl && !entrevEl.value.trim()){
+    (async function(){
+      const K = 'sb-gggwswbgwihlokrnvktl-auth-token';
+      const SB_URL  = 'https://gggwswbgwihlokrnvktl.supabase.co';
+      const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjMwMjksImV4cCI6MjA4OTg5OTAyOX0.hyjmonvNM3b9aK4tM8hJGQv7ZF1-1absbczxUwiTCUg';
+      function fmt(email){ return email.split('@')[0].split(/[._-]/).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' '); }
+
+      // 1) Consulta fresca al servidor (incluye metadata actualizada via SQL)
+      try{
+        const sess = JSON.parse(localStorage.getItem(K)||'{}');
+        if(sess.access_token){
+          const r = await fetch(`${SB_URL}/auth/v1/user`,{
+            headers:{'apikey':SB_KEY,'Authorization':'Bearer '+sess.access_token}
+          });
+          if(r.ok){
+            const u = await r.json();
+            const name = u.user_metadata?.full_name || u.user_metadata?.name || '';
+            if(name){ entrevEl.value = name; localStorage.setItem('he-user-name', name); return; }
+            // Si no tiene full_name pero tenemos email, guardarlo formateado como fallback
+            if(u.email){ entrevEl.value = fmt(u.email); return; }
+          }
+        }
+      }catch(e){}
+
+      // 2) Fallback: nombre guardado localmente
+      const saved = localStorage.getItem('he-user-name') || '';
+      if(saved){ entrevEl.value = saved; return; }
+
+      // 3) Fallback: email del token local formateado
+      try{
+        const sess = JSON.parse(localStorage.getItem(K)||'{}');
+        if(sess?.user?.email) entrevEl.value = fmt(sess.user.email);
+      }catch(e){}
+    })();
   }
 })();
 
