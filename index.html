@@ -26,9 +26,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 .hero img{height:62px;margin-bottom:1rem;filter:brightness(10);position:relative;z-index:1}
 .hero h1{font-family:'Playfair Display',serif;font-style:italic;font-size:2rem;font-weight:600;margin-bottom:.35rem;position:relative;z-index:1}
 .hero p{font-size:.88rem;opacity:.8;position:relative;z-index:1}
-.hero-controls{position:absolute;top:1rem;right:1rem;display:flex;gap:.4rem;z-index:2}
+.hero-controls{position:absolute;top:1rem;right:1rem;display:flex;gap:.4rem;align-items:center;z-index:2}
 .theme-btn{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .theme-btn:hover{background:rgba(255,255,255,.25)}
+.logout-btn{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .75rem;border-radius:20px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);font-size:.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+.logout-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+.user-email{font-size:.72rem;color:rgba(255,255,255,.6);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .kpi-bar{background:var(--card);border-bottom:1px solid var(--border);padding:1.2rem 2rem;display:flex;gap:2.5rem;flex-wrap:wrap;justify-content:center;box-shadow:var(--shadow)}
 .kpi-item{text-align:center;min-width:100px}
@@ -66,9 +69,12 @@ footer{text-align:center;padding:2rem;font-size:.78rem;color:var(--muted);border
 </style>
 </head>
 <body>
+<script>(function(){try{var k='sb-gggwswbgwihlokrnvktl-auth-token',s=JSON.parse(localStorage.getItem(k)||'{}');if(!s.access_token||(s.expires_at&&Math.floor(Date.now()/1000)>s.expires_at)){localStorage.removeItem(k);sessionStorage.setItem('he-auth-dest',location.href);location.replace(window.location.pathname.indexOf('/admin/')!==-1?'../login.html':'login.html');}}catch(e){location.replace('login.html');}})();</script>
 
 <div class="hero">
   <div class="hero-controls">
+    <span class="user-email" id="userEmail"></span>
+    <button class="logout-btn" id="logoutBtn" onclick="doLogout()">↩ Salir</button>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Cambiar tema">☀</button>
   </div>
   <img src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón">
@@ -155,6 +161,20 @@ footer{text-align:center;padding:2rem;font-size:.78rem;color:var(--muted);border
 const SUPA_URL = 'https://gggwswbgwihlokrnvktl.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjMwMjksImV4cCI6MjA4OTg5OTAyOX0.hyjmonvNM3b9aK4tM8hJGQv7ZF1-1absbczxUwiTCUg';
 const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// Show logged-in user email and handle logout
+(async function(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(session?.user?.email){
+    const el = document.getElementById('userEmail');
+    if(el) el.textContent = session.user.email;
+  }
+})();
+
+async function doLogout(){
+  await sb.auth.signOut();
+  window.location.replace('login.html');
+}
 
 async function loadKPIs() {
   try {

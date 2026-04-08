@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceso — Hospital Escandón</title>
+<link rel="icon" href="https://hospitalescandon.org/img/core-img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#127850;--green-dark:#0B2D24;--green-mid:#154135;--gold:#AA8A4A;
+  --bg:#F7F6F3;--card:#fff;--text:#1a1a1a;--muted:#6b7280;
+  --border:#e5e7eb;--shadow:0 8px 32px rgba(0,0,0,.10);--radius:18px;
+}
+body{
+  font-family:'Inter',sans-serif;background:linear-gradient(135deg,var(--green-dark) 0%,var(--green-mid) 60%,#1a5c3a 100%);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+.card{
+  background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  width:100%;max-width:400px;padding:2.5rem 2rem;position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:-60px;right:-60px;width:180px;height:180px;
+  background:radial-gradient(circle,rgba(170,138,74,.12),transparent 70%);border-radius:50%;
+}
+.logo{display:block;height:52px;margin:0 auto 1.4rem}
+h1{
+  font-family:'Playfair Display',serif;font-style:italic;font-size:1.5rem;font-weight:700;
+  color:var(--green-dark);text-align:center;margin-bottom:.3rem
+}
+.subtitle{font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:2rem}
+
+label{display:block;font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:.35rem;margin-top:1.1rem}
+input[type="email"],input[type="password"]{
+  width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;
+  font-family:'Inter',sans-serif;font-size:.9rem;transition:border-color .2s,box-shadow .2s;
+  background:#fafafa;color:var(--text)
+}
+input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(18,120,80,.1);background:#fff}
+
+.btn-login{
+  display:block;width:100%;margin-top:1.6rem;padding:.85rem;
+  background:var(--green);color:#fff;border:none;border-radius:12px;
+  font-family:'Inter',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;
+  transition:background .2s,transform .15s;
+}
+.btn-login:hover:not(:disabled){background:#0e6040;transform:translateY(-1px)}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+.error{
+  display:none;margin-top:1rem;padding:.7rem 1rem;border-radius:10px;
+  background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;font-size:.82rem;font-weight:500;
+}
+.error.show{display:block}
+
+.footer-note{text-align:center;margin-top:1.8rem;font-size:.73rem;color:var(--muted)}
+.footer-note a{color:var(--green);text-decoration:none}
+
+/* Spinner */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:.4rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <img class="logo" src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón">
+  <h1>Bienvenido</h1>
+  <p class="subtitle">Plataforma de consultoría · InnovaSalud × Hospital Escandón</p>
+
+  <form id="loginForm" onsubmit="doLogin(event)">
+    <label for="email">Correo electrónico</label>
+    <input type="email" id="email" placeholder="tu@correo.com" required autocomplete="email">
+
+    <label for="password">Contraseña</label>
+    <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+
+    <div class="error" id="errorMsg"></div>
+
+    <button type="submit" class="btn-login" id="btnLogin">Iniciar sesión</button>
+  </form>
+
+  <p class="footer-note">¿Problemas de acceso? Contacta a <a href="mailto:heberto@innovasalud.mx">heberto@innovasalud.mx</a></p>
+</div>
+
+<script>
+const SB_URL = 'https://gggwswbgwihlokrnvktl.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjMwMjksImV4cCI6MjA4OTg5OTAyOX0.hyjmonvNM3b9aK4tM8hJGQv7ZF1-1absbczxUwiTCUg';
+const { createClient } = supabase;
+const sb = createClient(SB_URL, SB_KEY);
+
+// If already logged in, skip login page
+(async function(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(session) goHome();
+})();
+
+async function doLogin(e){
+  e.preventDefault();
+  const btn = document.getElementById('btnLogin');
+  const err = document.getElementById('errorMsg');
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  err.classList.remove('show');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Verificando...';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if(error){
+    err.textContent = error.message === 'Invalid login credentials'
+      ? 'Correo o contraseña incorrectos.'
+      : 'Error: ' + error.message;
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Iniciar sesión';
+    return;
+  }
+
+  goHome();
+}
+
+function goHome(){
+  // Redirect to original destination or index
+  const dest = sessionStorage.getItem('he-auth-dest') || 'index.html';
+  sessionStorage.removeItem('he-auth-dest');
+  window.location.replace(dest);
+}
+</script>
+</body>
+</html>
