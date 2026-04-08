@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda de Entrevistas — Hospital Escandón</title>
+<link rel="icon" href="https://hospitalescandon.org/img/core-img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#127850;--green-dark:#0B2D24;--green-mid:#154135;--gold:#AA8A4A;
+  --bg:#F7F6F3;--card:#fff;--text:#1a1a1a;--muted:#6b7280;
+  --border:#e5e7eb;--shadow:0 2px 12px rgba(0,0,0,.06);--radius:14px;
+  --alto:#127850;--alto-bg:#f0fdf4;--alto-text:#166534;
+  --medio:#d97706;--medio-bg:#fef9c3;--medio-text:#854d0e;
+  --bajo:#64748b;--bajo-bg:#f1f5f9;--bajo-text:#334155;
+}
+[data-theme="dark"]{
+  --bg:#091a13;--card:#0f2319;--text:#e4f0ea;--muted:#7da990;
+  --border:rgba(255,255,255,.1);--shadow:0 2px 12px rgba(0,0,0,.3);
+  --alto-bg:#0d2410;--alto-text:#5DCAA5;
+  --medio-bg:#2a1f00;--medio-text:#fbbf24;
+  --bajo-bg:#1e293b;--bajo-text:#94a3b8;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--green-dark),var(--green-mid));color:#fff;padding:2rem 1.5rem 1.8rem;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:-40%;right:-20%;width:300px;height:300px;background:radial-gradient(circle,rgba(170,138,74,.15),transparent 70%);border-radius:50%;pointer-events:none}
+.hero-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;position:relative;z-index:2}
+.hero-actions{display:flex;gap:.5rem;align-items:center}
+.back-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .75rem;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .2s}
+.back-btn:hover{background:rgba(255,255,255,.22)}
+.theme-btn{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-btn:hover{background:rgba(255,255,255,.22)}
+.hero-body{position:relative;z-index:2}
+.hero img{height:48px;filter:brightness(10);margin-bottom:.6rem;display:block}
+.hero h1{font-family:'Playfair Display',serif;font-style:italic;font-size:1.7rem;font-weight:700;margin-bottom:.2rem}
+.hero p{font-size:.85rem;opacity:.8}
+
+/* STATS */
+.stats-bar{background:var(--card);border-bottom:1px solid var(--border);padding:.8rem 1.5rem;display:flex;gap:2rem;overflow-x:auto}
+.stat{text-align:center;min-width:80px}
+.stat .val{font-size:1.5rem;font-weight:800;color:var(--green);line-height:1}
+[data-theme="dark"] .stat .val{color:#5DCAA5}
+.stat .lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:.15rem}
+.stat.s-pend .val{color:var(--gold)}
+.stat.s-comp .val{color:#059669}
+
+/* CONTROLS */
+.controls{padding:.9rem 1.5rem;display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;border-bottom:1px solid var(--border);background:var(--card)}
+.toggle-group{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.toggle-group button{padding:.4rem .9rem;border:none;background:transparent;cursor:pointer;font-size:.8rem;font-weight:500;color:var(--muted);transition:all .2s}
+.toggle-group button.on{background:var(--green);color:#fff}
+.filter-group{display:flex;gap:.4rem;margin-left:auto}
+.filter-btn{padding:.35rem .8rem;border:1px solid var(--border);border-radius:20px;background:transparent;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--muted);transition:all .2s}
+.filter-btn.on{border-color:var(--green);color:var(--green);background:rgba(18,120,80,.07)}
+[data-theme="dark"] .filter-btn.on{background:rgba(18,120,80,.2)}
+
+/* MAIN CONTENT */
+.main{max-width:1100px;margin:0 auto;padding:1.2rem 1.5rem}
+
+/* CALENDAR VIEW */
+.cal-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.7rem;min-width:700px}
+.cal-scroll{overflow-x:auto;padding-bottom:.5rem}
+.cal-day{min-width:130px}
+.cal-day-header{background:var(--green-dark);color:#fff;border-radius:8px 8px 0 0;padding:.5rem .7rem;text-align:center}
+.cal-day-header .dow{font-size:.68rem;opacity:.75;text-transform:uppercase;letter-spacing:.5px}
+.cal-day-header .date{font-size:1rem;font-weight:700;margin-top:.1rem}
+.cal-day-body{background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:.5rem;display:flex;flex-direction:column;gap:.5rem;min-height:60px}
+.cal-empty{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.75rem;padding:.8rem 0;opacity:.5}
+
+/* APPOINTMENT CARDS */
+.cita-card{border-radius:10px;padding:.7rem .85rem;border-left:4px solid;transition:transform .15s,box-shadow .15s;position:relative}
+.cita-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.cita-card.alto{border-left-color:var(--alto);background:var(--alto-bg)}
+.cita-card.medio{border-left-color:var(--medio);background:var(--medio-bg)}
+.cita-card.bajo{border-left-color:var(--bajo);background:var(--bajo-bg)}
+.cita-hora{font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:.25rem}
+.cita-nombre{font-size:.78rem;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:.2rem}
+.cita-esp{font-size:.7rem;color:var(--muted);margin-bottom:.35rem}
+.cita-badges{display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.4rem}
+.badge{font-size:.62rem;font-weight:700;padding:.15rem .5rem;border-radius:10px;text-transform:uppercase;letter-spacing:.3px}
+.badge-alto{background:#dcfce7;color:#166534}
+.badge-medio{background:#fef9c3;color:#854d0e}
+.badge-bajo{background:#f1f5f9;color:#475569}
+[data-theme="dark"] .badge-alto{background:#0d2410;color:#5DCAA5}
+[data-theme="dark"] .badge-medio{background:#2a1f00;color:#fbbf24}
+[data-theme="dark"] .badge-bajo{background:#1e293b;color:#94a3b8}
+.badge-zoom{background:#ede9fe;color:#5b21b6}
+[data-theme="dark"] .badge-zoom{background:#1e1040;color:#a78bfa}
+.badge-comp{background:#dcfce7;color:#166534;border:1px solid #86efac}
+[data-theme="dark"] .badge-comp{background:#0d2410;color:#5DCAA5;border-color:#16532d}
+.cita-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:.2rem;font-size:.65rem;border-top:1px solid rgba(0,0,0,.07);padding-top:.35rem;margin-top:.1rem}
+[data-theme="dark"] .cita-kpis{border-top-color:rgba(255,255,255,.08)}
+.kpi-item .k-val{font-weight:700;color:var(--text);font-size:.72rem}
+.kpi-item .k-lbl{color:var(--muted);font-size:.6rem}
+.cita-link{display:block;margin-top:.45rem;font-size:.7rem;font-weight:600;color:var(--green);text-decoration:none;text-align:right}
+[data-theme="dark"] .cita-link{color:#5DCAA5}
+.cita-link:hover{text-decoration:underline}
+
+/* LIST VIEW */
+.list-table{width:100%;border-collapse:collapse}
+.list-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:.6rem .9rem;text-align:left;border-bottom:2px solid var(--border);background:var(--card);position:sticky;top:0;z-index:2}
+.list-table td{padding:.7rem .9rem;border-bottom:1px solid var(--border);font-size:.83rem;vertical-align:middle;background:var(--card)}
+.list-table tr:hover td{background:rgba(18,120,80,.04)}
+[data-theme="dark"] .list-table tr:hover td{background:rgba(93,202,165,.05)}
+.dr-name{font-weight:700;color:var(--text);font-size:.85rem}
+.dr-esp{font-size:.75rem;color:var(--muted)}
+.kpi-chip{font-size:.75rem;font-weight:600;color:var(--text)}
+.kpi-sub{font-size:.68rem;color:var(--muted)}
+
+/* SECTION TITLE */
+.section-title{font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;font-weight:700;color:var(--green-dark);margin:1.5rem 0 .7rem;display:flex;align-items:center;gap:.5rem}
+[data-theme="dark"] .section-title{color:#5DCAA5}
+
+/* PENDIENTES */
+.pend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.7rem}
+.pend-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem}
+.pend-nombre{font-weight:700;font-size:.85rem;margin-bottom:.2rem}
+.pend-esp{font-size:.75rem;color:var(--muted);margin-bottom:.4rem}
+.pend-razon{font-size:.75rem;color:var(--gold);background:rgba(170,138,74,.1);border-radius:6px;padding:.25rem .6rem;display:inline-block;margin-bottom:.5rem}
+[data-theme="dark"] .pend-razon{background:rgba(170,138,74,.15)}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .controls{flex-direction:column;align-items:flex-start}
+  .filter-group{margin-left:0}
+  .stats-bar{gap:1.2rem}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <div class="hero-actions">
+      <a href="index.html" class="back-btn">← Panel de Control</a>
+    </div>
+    <div class="hero-actions">
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Cambiar tema">☀</button>
+    </div>
+  </div>
+  <div class="hero-body">
+    <img src="https://hospitalescandon.org/img/core-img/logo.png" alt="Hospital Escandón">
+    <h1>Agenda de Entrevistas</h1>
+    <p>Selección de cirujanos · Semana 9–16 de Abril 2026</p>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat"><div class="val">15</div><div class="lbl">Total</div></div>
+  <div class="stat"><div class="val" id="statConf">10</div><div class="lbl">Confirmadas</div></div>
+  <div class="stat s-pend"><div class="val" id="statPend">5</div><div class="lbl">Pendientes</div></div>
+  <div class="stat s-comp"><div class="val" id="statComp">—</div><div class="lbl">Completadas</div></div>
+  <div class="stat"><div class="val" id="statAlto">5</div><div class="lbl">Perfil Alto</div></div>
+  <div class="stat"><div class="val" id="statMedio">5</div><div class="lbl">Perfil Medio</div></div>
+  <div class="stat"><div class="val" id="statBajo">5</div><div class="lbl">Perfil Bajo</div></div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="toggle-group">
+    <button class="on" id="btnCal" onclick="setView('cal')">📅 Calendario</button>
+    <button id="btnList" onclick="setView('list')">≡ Lista</button>
+  </div>
+  <div class="filter-group">
+    <button class="filter-btn on" onclick="setFilter('todos',this)">Todos</button>
+    <button class="filter-btn" onclick="setFilter('Alto',this)">Alto</button>
+    <button class="filter-btn" onclick="setFilter('Medio',this)">Medio</button>
+    <button class="filter-btn" onclick="setFilter('Bajo',this)">Bajo</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- CALENDAR VIEW -->
+  <div id="calView">
+    <div class="cal-scroll">
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="section-title" style="margin-top:1.8rem">⏳ Pendientes — Requieren seguimiento</div>
+    <div class="pend-grid" id="pendGrid"></div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="listView" style="display:none">
+    <div style="overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden">
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th>Doctor</th>
+            <th>Perfil</th>
+            <th>Fecha / Hora</th>
+            <th>Lugar</th>
+            <th>Facturación 2025</th>
+            <th>Cirugías</th>
+            <th>Ticket promedio</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="listBody"></tbody>
+      </table>
+    </div>
+    <div class="section-title" style="margin-top:1.8rem">⏳ Pendientes — Requieren seguimiento</div>
+    <div class="pend-grid" id="pendGridList"></div>
+  </div>
+
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────
+const CITAS = [
+  {nombre:'Alfán Guzmán Felipe',   esp:'Ginecología',    perfil:'Alto',  fecha:'2026-04-09',hora:'9:30', lugar:'Hospital Escandón', forma:'Presencial',co:1799,ci:82,f:2128894},
+  {nombre:'Guzmán Amoroso Luis Antonio',esp:'Ortopediatría',perfil:'Medio',fecha:'2026-04-09',hora:'16:00',lugar:'Hospital Escandón',forma:'Presencial',co:0,ci:9,f:0},
+  {nombre:'Alcantara Mena Nallely Susana',esp:'Urología',perfil:'Alto',fecha:'2026-04-10',hora:'12:00',lugar:'Hospital Escandón',forma:'Presencial',co:604,ci:67,f:4214389},
+  {nombre:'Canales Zamora Oscar Alejandro',esp:'Ortopedia',perfil:'Alto',fecha:'2026-04-13',hora:'11:00',lugar:'Hospital Escandón',forma:'Presencial',co:663,ci:37,f:1911602},
+  {nombre:'Rivera Oliva Dori Daisy',esp:'Urología',perfil:'Medio',fecha:'2026-04-13',hora:'11:30',lugar:'Hospital Escandón',forma:'Presencial',co:625,ci:24,f:658416},
+  {nombre:'Arguelles López Patricia Elizabeth',esp:'Cirugía Plástica',perfil:'Alto',fecha:'2026-04-14',hora:'10:00',lugar:'Hospital Escandón',forma:'Presencial',co:211,ci:29,f:777983},
+  {nombre:'Conde Gutiérrez Martha',esp:'Cirugía Pediátrica',perfil:'Bajo',fecha:'2026-04-14',hora:'14:00',lugar:'Consultorio Dra. (Zoom)',forma:'Zoom',co:0,ci:5,f:91166},
+  {nombre:'Castilla Serrano Horacio Alfonso',esp:'Otorrinolaringología',perfil:'Medio',fecha:'2026-04-15',hora:'16:30',lugar:'Hospital Escandón',forma:'Presencial',co:890,ci:7,f:200520},
+  {nombre:'Ortiz Ramírez Juan Eduardo',esp:'Cx. Maxilofacial',perfil:'Medio',fecha:'2026-04-16',hora:'10:30',lugar:'Hospital Escandón',forma:'Presencial',co:103,ci:21,f:1008011},
+  {nombre:'Herrera Meillón Hector',esp:'Cirugía General',perfil:'Medio',fecha:'2026-04-16',hora:'11:00',lugar:'Hospital Escandón',forma:'Presencial',co:84,ci:19,f:1072513},
+];
+
+const PENDIENTES = [
+  {nombre:'Márquez Ugalde Miguel Ángel',esp:'Cirugía General',perfil:'Alto',razon:'Estaba en cirugía — llamar más tarde',co:0,ci:43,f:4583886},
+  {nombre:'Vázquez Arroyo David',esp:'Urología',perfil:'Bajo',razon:'Estaba en consulta — llamar más tarde',co:363,ci:5,f:210282},
+  {nombre:'Fuentes Ernult Luisa Victoria',esp:'Gastroenterología',perfil:'Bajo',razon:'Estaba en consulta — llamar más tarde',co:15,ci:0,f:0},
+  {nombre:'Burgess Valdez Flaquer Alfred Paul',esp:'Cirugía General',perfil:'Bajo',razon:'No responde — llamar más tarde',co:1,ci:0,f:0},
+  {nombre:'Rivera Martínez Hector Abad',esp:'Neumología',perfil:'Bajo',razon:'No responde — llamar más tarde',co:111,ci:3,f:544562},
+];
+
+// Days for calendar
+const CAL_DAYS = [
+  {dow:'Jue',date:'9 Abr',key:'2026-04-09'},
+  {dow:'Vie',date:'10 Abr',key:'2026-04-10'},
+  {dow:'Lun',date:'13 Abr',key:'2026-04-13'},
+  {dow:'Mar',date:'14 Abr',key:'2026-04-14'},
+  {dow:'Mié',date:'15 Abr',key:'2026-04-15'},
+  {dow:'Jue',date:'16 Abr',key:'2026-04-16'},
+];
+
+// ─── SUPABASE ────────────────────────────────────────────────────────
+const SB_URL = 'https://gggwswbgwihlokrnvktl.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnZ3dzd2Jnd2lobG9rcm52a3RsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjMwMjksImV4cCI6MjA4OTg5OTAyOX0.hyjmonvNM3b9aK4tM8hJGQv7ZF1-1absbczxUwiTCUg';
+
+let completedNames = new Set(); // normalized names of completed interviews
+let currentFilter = 'todos';
+
+function normalize(str){
+  return (str||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+}
+
+function isCompleted(nombre){
+  const n = normalize(nombre);
+  for(const c of completedNames){
+    // Match if first two words of the normalized name match
+    const words = n.split(' ');
+    if(c.includes(words[0]) && (words.length < 2 || c.includes(words[1]))) return true;
+  }
+  return false;
+}
+
+async function loadCompleted(){
+  try{
+    const res = await fetch(`${SB_URL}/rest/v1/entrevistas_cirujanos?select=nombre_entrevistado`,{
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+    });
+    if(res.ok){
+      const rows = await res.json();
+      completedNames = new Set(rows.map(r=>normalize(r.nombre_entrevistado||'')));
+      const count = CITAS.filter(c=>isCompleted(c.nombre)).length + PENDIENTES.filter(p=>isCompleted(p.nombre)).length;
+      document.getElementById('statComp').textContent = count;
+      render();
+    }
+  }catch(e){ console.warn('Supabase offline',e); render(); }
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────
+function fmt(n){
+  if(!n) return '$0';
+  if(n>=1000000) return '$'+(n/1000000).toFixed(1)+'M';
+  if(n>=1000) return '$'+(n/1000).toFixed(0)+'K';
+  return '$'+n;
+}
+function ticket(ci,f){ return ci>0 ? fmt(Math.round(f/ci)) : '—'; }
+function perfilClass(p){ return p==='Alto'?'alto':p==='Medio'?'medio':'bajo'; }
+function interviewUrl(c){ return `entrevista-cirujanos.html?dr=${encodeURIComponent(c.nombre)}&esp=${encodeURIComponent(c.esp)}`; }
+
+function citaCard(c, compact=false){
+  const comp = isCompleted(c.nombre);
+  const cls = perfilClass(c.perfil);
+  return `<div class="cita-card ${cls}" data-perfil="${c.perfil}">
+    ${c.hora?`<div class="cita-hora">⏰ ${c.hora}</div>`:''}
+    <div class="cita-nombre">${c.nombre}</div>
+    <div class="cita-esp">${c.esp}</div>
+    <div class="cita-badges">
+      <span class="badge badge-${cls}">${c.perfil}</span>
+      ${c.forma==='Zoom'?'<span class="badge badge-zoom">Zoom</span>':''}
+      ${comp?'<span class="badge badge-comp">✓ Completada</span>':''}
+    </div>
+    <div class="cita-kpis">
+      <div class="kpi-item"><div class="k-val">${fmt(c.f)}</div><div class="k-lbl">Facturación</div></div>
+      <div class="kpi-item"><div class="k-val">${c.ci}</div><div class="k-lbl">Cirugías</div></div>
+      <div class="kpi-item"><div class="k-val">${ticket(c.ci,c.f)}</div><div class="k-lbl">Ticket</div></div>
+    </div>
+    ${!comp?`<a href="${interviewUrl(c)}" class="cita-link">Iniciar entrevista →</a>`:'<div class="cita-link" style="color:var(--muted);cursor:default">Entrevista registrada ✓</div>'}
+  </div>`;
+}
+
+function pendCard(p){
+  const comp = isCompleted(p.nombre);
+  const cls = perfilClass(p.perfil);
+  return `<div class="pend-card" data-perfil="${p.perfil}">
+    <div class="pend-nombre">${p.nombre}</div>
+    <div class="pend-esp">${p.esp}</div>
+    <div class="pend-razon">${p.razon}</div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">
+      <span class="badge badge-${cls}">${p.perfil}</span>
+      ${comp?'<span class="badge badge-comp">✓ Completada</span>':''}
+    </div>
+    <div class="cita-kpis" style="border-top:1px solid var(--border);padding-top:.4rem">
+      <div class="kpi-item"><div class="k-val">${fmt(p.f)}</div><div class="k-lbl">Facturación</div></div>
+      <div class="kpi-item"><div class="k-val">${p.ci}</div><div class="k-lbl">Cirugías</div></div>
+      <div class="kpi-item"><div class="k-val">${ticket(p.ci,p.f)}</div><div class="k-lbl">Ticket</div></div>
+    </div>
+    ${!comp?`<a href="${interviewUrl(p)}" class="cita-link" style="margin-top:.5rem">Iniciar entrevista →</a>`:'<div class="cita-link" style="color:var(--muted);cursor:default;margin-top:.5rem">Entrevista registrada ✓</div>'}
+  </div>`;
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────
+function filteredCitas(){ return currentFilter==='todos'?CITAS:CITAS.filter(c=>c.perfil===currentFilter); }
+function filteredPend(){ return currentFilter==='todos'?PENDIENTES:PENDIENTES.filter(p=>p.perfil===currentFilter); }
+
+function renderCal(){
+  const citas = filteredCitas();
+  const pends = filteredPend();
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = CAL_DAYS.map(d=>{
+    const day_citas = citas.filter(c=>c.fecha===d.key).sort((a,b)=>a.hora.localeCompare(b.hora));
+    return `<div class="cal-day">
+      <div class="cal-day-header"><div class="dow">${d.dow}</div><div class="date">${d.date}</div></div>
+      <div class="cal-day-body">${day_citas.length?day_citas.map(c=>citaCard(c,true)).join(''):'<div class="cal-empty">Sin citas</div>'}
+      </div></div>`;
+  }).join('');
+  document.getElementById('pendGrid').innerHTML = pends.map(pendCard).join('') || '<p style="color:var(--muted);font-size:.85rem">Sin pendientes en este filtro.</p>';
+}
+
+function renderList(){
+  const citas = filteredCitas().slice().sort((a,b)=>a.fecha.localeCompare(b.fecha)||a.hora.localeCompare(b.hora));
+  const pends = filteredPend();
+  const DAYS_ES = {'2026-04-09':'Jue 9 Abr','2026-04-10':'Vie 10 Abr','2026-04-13':'Lun 13 Abr','2026-04-14':'Mar 14 Abr','2026-04-15':'Mié 15 Abr','2026-04-16':'Jue 16 Abr'};
+  const comp_c = isCompleted.bind(null);
+  document.getElementById('listBody').innerHTML = citas.map(c=>{
+    const comp = isCompleted(c.nombre);
+    const cls = perfilClass(c.perfil);
+    return `<tr>
+      <td><div class="dr-name">${c.nombre}</div><div class="dr-esp">${c.esp}</div></td>
+      <td><span class="badge badge-${cls}">${c.perfil}</span></td>
+      <td><div class="kpi-chip">${DAYS_ES[c.fecha]||c.fecha}</div><div class="kpi-sub">${c.hora} — ${c.lugar}</div></td>
+      <td><div class="kpi-sub">${c.forma==='Zoom'?'🖥 Zoom':'🏥 Presencial'}</div></td>
+      <td><div class="kpi-chip">${fmt(c.f)}</div></td>
+      <td><div class="kpi-chip">${c.ci} cx</div></td>
+      <td><div class="kpi-chip">${ticket(c.ci,c.f)}</div></td>
+      <td>${comp?'<span class="badge badge-comp">✓ Completada</span>':'<span style="font-size:.75rem;color:var(--muted)">Pendiente</span>'}</td>
+      <td>${!comp?`<a href="${interviewUrl(c)}" style="font-size:.75rem;font-weight:600;color:var(--green);text-decoration:none;white-space:nowrap">Entrevistar →</a>`:'—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('pendGridList').innerHTML = pends.map(pendCard).join('') || '<p style="color:var(--muted);font-size:.85rem">Sin pendientes en este filtro.</p>';
+}
+
+function render(){
+  const v = document.getElementById('calView').style.display !== 'none' ? 'cal' : 'list';
+  if(v==='cal') renderCal(); else renderList();
+}
+
+// ─── VIEW / FILTER CONTROLS ──────────────────────────────────────────
+function setView(v){
+  document.getElementById('calView').style.display = v==='cal'?'':'none';
+  document.getElementById('listView').style.display = v==='list'?'':'none';
+  document.getElementById('btnCal').classList.toggle('on', v==='cal');
+  document.getElementById('btnList').classList.toggle('on', v==='list');
+  render();
+}
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  render();
+}
+
+// ─── DARK MODE ───────────────────────────────────────────────────────
+(function(){
+  function applyTheme(dark){
+    document.documentElement.setAttribute('data-theme',dark?'dark':'');
+    const btn=document.getElementById('themeBtn');
+    if(btn)btn.textContent=dark?'☾':'☀';
+    localStorage.setItem('he-theme',dark?'dark':'light');
+  }
+  window.toggleTheme=function(){applyTheme(document.documentElement.getAttribute('data-theme')!=='dark');};
+  const saved=localStorage.getItem('he-theme');
+  if(saved){applyTheme(saved==='dark');}
+  else{applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);}
+})();
+
+// ─── URL PARAM (pre-fill de regreso) ─────────────────────────────────
+// (handled in entrevista-cirujanos.html)
+
+// ─── INIT ────────────────────────────────────────────────────────────
+render();
+loadCompleted();
+</script>
+</body>
+</html>
