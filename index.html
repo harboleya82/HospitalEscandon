@@ -166,11 +166,57 @@ const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 // Show logged-in user email and handle logout
 (async function(){
   const { data: { session } } = await sb.auth.getSession();
-  if(session?.user?.email){
-    const el = document.getElementById('userEmail');
-    if(el) el.textContent = session.user.email;
+  if(!session) return;
+  const email = session.user.email || '';
+  const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || '';
+  const savedName = localStorage.getItem('he-user-name') || '';
+  const displayName = fullName || savedName;
+
+  const el = document.getElementById('userEmail');
+  if(el) el.textContent = displayName || email;
+
+  // Si no hay nombre configurado → mostrar banner de configuración
+  if(!displayName){
+    showNameBanner(email);
   }
 })();
+
+function showNameBanner(email){
+  const guess = email.split('@')[0].split(/[._-]/).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+  const banner = document.createElement('div');
+  banner.id = 'nameBanner';
+  banner.innerHTML = `
+    <div style="flex:1;min-width:0">
+      <div style="font-size:.83rem;font-weight:700;color:var(--text);margin-bottom:.2rem">¿Cómo te llamas?</div>
+      <div style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem">Para identificarte como entrevistador en las encuestas</div>
+      <input id="nameInput" type="text" placeholder="Nombre completo"
+        value="${guess}"
+        style="width:100%;padding:.5rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-family:Inter,sans-serif;font-size:.85rem;background:var(--bg);color:var(--text);box-sizing:border-box">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.4rem;flex-shrink:0">
+      <button onclick="saveName()" style="padding:.5rem 1.1rem;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:Inter,sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap">Guardar</button>
+      <button onclick="document.getElementById('nameBanner').remove()" style="padding:.4rem;background:transparent;border:none;color:var(--muted);font-size:.75rem;cursor:pointer">Después</button>
+    </div>`;
+  Object.assign(banner.style, {
+    position:'fixed',bottom:'1.5rem',left:'50%',transform:'translateX(-50%)',
+    background:'var(--card)',border:'1.5px solid var(--green)',borderRadius:'14px',
+    padding:'1rem 1.2rem',boxShadow:'0 8px 32px rgba(0,0,0,.15)',zIndex:'500',
+    display:'flex',gap:'1rem',alignItems:'center',
+    maxWidth:'440px',width:'calc(100% - 2rem)',boxSizing:'border-box'
+  });
+  document.body.appendChild(banner);
+  setTimeout(()=>{ const inp=document.getElementById('nameInput'); if(inp){ inp.select(); } }, 100);
+}
+
+async function saveName(){
+  const name = (document.getElementById('nameInput')?.value || '').trim();
+  if(!name) return;
+  localStorage.setItem('he-user-name', name);
+  // Guardar en Supabase user_metadata para que persista en todos los dispositivos
+  try{ await sb.auth.updateUser({ data: { full_name: name } }); }catch(e){}
+  document.getElementById('userEmail').textContent = name;
+  document.getElementById('nameBanner')?.remove();
+}
 
 async function doLogout(){
   await sb.auth.signOut();
