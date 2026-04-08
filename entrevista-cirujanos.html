@@ -745,22 +745,29 @@ function resetForm() {
 
 // --- INIT ---
 document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0];
-// Pre-fill from agenda URL params (?dr=NOMBRE&esp=ESPECIALIDAD)
+
+// 1) Cargar borrador primero
+autoLoad();
+
+// 2) Aplicar pre-fills DESPUÉS de autoLoad (para que no queden sobreescritos)
 (function(){
   const params = new URLSearchParams(window.location.search);
-  const dr = params.get('dr');
+  const dr  = params.get('dr');
   const esp = params.get('esp');
+
+  // Si viene de la agenda con ?dr=, siempre sobreescribir doctor y especialidad
   if(dr){
     const el = document.getElementById('m_cirujano');
-    if(el && !el.value) el.value = dr;
+    if(el) el.value = dr;
   }
   if(esp){
     const sel = document.getElementById('m_especialidad');
     if(sel){
-      // Try to match by value (JSON key)
       const norm = esp.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
       for(const opt of sel.options){
-        if(opt.value === norm || opt.text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().includes(norm.split(' ')[0])){
+        if(opt.value === norm ||
+           opt.text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase()
+             .includes(norm.split(' ')[0])){
           sel.value = opt.value; break;
         }
       }
@@ -768,22 +775,46 @@ document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0
   }
   if(dr || esp){
     document.getElementById('sec-meta').classList.add('open');
+    // Nueva cita desde agenda: resetear fecha a hoy
+    document.getElementById('m_fecha').value = new Date().toISOString().split('T')[0];
   }
-  // Auto-fill entrevistador desde la sesión activa
+
+  // Entrevistador: llenar solo si el campo quedó vacío tras autoLoad
   const entrevEl = document.getElementById('m_entrevistador');
-  if(entrevEl && !entrevEl.value){
-    try{
-      const sess = JSON.parse(localStorage.getItem('sb-gggwswbgwihlokrnvktl-auth-token')||'{}');
-      const email = sess?.user?.email || '';
-      const fullName = sess?.user?.user_metadata?.full_name || sess?.user?.user_metadata?.name || '';
-      if(fullName){ entrevEl.value = fullName; }
-      else if(email){
-        entrevEl.value = email.split('@')[0].split(/[._-]/).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
-      }
-    }catch(e){}
+  if(entrevEl && !entrevEl.value.trim()){
+    // Prioridad 1: nombre guardado localmente (se guarda la primera vez que se escribe)
+    const savedName = localStorage.getItem('he-user-name') || '';
+    if(savedName){
+      entrevEl.value = savedName;
+    } else {
+      // Prioridad 2: full_name en user_metadata de Supabase
+      // Prioridad 3: email formateado como fallback
+      try{
+        const sess = JSON.parse(localStorage.getItem('sb-gggwswbgwihlokrnvktl-auth-token')||'{}');
+        const email = sess?.user?.email || '';
+        const fullName = sess?.user?.user_metadata?.full_name
+                      || sess?.user?.user_metadata?.name || '';
+        if(fullName){
+          entrevEl.value = fullName;
+          localStorage.setItem('he-user-name', fullName); // guardar para próximas veces
+        } else if(email){
+          entrevEl.value = email.split('@')[0]
+            .split(/[._-]/)
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ');
+        }
+      }catch(e){}
+    }
+  }
+
+  // Guardar nombre en localStorage cuando el usuario lo escribe/edita
+  if(entrevEl){
+    entrevEl.addEventListener('blur', function(){
+      const v = this.value.trim();
+      if(v) localStorage.setItem('he-user-name', v);
+    });
   }
 })();
-autoLoad();
 
 // Dark mode
 (function(){
