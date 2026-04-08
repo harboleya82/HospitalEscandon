@@ -153,8 +153,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <!-- STATS -->
 <div class="stats-bar">
   <div class="stat"><div class="val">15</div><div class="lbl">Total</div></div>
-  <div class="stat"><div class="val" id="statConf">10</div><div class="lbl">Confirmadas</div></div>
-  <div class="stat s-pend"><div class="val" id="statPend">5</div><div class="lbl">Pendientes</div></div>
+  <div class="stat"><div class="val" id="statConf">11</div><div class="lbl">Confirmadas</div></div>
+  <div class="stat s-pend"><div class="val" id="statPend">4</div><div class="lbl">Pendientes</div></div>
   <div class="stat s-comp"><div class="val" id="statComp">—</div><div class="lbl">Completadas</div></div>
   <div class="stat"><div class="val" id="statAlto">5</div><div class="lbl">Perfil Alto</div></div>
   <div class="stat"><div class="val" id="statMedio">5</div><div class="lbl">Perfil Medio</div></div>
@@ -223,13 +223,13 @@ const CITAS = [
   {nombre:'Rivera Oliva Dori Daisy',esp:'Urología',perfil:'Medio',fecha:'2026-04-13',hora:'11:30',lugar:'Hospital Escandón',forma:'Presencial',co:625,ci:24,f:658416},
   {nombre:'Arguelles López Patricia Elizabeth',esp:'Cirugía Plástica',perfil:'Alto',fecha:'2026-04-14',hora:'10:00',lugar:'Hospital Escandón',forma:'Presencial',co:211,ci:29,f:777983},
   {nombre:'Conde Gutiérrez Martha',esp:'Cirugía Pediátrica',perfil:'Bajo',fecha:'2026-04-14',hora:'14:00',lugar:'Consultorio Dra. (Zoom)',forma:'Zoom',co:0,ci:5,f:91166},
+  {nombre:'Márquez Ugalde Miguel Ángel',esp:'Cirugía General',perfil:'Alto',fecha:'2026-04-14',hora:'15:00',lugar:'Zoom',forma:'Zoom',co:0,ci:43,f:4583886},
   {nombre:'Castilla Serrano Horacio Alfonso',esp:'Otorrinolaringología',perfil:'Medio',fecha:'2026-04-15',hora:'16:30',lugar:'Hospital Escandón',forma:'Presencial',co:890,ci:7,f:200520},
   {nombre:'Ortiz Ramírez Juan Eduardo',esp:'Cx. Maxilofacial',perfil:'Medio',fecha:'2026-04-16',hora:'10:30',lugar:'Hospital Escandón',forma:'Presencial',co:103,ci:21,f:1008011},
   {nombre:'Herrera Meillón Hector',esp:'Cirugía General',perfil:'Medio',fecha:'2026-04-16',hora:'11:00',lugar:'Hospital Escandón',forma:'Presencial',co:84,ci:19,f:1072513},
 ];
 
 const PENDIENTES = [
-  {nombre:'Márquez Ugalde Miguel Ángel',esp:'Cirugía General',perfil:'Alto',razon:'Estaba en cirugía — llamar más tarde',co:0,ci:43,f:4583886},
   {nombre:'Vázquez Arroyo David',esp:'Urología',perfil:'Bajo',razon:'Estaba en consulta — llamar más tarde',co:363,ci:5,f:210282},
   {nombre:'Fuentes Ernult Luisa Victoria',esp:'Gastroenterología',perfil:'Bajo',razon:'Estaba en consulta — llamar más tarde',co:15,ci:0,f:0},
   {nombre:'Burgess Valdez Flaquer Alfred Paul',esp:'Cirugía General',perfil:'Bajo',razon:'No responde — llamar más tarde',co:1,ci:0,f:0},
