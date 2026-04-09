@@ -165,6 +165,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn-conf-save{width:100%;margin-top:.5rem;padding:.5rem;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:background .2s}
 .btn-conf-save:hover{background:#0e6040}
 
+/* COMPLETED CARDS */
+.comp-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;opacity:.75;position:relative}
+.comp-card::after{content:'✓';position:absolute;top:.7rem;right:.9rem;font-size:1rem;color:#059669;font-weight:800}
+.comp-nombre{font-weight:700;font-size:.85rem;margin-bottom:.15rem;color:var(--text)}
+.comp-esp{font-size:.75rem;color:var(--muted);margin-bottom:.4rem}
+.comp-meta{font-size:.72rem;color:#059669;font-weight:600;margin-bottom:.4rem}
+[data-theme="dark"] .comp-card{opacity:.65}
+[data-theme="dark"] .comp-meta{color:#5DCAA5}
+
 /* RESPONSIVE */
 @media(max-width:640px){
   .controls{flex-direction:column;align-items:flex-start}
@@ -228,6 +237,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
     <div class="section-title" style="margin-top:1.8rem">⏳ Pendientes — Requieren seguimiento</div>
     <div class="pend-grid" id="pendGrid"></div>
+    <div id="compSection" style="display:none">
+      <div class="section-title" style="margin-top:1.8rem">✅ Encuesta realizada</div>
+      <div class="pend-grid" id="compGrid"></div>
+    </div>
   </div>
 
   <!-- LIST VIEW -->
@@ -302,10 +315,15 @@ function normalize(str){
 
 function isCompleted(nombre){
   const n = normalize(nombre);
+  const nWords = n.split(' ').filter(w => w.length > 2);
   for(const c of completedNames){
-    // Match if first two words of the normalized name match
-    const words = n.split(' ');
-    if(c.includes(words[0]) && (words.length < 2 || c.includes(words[1]))) return true;
+    if(!c) continue;
+    // Exact match
+    if(c === n) return true;
+    // Bidirectional word match: require at least 2 significant words in common
+    const cWords = c.split(' ').filter(w => w.length > 2);
+    const matches = nWords.filter(w => cWords.includes(w)).length;
+    if(matches >= 2) return true;
   }
   return false;
 }
@@ -318,6 +336,8 @@ async function loadCompleted(){
     if(res.ok){
       const rows = await res.json();
       completedNames = new Set(rows.map(r=>normalize(r.nombre_entrevistado||'')));
+      console.log('[Agenda] Entrevistas en Supabase raw:', rows.map(r=>r.nombre_entrevistado));
+      console.log('[Agenda] Normalizados:', [...completedNames]);
       const allNames = [...CITAS, ...PENDIENTES];
       const count = allNames.filter(c=>isCompleted(c.nombre)).length;
       document.getElementById('statComp').textContent = count;
@@ -430,6 +450,24 @@ function citaCard(c, compact=false){
   </div>`;
 }
 
+function completedCard(c){
+  const cls = perfilClass(c.perfil);
+  return `<div class="comp-card" data-perfil="${c.perfil}">
+    <div class="comp-nombre">${c.nombre}</div>
+    <div class="comp-esp">${c.esp}</div>
+    <div class="comp-meta">Encuesta realizada ✓</div>
+    <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+      <span class="badge badge-${cls}">${c.perfil}</span>
+      ${c.forma==='Zoom'?'<span class="badge badge-zoom">Zoom</span>':''}
+    </div>
+    <div class="cita-kpis" style="border-top:1px solid var(--border);padding-top:.35rem;margin-top:.5rem">
+      <div class="kpi-item"><div class="k-val">${fmt(c.f)}</div><div class="k-lbl">Facturación</div></div>
+      <div class="kpi-item"><div class="k-val">${c.ci}</div><div class="k-lbl">Cirugías</div></div>
+      <div class="kpi-item"><div class="k-val">${ticket(c.ci,c.f)}</div><div class="k-lbl">Ticket</div></div>
+    </div>
+  </div>`;
+}
+
 function pendCard(p){
   const comp = isCompleted(p.nombre);
   const cls = perfilClass(p.perfil);
@@ -468,14 +506,16 @@ function pendCard(p){
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────────
-function filteredCitas(){ const all=getEffectiveCitas(); return currentFilter==='todos'?all:all.filter(c=>c.perfil===currentFilter); }
-function filteredPend(){ const all=getEffectivePendientes(); return currentFilter==='todos'?all:all.filter(p=>p.perfil===currentFilter); }
+function filteredCitas(){ const all=getEffectiveCitas().filter(c=>!isCompleted(c.nombre)); return currentFilter==='todos'?all:all.filter(c=>c.perfil===currentFilter); }
+function filteredPend(){ const all=getEffectivePendientes().filter(p=>!isCompleted(p.nombre)); return currentFilter==='todos'?all:all.filter(p=>p.perfil===currentFilter); }
+function filteredCompleted(){ const all=[...getEffectiveCitas(),...getEffectivePendientes()].filter(c=>isCompleted(c.nombre)); return currentFilter==='todos'?all:all.filter(c=>c.perfil===currentFilter); }
 
 function updateStats(){
   const eff = getEffectiveCitas();
   const pend = getEffectivePendientes();
-  document.getElementById('statConf').textContent = eff.length;
-  document.getElementById('statPend').textContent = pend.length;
+  const pendientes = eff.filter(c=>!isCompleted(c.nombre)).length + pend.filter(p=>!isCompleted(p.nombre)).length;
+  document.getElementById('statConf').textContent = eff.filter(c=>!isCompleted(c.nombre)).length;
+  document.getElementById('statPend').textContent = pendientes;
 }
 
 function renderCal(){
@@ -492,6 +532,15 @@ function renderCal(){
       </div></div>`;
   }).join('');
   document.getElementById('pendGrid').innerHTML = pends.map(pendCard).join('') || '<p style="color:var(--muted);font-size:.85rem">Sin pendientes en este filtro.</p>';
+  const comp = filteredCompleted();
+  const compSection = document.getElementById('compSection');
+  const compGrid = document.getElementById('compGrid');
+  if(comp.length){
+    compSection.style.display = '';
+    compGrid.innerHTML = comp.map(completedCard).join('');
+  } else {
+    compSection.style.display = 'none';
+  }
 }
 
 function renderList(){

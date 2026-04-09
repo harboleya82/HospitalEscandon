@@ -362,6 +362,56 @@ TABS.forEach((t, i) => {
   nav.appendChild(btn);
 });
 
+// ============== CATÁLOGO CIRUJANOS (perfil + especialidad) ==============
+const CATALOGO = [
+  {nombre:'Alfán Guzmán Felipe',              perfil:'Alto',  esp:'Ginecología'},
+  {nombre:'Guzmán Amoroso Luis Antonio',       perfil:'Medio', esp:'Ortopediatría'},
+  {nombre:'Alcantara Mena Nallely Susana',     perfil:'Alto',  esp:'Urología'},
+  {nombre:'Canales Zamora Oscar Alejandro',    perfil:'Alto',  esp:'Ortopedia'},
+  {nombre:'Rivera Oliva Dori Daisy',           perfil:'Medio', esp:'Urología'},
+  {nombre:'Arguelles López Patricia Elizabeth',perfil:'Alto',  esp:'Cirugía Plástica'},
+  {nombre:'Conde Gutiérrez Martha',            perfil:'Bajo',  esp:'Cirugía Pediátrica'},
+  {nombre:'Márquez Ugalde Miguel Ángel',       perfil:'Alto',  esp:'Cirugía General'},
+  {nombre:'Castilla Serrano Horacio Alfonso',  perfil:'Medio', esp:'Otorrinolaringología'},
+  {nombre:'Ortiz Ramírez Juan Eduardo',        perfil:'Medio', esp:'Cx. Maxilofacial'},
+  {nombre:'Herrera Meillón Hector',            perfil:'Medio', esp:'Cirugía General'},
+  {nombre:'Vázquez Arroyo David',              perfil:'Bajo',  esp:'Urología'},
+  {nombre:'Fuentes Ernult Luisa Victoria',     perfil:'Bajo',  esp:'Gastroenterología'},
+  {nombre:'Burgess Valdez Flaquer Alfred Paul',perfil:'Bajo',  esp:'Cirugía General'},
+  {nombre:'Rivera Martínez Hector Abad',       perfil:'Bajo',  esp:'Neumología'},
+];
+
+function normName(str){
+  return (str||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+}
+
+function lookupCatalog(nombreEntrevistado){
+  const n = normName(nombreEntrevistado);
+  // exact match first
+  let found = CATALOGO.find(c => normName(c.nombre) === n);
+  if(!found){
+    // fuzzy: first two words of either side match
+    const words = n.split(' ');
+    found = CATALOGO.find(c => {
+      const cn = normName(c.nombre);
+      return words.slice(0,2).every(w => cn.includes(w));
+    });
+  }
+  return found || null;
+}
+
+function enrichWithCatalog(rows){
+  return rows.map(d => {
+    if(d.perfil && d.perfil !== 'Sin perfil') return d; // already set
+    const cat = lookupCatalog(d.nombre_entrevistado);
+    if(!cat) return d;
+    return Object.assign({}, d, {
+      perfil: d.perfil || cat.perfil,
+      especialidad: d.especialidad || cat.esp,
+    });
+  });
+}
+
 // ============== FETCH DATA ==============
 async function fetchData() {
   try {
@@ -369,7 +419,7 @@ async function fetchData() {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
     if (!res.ok) throw new Error('Table not found');
-    allData = await res.json();
+    allData = enrichWithCatalog(await res.json());
   } catch (e) {
     console.warn('Supabase fetch failed, using empty data:', e);
     allData = [];
