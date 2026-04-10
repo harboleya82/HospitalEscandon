@@ -29,6 +29,10 @@
 [data-theme="dark"] .comp-bar .bar-track{background:#132a1e}
 [data-theme="dark"] .kpi .val{color:#5DCAA5}
 [data-theme="dark"] .card h3{color:#5DCAA5}
+[data-theme="dark"] .interview-card{background:#0f2319;border-color:rgba(255,255,255,.1)}
+[data-theme="dark"] .interview-header{background:#132a1e}
+[data-theme="dark"] .resp-row:hover{background:#132a1e}
+[data-theme="dark"] .edit-input{background:#091a13;color:var(--text);border-color:rgba(255,255,255,.2)}
 .back-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .75rem;border-radius:20px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:.78rem;font-weight:600;text-decoration:none;transition:all .2s}
 .back-btn:hover{background:rgba(255,255,255,.22)}
 .theme-btn{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s}
@@ -128,10 +132,71 @@ nav button:hover{color:var(--text)}
 .timeline-item .t-date{font-size:.72rem;font-weight:600;color:var(--gold);min-width:70px}
 .timeline-item .t-content{flex:1;font-size:.85rem}
 
+/* ===================== INTERVIEW CARD (colapsable + editable) ===================== */
+.interview-card{border:1px solid var(--border);border-radius:12px;margin-bottom:1rem;overflow:hidden;background:var(--card)}
+
+.interview-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.9rem 1.1rem;cursor:pointer;
+  background:#f9fafb;
+  transition:background .15s;
+  user-select:none;
+}
+.interview-header:hover{background:#f0fdf4}
+
+.interview-header .ih-left{display:flex;align-items:center;gap:.8rem}
+.interview-header .ih-name{font-weight:700;font-size:.95rem}
+.interview-header .ih-meta{font-size:.75rem;color:var(--muted)}
+.interview-header .ih-right{display:flex;align-items:center;gap:.6rem}
+.interview-header .chevron{font-size:.85rem;color:var(--muted);transition:transform .25s}
+.interview-header.open .chevron{transform:rotate(180deg)}
+
+.interview-body{display:none;padding:1rem 1.1rem 1.1rem}
+.interview-body.open{display:block}
+
+/* Fila de respuesta */
+.resp-row{display:grid;grid-template-columns:200px 1fr;gap:.6rem;padding:.5rem .4rem;border-radius:8px;transition:background .1s}
+.resp-row:hover{background:#f9fafb}
+.resp-label{font-size:.75rem;font-weight:600;color:var(--gold);padding-top:.15rem}
+.resp-value{font-size:.85rem;color:var(--text)}
+
+/* Modo edición */
+.edit-input{
+  width:100%;font-family:'Inter',sans-serif;font-size:.85rem;
+  padding:.4rem .6rem;border:1px solid var(--green);border-radius:8px;
+  background:#f0fdf4;color:var(--text);resize:vertical;min-height:38px;
+  outline:none;line-height:1.5;
+}
+.edit-input:focus{border-color:var(--green-dark);box-shadow:0 0 0 3px rgba(18,120,80,.12)}
+
+/* Botones acción */
+.btn-edit{
+  padding:.3rem .8rem;border-radius:20px;border:1.5px solid var(--green);
+  background:transparent;color:var(--green);font-family:'Inter',sans-serif;
+  font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.btn-edit:hover{background:var(--green);color:#fff}
+.btn-save{
+  padding:.3rem .9rem;border-radius:20px;border:none;
+  background:var(--green);color:#fff;font-family:'Inter',sans-serif;
+  font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.btn-save:hover{background:var(--green-dark)}
+.btn-cancel{
+  padding:.3rem .8rem;border-radius:20px;border:1.5px solid var(--border);
+  background:transparent;color:var(--muted);font-family:'Inter',sans-serif;
+  font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.btn-cancel:hover{border-color:var(--red);color:var(--red)}
+.save-msg{font-size:.75rem;font-weight:600;padding:.2rem .6rem;border-radius:20px}
+.save-msg.ok{color:#059669;background:#f0fdf4}
+.save-msg.err{color:#dc2626;background:#fef2f2}
+
 @media(max-width:768px){
   .r2,.r3,.r4{grid-template-columns:1fr}
   .hero{flex-direction:column;text-align:center}
   .hero .right{margin-left:0;text-align:center}
+  .resp-row{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -328,15 +393,14 @@ const TABS = [
   { id: 'raw', label: 'Respuestas' },
 ];
 
-// Question labels for display
 const Q_LABELS = {
   q1_1:'Tipo de cirugías',q1_2:'Hospitales donde opera',q1_3:'Dónde da consultas',q1_4:'Distribución volumen',q1_5:'Tipo de pacientes',q1_6:'% en HE',q1_7:'Cambio últimos años',
-  q2_1:'Cómo decide hospital',q2_2:'Factores importantes',q2_3:'Top 3 factores',q2_4:'Precio/calidad/conveniencia',q2_5:'Pacientes que se van',
+  q2_1:'Cómo decide hospital',q2_2:'Factores importantes',q2_3:'Top 3 factores',q2_4:'Precio/calidad/conveniencia',q2_5:'Pacientes que se van',q2_6:'Pacientes que se van (detalle)',
   q3_1:'Lo que más le gusta',q3_2:'Funciona bien',q3_3:'Mejor que otros',
   q4_1:'Frustraciones',q4_2:'Dificulta traer pacientes',q4_3:'3 cambios',
   q5_1:'Impide traer pacientes',q5_2:'Casos que no recomienda',q5_3:'Qué debe cambiar',
   q6_1:'Competidores',q6_2:'Competencia principal',q6_3:'Mejor o peor',
-  q7_1:'Comparación por rubros',q7_2:'Opciones más baratas',q7_3:'Opciones más valor',
+  q7_1:'Infraestructura',q7_2:'Operación',q7_3:'Personal',q7_4:'Experiencia paciente',q7_5:'Experiencia médico',q7_6:'Prestigio',q7_7:'Precios',q7_8:'Opciones más baratas',q7_9:'Opciones más valor',
   q8_1:'Paquetes HE',q8_2:'Ayudan a informar',q8_3:'Paquetes competencia',q8_4:'Comparación paquetes',q8_5:'Compartir paquetes',
   q9_1:'Se siente valorado',q9_2:'Mejorar relación',q9_3:'Programas interés',
   q10_1:'Propuesta más pacientes',q10_2:'HE como hospital principal',q10_3:'Temas pendientes',q10_obs:'Observaciones entrevistador'
@@ -362,7 +426,7 @@ TABS.forEach((t, i) => {
   nav.appendChild(btn);
 });
 
-// ============== CATÁLOGO CIRUJANOS (perfil + especialidad) ==============
+// ============== CATÁLOGO ==============
 const CATALOGO = [
   {nombre:'Alfán Guzmán Felipe',              perfil:'Alto',  esp:'Ginecología'},
   {nombre:'Guzmán Amoroso Luis Antonio',       perfil:'Medio', esp:'Ortopediatría'},
@@ -384,13 +448,10 @@ const CATALOGO = [
 function normName(str){
   return (str||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
 }
-
 function lookupCatalog(nombreEntrevistado){
   const n = normName(nombreEntrevistado);
-  // exact match first
   let found = CATALOGO.find(c => normName(c.nombre) === n);
   if(!found){
-    // fuzzy: first two words of either side match
     const words = n.split(' ');
     found = CATALOGO.find(c => {
       const cn = normName(c.nombre);
@@ -399,20 +460,16 @@ function lookupCatalog(nombreEntrevistado){
   }
   return found || null;
 }
-
 function enrichWithCatalog(rows){
   return rows.map(d => {
-    if(d.perfil && d.perfil !== 'Sin perfil') return d; // already set
+    if(d.perfil && d.perfil !== 'Sin perfil') return d;
     const cat = lookupCatalog(d.nombre_entrevistado);
     if(!cat) return d;
-    return Object.assign({}, d, {
-      perfil: d.perfil || cat.perfil,
-      especialidad: d.especialidad || cat.esp,
-    });
+    return Object.assign({}, d, { perfil: d.perfil || cat.perfil, especialidad: d.especialidad || cat.esp });
   });
 }
 
-// ============== FETCH DATA ==============
+// ============== FETCH ==============
 async function fetchData() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/entrevistas_cirujanos?select=*&order=created_at.desc`, {
@@ -421,11 +478,30 @@ async function fetchData() {
     if (!res.ok) throw new Error('Table not found');
     allData = enrichWithCatalog(await res.json());
   } catch (e) {
-    console.warn('Supabase fetch failed, using empty data:', e);
+    console.warn('Supabase fetch failed:', e);
     allData = [];
   }
   filteredData = [...allData];
   render();
+}
+
+// ============== SAVE A SUPABASE ==============
+async function saveRespuestas(id, respuestas) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/entrevistas_cirujanos?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify({ respuestas })
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  return await res.json();
 }
 
 // ============== FILTERS ==============
@@ -451,79 +527,49 @@ function buildFilters(containerId) {
 function getResp(entry, key) {
   return (entry.respuestas && entry.respuestas[key]) || '';
 }
-
 function getAllResponses(key) {
   return filteredData.map(d => getResp(d, key)).filter(Boolean);
 }
-
-function countFreq(arr) {
-  const freq = {};
-  arr.forEach(v => { const k = v.trim().toLowerCase(); if (k) freq[k] = (freq[k] || 0) + 1; });
-  return Object.entries(freq).sort((a, b) => b[1] - a[1]);
-}
-
 function extractThemes(responses, keywords) {
   const counts = {};
   keywords.forEach(k => counts[k.label] = 0);
   responses.forEach(r => {
     const low = r.toLowerCase();
-    keywords.forEach(k => {
-      if (k.terms.some(t => low.includes(t))) counts[k.label]++;
-    });
+    keywords.forEach(k => { if (k.terms.some(t => low.includes(t))) counts[k.label]++; });
   });
   return Object.entries(counts).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
 }
-
 function renderThemes(containerId, themes, colors) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  if (themes.length === 0) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin datos suficientes aún.</p>';
-    return;
-  }
+  if (themes.length === 0) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin datos suficientes aún.</p>'; return; }
   el.innerHTML = themes.map(([label, count], i) =>
-    `<span class="theme-pill" style="background:${colors[i % colors.length]}20;color:${colors[i % colors.length]};border:1px solid ${colors[i % colors.length]}40">${label} <span class="count">${count}</span></span>`
+    `<span class="theme-pill" style="background:${colors[i%colors.length]}20;color:${colors[i%colors.length]};border:1px solid ${colors[i%colors.length]}40">${label} <span class="count">${count}</span></span>`
   ).join('');
 }
-
 function renderQuotes(containerId, key, max = 6) {
   const el = document.getElementById(containerId);
   if (!el) return;
   const quotes = filteredData.filter(d => getResp(d, key)).slice(0, max);
-  if (quotes.length === 0) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas disponibles.</p>';
-    return;
-  }
+  if (quotes.length === 0) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas disponibles.</p>'; return; }
   el.innerHTML = quotes.map(d => `
     <div class="quote">
       <div class="text">${getResp(d, key)}</div>
-      <div class="meta"><span class="tag">${d.perfil || '?'}</span> ${d.nombre_entrevistado || 'Anónimo'} · ${d.especialidad || ''}</div>
-    </div>
-  `).join('');
+      <div class="meta"><span class="tag">${d.perfil||'?'}</span> ${d.nombre_entrevistado||'Anónimo'} · ${d.especialidad||''}</div>
+    </div>`).join('');
 }
-
 function renderMultiQuotes(containerId, keys, max = 6) {
   const el = document.getElementById(containerId);
   if (!el) return;
   const quotes = [];
-  filteredData.forEach(d => {
-    keys.forEach(key => {
-      const text = getResp(d, key);
-      if (text) quotes.push({ text, perfil: d.perfil, nombre: d.nombre_entrevistado, esp: d.especialidad });
-    });
-  });
-  if (quotes.length === 0) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas disponibles.</p>';
-    return;
-  }
+  filteredData.forEach(d => { keys.forEach(key => { const text = getResp(d, key); if (text) quotes.push({ text, perfil: d.perfil, nombre: d.nombre_entrevistado, esp: d.especialidad }); }); });
+  if (quotes.length === 0) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas disponibles.</p>'; return; }
   el.innerHTML = quotes.slice(0, max).map(q => `
     <div class="quote">
       <div class="text">${q.text}</div>
-      <div class="meta"><span class="tag">${q.perfil || '?'}</span> ${q.nombre || 'Anónimo'} · ${q.esp || ''}</div>
-    </div>
-  `).join('');
+      <div class="meta"><span class="tag">${q.perfil||'?'}</span> ${q.nombre||'Anónimo'} · ${q.esp||''}</div>
+    </div>`).join('');
 }
-
 function getOrCreate(id, config) {
   if (charts[id]) charts[id].destroy();
   const ctx = document.getElementById(id);
@@ -531,11 +577,137 @@ function getOrCreate(id, config) {
   charts[id] = new Chart(ctx, config);
 }
 
-// ============== RENDER ==============
-function render() {
-  // Build all filter sections
-  ['filtersSat','filtersProb','filtersComp','filtersDec','filtersRel','filtersRaw'].forEach(buildFilters);
+// ============== RENDER RAW (colapsable + editable) ==============
+function renderRaw() {
+  const rawList = document.getElementById('rawList');
+  if (filteredData.length === 0) {
+    rawList.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg><h3>Sin entrevistas registradas</h3><p>Las entrevistas aparecerán aquí conforme se guarden desde la guía de entrevista.</p></div>';
+    return;
+  }
 
+  rawList.innerHTML = filteredData.map((d, idx) => {
+    const perfilColor = d.perfil === 'Alto' ? '#059669' : d.perfil === 'Medio' ? '#d97706' : '#dc2626';
+    const respRows = Object.entries(d.respuestas || {}).map(([k, v]) => `
+      <div class="resp-row" data-key="${k}">
+        <div class="resp-label">${Q_LABELS[k] || k}</div>
+        <div class="resp-value" data-display="${k}">${v || '<em style="color:var(--muted)">Sin respuesta</em>'}</div>
+      </div>`).join('');
+
+    return `
+      <div class="interview-card" id="card-${d.id}">
+        <div class="interview-header" onclick="toggleCard('${d.id}')">
+          <div class="ih-left">
+            <span class="chevron">▼</span>
+            <div>
+              <div class="ih-name">${d.nombre_entrevistado || 'Anónimo'}</div>
+              <div class="ih-meta">${d.especialidad || ''} · ${d.fecha_entrevista || ''} · ${Math.round((d.duracion_segundos||0)/60)} min · Entrevistó: ${d.entrevistador||'?'}</div>
+            </div>
+          </div>
+          <div class="ih-right">
+            <span class="theme-pill" style="background:${perfilColor}20;color:${perfilColor}">${d.perfil||'?'}</span>
+          </div>
+        </div>
+        <div class="interview-body" id="body-${d.id}">
+          <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:.8rem;align-items:center">
+            <span class="save-msg" id="msg-${d.id}" style="display:none"></span>
+            <button class="btn-edit" id="btnedit-${d.id}" onclick="startEdit('${d.id}')">✏️ Editar respuestas</button>
+            <button class="btn-save" id="btnsave-${d.id}" style="display:none" onclick="saveEdit('${d.id}')">💾 Guardar</button>
+            <button class="btn-cancel" id="btncancel-${d.id}" style="display:none" onclick="cancelEdit('${d.id}')">Cancelar</button>
+          </div>
+          <div id="resps-${d.id}">${respRows}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ============== TOGGLE COLAPSAR ==============
+function toggleCard(id) {
+  const header = document.querySelector(`#card-${id} .interview-header`);
+  const body = document.getElementById(`body-${id}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+}
+
+// ============== EDICIÓN INLINE ==============
+function startEdit(id) {
+  const d = allData.find(x => x.id === id);
+  if (!d) return;
+  const container = document.getElementById(`resps-${id}`);
+  container.querySelectorAll('.resp-row').forEach(row => {
+    const key = row.dataset.key;
+    const valEl = row.querySelector('.resp-value');
+    const current = d.respuestas?.[key] || '';
+    valEl.innerHTML = `<textarea class="edit-input" data-editkey="${key}" rows="2">${current}</textarea>`;
+  });
+  document.getElementById(`btnedit-${id}`).style.display = 'none';
+  document.getElementById(`btnsave-${id}`).style.display = 'inline-flex';
+  document.getElementById(`btncancel-${id}`).style.display = 'inline-flex';
+  // Auto-resize textareas
+  container.querySelectorAll('textarea').forEach(ta => {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+    ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+  });
+}
+
+async function saveEdit(id) {
+  const d = allData.find(x => x.id === id);
+  if (!d) return;
+  const container = document.getElementById(`resps-${id}`);
+  const newResp = Object.assign({}, d.respuestas || {});
+  container.querySelectorAll('textarea[data-editkey]').forEach(ta => {
+    newResp[ta.dataset.editkey] = ta.value;
+  });
+  const msgEl = document.getElementById(`msg-${id}`);
+  const saveBtn = document.getElementById(`btnsave-${id}`);
+  saveBtn.textContent = 'Guardando...';
+  saveBtn.disabled = true;
+  try {
+    await saveRespuestas(id, newResp);
+    // Actualizar local
+    d.respuestas = newResp;
+    msgEl.textContent = '✅ Guardado';
+    msgEl.className = 'save-msg ok';
+    msgEl.style.display = 'inline-block';
+    setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+    cancelEdit(id);
+    // Re-render respuestas con nuevos valores
+    const respRows = Object.entries(newResp).map(([k, v]) => `
+      <div class="resp-row" data-key="${k}">
+        <div class="resp-label">${Q_LABELS[k] || k}</div>
+        <div class="resp-value" data-display="${k}">${v || '<em style="color:var(--muted)">Sin respuesta</em>'}</div>
+      </div>`).join('');
+    container.innerHTML = respRows;
+  } catch(e) {
+    msgEl.textContent = '❌ Error al guardar';
+    msgEl.className = 'save-msg err';
+    msgEl.style.display = 'inline-block';
+    saveBtn.textContent = '💾 Guardar';
+    saveBtn.disabled = false;
+  }
+}
+
+function cancelEdit(id) {
+  const d = allData.find(x => x.id === id);
+  if (!d) return;
+  const container = document.getElementById(`resps-${id}`);
+  const respRows = Object.entries(d.respuestas || {}).map(([k, v]) => `
+    <div class="resp-row" data-key="${k}">
+      <div class="resp-label">${Q_LABELS[k] || k}</div>
+      <div class="resp-value" data-display="${k}">${v || '<em style="color:var(--muted)">Sin respuesta</em>'}</div>
+    </div>`).join('');
+  container.innerHTML = respRows;
+  document.getElementById(`btnedit-${id}`).style.display = 'inline-flex';
+  document.getElementById(`btnsave-${id}`).style.display = 'none';
+  document.getElementById(`btnsave-${id}`).textContent = '💾 Guardar';
+  document.getElementById(`btnsave-${id}`).disabled = false;
+  document.getElementById(`btncancel-${id}`).style.display = 'none';
+}
+
+// ============== RENDER PRINCIPAL ==============
+function render() {
+  ['filtersSat','filtersProb','filtersComp','filtersDec','filtersRel','filtersRaw'].forEach(buildFilters);
   const n = filteredData.length;
 
   // ---- PANORAMA ----
@@ -546,44 +718,30 @@ function render() {
   if (n > 0) {
     const avgDur = Math.round(filteredData.reduce((s, d) => s + (d.duracion_segundos || 0), 0) / n / 60);
     document.getElementById('kpi_dur').textContent = avgDur;
-
     const perfiles = {};
     filteredData.forEach(d => { const p = d.perfil || 'Sin perfil'; perfiles[p] = (perfiles[p] || 0) + 1; });
     document.getElementById('kpi_perfiles').textContent = Object.keys(perfiles).length;
     document.getElementById('kpi_perfiles_sub').textContent = Object.entries(perfiles).map(([k, v]) => `${k}: ${v}`).join(' · ');
-
     const esps = new Set(filteredData.map(d => d.especialidad).filter(Boolean));
     document.getElementById('kpi_esp').textContent = esps.size;
 
-    // Charts
     const pLabels = Object.keys(perfiles);
     const pColors = pLabels.map(l => l === 'Alto' ? '#059669' : l === 'Medio' ? '#d97706' : l === 'Bajo' ? '#dc2626' : '#6b7280');
-    getOrCreate('cPerfiles', {
-      type: 'doughnut',
-      data: { labels: pLabels, datasets: [{ data: Object.values(perfiles), backgroundColor: pColors, borderWidth: 2, borderColor: '#fff' }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
-    });
+    getOrCreate('cPerfiles', { type:'doughnut', data:{ labels:pLabels, datasets:[{ data:Object.values(perfiles), backgroundColor:pColors, borderWidth:2, borderColor:'#fff' }] }, options:{ responsive:true, maintainAspectRatio:false, cutout:'55%', plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 } } } } } });
 
     const espCount = {};
     filteredData.forEach(d => { const e = d.especialidad || 'Sin esp.'; espCount[e] = (espCount[e] || 0) + 1; });
     const espSorted = Object.entries(espCount).sort((a, b) => b[1] - a[1]);
-    getOrCreate('cEspecialidades', {
-      type: 'bar',
-      data: { labels: espSorted.map(e => e[0]), datasets: [{ data: espSorted.map(e => e[1]), backgroundColor: '#2563eb', borderRadius: 6 }] },
-      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { stepSize: 1 } } } }
-    });
+    getOrCreate('cEspecialidades', { type:'bar', data:{ labels:espSorted.map(e=>e[0]), datasets:[{ data:espSorted.map(e=>e[1]), backgroundColor:'#2563eb', borderRadius:6 }] }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ ticks:{ stepSize:1 } } } } });
 
-    // Timeline
     const timeline = document.getElementById('timeline');
     const sorted = [...filteredData].sort((a, b) => new Date(a.fecha_entrevista) - new Date(b.fecha_entrevista));
     timeline.innerHTML = sorted.map(d => `
       <div class="timeline-item">
-        <div class="t-date">${d.fecha_entrevista || '?'}</div>
-        <div class="t-content"><strong>${d.nombre_entrevistado || 'Anónimo'}</strong> · ${d.especialidad || ''} · <span style="color:${d.perfil === 'Alto' ? '#059669' : d.perfil === 'Medio' ? '#d97706' : '#dc2626'}">${d.perfil || '?'}</span> · ${Math.round((d.duracion_segundos || 0) / 60)} min</div>
-      </div>
-    `).join('');
-
-    document.getElementById('lastUpdate').textContent = `Última: ${allData[0]?.fecha_entrevista || ''}`;
+        <div class="t-date">${d.fecha_entrevista||'?'}</div>
+        <div class="t-content"><strong>${d.nombre_entrevistado||'Anónimo'}</strong> · ${d.especialidad||''} · <span style="color:${d.perfil==='Alto'?'#059669':d.perfil==='Medio'?'#d97706':'#dc2626'}">${d.perfil||'?'}</span> · ${Math.round((d.duracion_segundos||0)/60)} min</div>
+      </div>`).join('');
+    document.getElementById('lastUpdate').textContent = `Última: ${allData[0]?.fecha_entrevista||''}`;
   } else {
     document.getElementById('kpi_dur').textContent = '–';
     document.getElementById('kpi_perfiles').textContent = '–';
@@ -593,164 +751,115 @@ function render() {
 
   // ---- SATISFACCIONES ----
   const satKeywords = [
-    { label: 'Trato / calidez', terms: ['trato', 'calid', 'amab', 'human', 'cariñ'] },
-    { label: 'Precio / costo', terms: ['precio', 'costo', 'económ', 'barat', 'accesib'] },
-    { label: 'Ubicación', terms: ['ubicación', 'ubicacion', 'cercan', 'zona', 'tacubaya'] },
-    { label: 'Infraestructura', terms: ['infraestructura', 'instalacion', 'equip', 'moderno'] },
-    { label: 'Misión social', terms: ['misión', 'mision', 'social', 'no lucro', 'asistencia'] },
-    { label: 'Personal', terms: ['personal', 'enferm', 'equipo'] },
-    { label: 'Flexibilidad', terms: ['flexib', 'disponib', 'horario', 'fácil'] },
-    { label: 'Confianza', terms: ['confianza', 'segur', 'tranquil'] },
+    {label:'Trato / calidez',terms:['trato','calid','amab','human','cariñ']},
+    {label:'Precio / costo',terms:['precio','costo','económ','barat','accesib']},
+    {label:'Ubicación',terms:['ubicación','ubicacion','cercan','zona','tacubaya']},
+    {label:'Infraestructura',terms:['infraestructura','instalacion','equip','moderno']},
+    {label:'Misión social',terms:['misión','mision','social','no lucro','asistencia']},
+    {label:'Personal',terms:['personal','enferm','equipo']},
+    {label:'Flexibilidad',terms:['flexib','disponib','horario','fácil']},
+    {label:'Confianza',terms:['confianza','segur','tranquil']},
   ];
-  const satResponses = [...getAllResponses('q3_1'), ...getAllResponses('q3_2')];
-  renderThemes('themesSat', extractThemes(satResponses, satKeywords), ['#059669','#2563eb','#7c3aed','#d97706','#ec4899','#0891b2','#84cc16','#f59e0b']);
-
-  const betterResponses = getAllResponses('q3_3');
-  renderThemes('themesBetter', extractThemes(betterResponses, satKeywords), ['#059669','#2563eb','#7c3aed','#d97706','#ec4899','#0891b2','#84cc16','#f59e0b']);
-
-  renderMultiQuotes('quotesSat', ['q3_1', 'q3_2', 'q3_3'], 8);
+  renderThemes('themesSat', extractThemes([...getAllResponses('q3_1'),...getAllResponses('q3_2')], satKeywords), ['#059669','#2563eb','#7c3aed','#d97706','#ec4899','#0891b2','#84cc16','#f59e0b']);
+  renderThemes('themesBetter', extractThemes(getAllResponses('q3_3'), satKeywords), ['#059669','#2563eb','#7c3aed','#d97706','#ec4899','#0891b2','#84cc16','#f59e0b']);
+  renderMultiQuotes('quotesSat', ['q3_1','q3_2','q3_3'], 8);
 
   // ---- PROBLEMAS ----
   const probKeywords = [
-    { label: 'Equipo médico caro', terms: ['equipo caro', 'renta', 'material', 'insumo', 'caro'] },
-    { label: 'Infraestructura vieja', terms: ['viejo', 'antiguo', 'deterioro', 'remodelac', 'infraestructura'] },
-    { label: 'Burocracia / procesos', terms: ['burocracia', 'proceso', 'trámit', 'tramit', 'lento', 'papele'] },
-    { label: 'Falta de tecnología', terms: ['tecnología', 'tecnologia', 'equipo', 'imagen', 'tomógrafo'] },
-    { label: 'Horarios limitados', terms: ['horario', 'disponib', 'turno', 'sábado', 'sabado', 'domingo'] },
-    { label: 'Percepción / imagen', terms: ['percepción', 'percepcion', 'imagen', 'reputación', 'reputacion', 'marca'] },
-    { label: 'Estacionamiento', terms: ['estacionamiento', 'parking', 'estacionar'] },
-    { label: 'Comunicación', terms: ['comunicación', 'comunicacion', 'informac', 'contact'] },
+    {label:'Equipo médico caro',terms:['equipo caro','renta','material','insumo','caro']},
+    {label:'Infraestructura vieja',terms:['viejo','antiguo','deterioro','remodelac','infraestructura']},
+    {label:'Burocracia / procesos',terms:['burocracia','proceso','trámit','tramit','lento','papele']},
+    {label:'Falta de tecnología',terms:['tecnología','tecnologia','equipo','imagen','tomógrafo']},
+    {label:'Horarios limitados',terms:['horario','disponib','turno','sábado','sabado','domingo']},
+    {label:'Percepción / imagen',terms:['percepción','percepcion','imagen','reputación','reputacion','marca']},
+    {label:'Estacionamiento',terms:['estacionamiento','parking','estacionar']},
+    {label:'Comunicación',terms:['comunicación','comunicacion','informac','contact']},
   ];
   renderThemes('themesInsatisf', extractThemes(getAllResponses('q4_1'), probKeywords), ['#dc2626','#d97706','#7c3aed','#2563eb','#059669','#ec4899','#6b7280','#0891b2']);
-  renderThemes('themesBarreras', extractThemes([...getAllResponses('q5_1'), ...getAllResponses('q5_2')], probKeywords), ['#dc2626','#d97706','#7c3aed','#2563eb','#059669','#ec4899','#6b7280','#0891b2']);
+  renderThemes('themesBarreras', extractThemes([...getAllResponses('q5_1'),...getAllResponses('q5_2')], probKeywords), ['#dc2626','#d97706','#7c3aed','#2563eb','#059669','#ec4899','#6b7280','#0891b2']);
   renderQuotes('themesCambios', 'q4_3', 8);
-  renderMultiQuotes('quotesProb', ['q4_1', 'q4_2', 'q5_1', 'q5_2'], 8);
+  renderMultiQuotes('quotesProb', ['q4_1','q4_2','q5_1','q5_2'], 8);
 
   // ---- COMPETENCIA ----
   const compKeywords = [
-    { label: 'Hospital de Jesús', terms: ['hospital de jesús', 'hospital de jesus', 'de jesus'] },
-    { label: 'Clínicas corta estancia', terms: ['corta estancia', 'clínica priv', 'clinica priv', 'ambulatori'] },
-    { label: 'Ángeles / Mocel', terms: ['ángeles', 'angeles', 'mocel'] },
-    { label: 'Diomed', terms: ['diomed'] },
-    { label: 'CMQ Escandón', terms: ['cmq', 'quirúrgico escandón', 'quirurgico escandon'] },
-    { label: 'Médica Sur', terms: ['médica sur', 'medica sur'] },
-    { label: 'Salud Digna', terms: ['salud digna'] },
-    { label: 'Otro', terms: ['star médica', 'star medica', 'dalinde', 'español'] },
+    {label:'Hospital de Jesús',terms:['hospital de jesús','hospital de jesus','de jesus']},
+    {label:'Clínicas corta estancia',terms:['corta estancia','clínica priv','clinica priv','ambulatori']},
+    {label:'Ángeles / Mocel',terms:['ángeles','angeles','mocel']},
+    {label:'Diomed',terms:['diomed']},
+    {label:'CMQ Escandón',terms:['cmq','quirúrgico escandón','quirurgico escandon']},
+    {label:'Médica Sur',terms:['médica sur','medica sur']},
+    {label:'Salud Digna',terms:['salud digna']},
+    {label:'Shriners',terms:['shriners','schneider']},
+    {label:'Otro',terms:['star médica','star medica','dalinde','español']},
   ];
-  const compResp = [...getAllResponses('q6_1'), ...getAllResponses('q6_2')];
+  const compResp = [...getAllResponses('q6_1'),...getAllResponses('q6_2')];
   const compThemes = extractThemes(compResp, compKeywords);
   const maxComp = compThemes.length > 0 ? compThemes[0][1] : 1;
-  const compColors = ['#1e40af', '#2563eb', '#3b82f6', '#60a5fa', '#7c3aed', '#a855f7', '#059669', '#6b7280'];
+  const compColors = ['#1e40af','#2563eb','#3b82f6','#60a5fa','#7c3aed','#a855f7','#059669','#6b7280','#d97706'];
   const compBarsEl = document.getElementById('compBars');
-  if (compThemes.length > 0) {
-    compBarsEl.innerHTML = compThemes.map(([label, count], i) =>
-      `<div class="comp-bar"><div class="name">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${(count / maxComp) * 100}%;background:${compColors[i % compColors.length]}">${count}</div></div></div>`
-    ).join('');
-  } else {
-    compBarsEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin datos aún.</p>';
-  }
+  compBarsEl.innerHTML = compThemes.length > 0
+    ? compThemes.map(([label, count], i) => `<div class="comp-bar"><div class="name">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${(count/maxComp)*100}%;background:${compColors[i%compColors.length]}">${count}</div></div></div>`).join('')
+    : '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin datos aún.</p>';
 
-  // Comparison matrix
-  const rubros = ['Infraestructura', 'Operación', 'Personal', 'Experiencia paciente', 'Experiencia médico', 'Prestigio', 'Precios'];
+  const rubros = ['Infraestructura','Operación','Personal','Experiencia paciente','Experiencia médico','Prestigio','Precios'];
   const matrixBody = document.getElementById('matrixBody');
   const compRubros = getAllResponses('q7_1');
   matrixBody.innerHTML = rubros.map(r => {
-    let pos = 0, neg = 0, neut = 0;
+    let pos=0,neg=0,neut=0;
     compRubros.forEach(resp => {
-      const low = resp.toLowerCase();
-      const rLow = r.toLowerCase();
-      if (low.includes(rLow.substring(0, 5))) {
-        if (/mejor|bien|bueno|superior|excelente|ventaja/.test(low)) pos++;
-        else if (/peor|mal|inferior|problema|desventaja|falta/.test(low)) neg++;
-        else neut++;
-      }
+      const low = resp.toLowerCase(); const rLow = r.toLowerCase();
+      if(low.includes(rLow.substring(0,5))){ if(/mejor|bien|bueno|superior|excelente|ventaja/.test(low)) pos++; else if(/peor|mal|inferior|problema|desventaja|falta/.test(low)) neg++; else neut++; }
     });
-    return `<tr><td style="font-weight:600">${r}</td><td class="cell-pos">${pos || '–'}</td><td class="cell-neg">${neg || '–'}</td><td class="cell-neut">${neut || '–'}</td></tr>`;
+    return `<tr><td style="font-weight:600">${r}</td><td class="cell-pos">${pos||'–'}</td><td class="cell-neg">${neg||'–'}</td><td class="cell-neut">${neut||'–'}</td></tr>`;
   }).join('');
 
-  renderQuotes('quotesBaratas', 'q7_2', 6);
-  renderQuotes('quotesValor', 'q7_3', 6);
+  renderQuotes('quotesBaratas','q7_8',6);
+  renderQuotes('quotesValor','q7_9',6);
 
   // ---- DECISIÓN ----
   const decKeywords = [
-    { label: 'Precio', terms: ['precio', 'costo', 'económ'] },
-    { label: 'Calidad', terms: ['calidad', 'resultado', 'éxito'] },
-    { label: 'Conveniencia', terms: ['convenien', 'cercan', 'ubicac', 'facil'] },
-    { label: 'Pref. del paciente', terms: ['paciente pref', 'paciente decid', 'paciente quiere', 'pide'] },
-    { label: 'Seguro / cobertura', terms: ['seguro', 'asegurad', 'cobertura', 'póliza'] },
-    { label: 'Equipo disponible', terms: ['equipo', 'material', 'instrumental'] },
-    { label: 'Experiencia previa', terms: ['experiencia', 'anterior', 'siempre'] },
-    { label: 'Relación con hospital', terms: ['relación', 'relacion', 'conoz', 'confianza'] },
+    {label:'Precio',terms:['precio','costo','económ']},
+    {label:'Calidad',terms:['calidad','resultado','éxito']},
+    {label:'Conveniencia',terms:['convenien','cercan','ubicac','facil']},
+    {label:'Pref. del paciente',terms:['paciente pref','paciente decid','paciente quiere','pide']},
+    {label:'Seguro / cobertura',terms:['seguro','asegurad','cobertura','póliza','baseguro']},
+    {label:'Equipo disponible',terms:['equipo','material','instrumental']},
+    {label:'Experiencia previa',terms:['experiencia','anterior','siempre']},
+    {label:'Relación con hospital',terms:['relación','relacion','conoz','confianza']},
   ];
-  const decResp = [...getAllResponses('q2_1'), ...getAllResponses('q2_2'), ...getAllResponses('q2_3')];
+  const decResp = [...getAllResponses('q2_1'),...getAllResponses('q2_2'),...getAllResponses('q2_3')];
   const decThemes = extractThemes(decResp, decKeywords);
-  if (decThemes.length > 0) {
-    getOrCreate('cFactores', {
-      type: 'bar',
-      data: { labels: decThemes.map(t => t[0]), datasets: [{ data: decThemes.map(t => t[1]), backgroundColor: ['#1e40af','#2563eb','#3b82f6','#60a5fa','#7c3aed','#a855f7','#059669','#d97706'], borderRadius: 6 }] },
-      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { stepSize: 1 } } } }
-    });
+  if(decThemes.length>0){
+    getOrCreate('cFactores',{type:'bar',data:{labels:decThemes.map(t=>t[0]),datasets:[{data:decThemes.map(t=>t[1]),backgroundColor:['#1e40af','#2563eb','#3b82f6','#60a5fa','#7c3aed','#a855f7','#059669','#d97706'],borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{stepSize:1}}}}});
   }
-
-  renderThemes('themesPaquetes', extractThemes([...getAllResponses('q8_1'), ...getAllResponses('q8_2')], [
-    { label: 'Tiene paquetes', terms: ['sí tiene', 'si tiene', 'tiene paquete'] },
-    { label: 'No tiene / no sabe', terms: ['no tiene', 'no sabe', 'desconoz'] },
-    { label: 'Ayudan a decidir', terms: ['ayuda', 'útil', 'util', 'inform'] },
-    { label: 'No son competitivos', terms: ['caro', 'no compet', 'más caro', 'mas caro'] },
-  ]), ['#059669', '#dc2626', '#2563eb', '#d97706']);
-
-  renderMultiQuotes('quotesFuga', ['q2_5', 'q5_1', 'q5_2'], 8);
+  renderThemes('themesPaquetes', extractThemes([...getAllResponses('q8_1'),...getAllResponses('q8_2')],[
+    {label:'Tiene paquetes',terms:['sí tiene','si tiene','tiene paquete','sí. hospital']},
+    {label:'No tiene / no sabe',terms:['no tiene','no sabe','desconoz']},
+    {label:'Ayudan a decidir',terms:['ayuda','útil','util','inform','facilita']},
+    {label:'No son competitivos',terms:['caro','no compet','más caro','mas caro']},
+  ]),['#059669','#dc2626','#2563eb','#d97706']);
+  renderMultiQuotes('quotesFuga',['q2_5','q2_6','q5_1','q5_2'],8);
 
   // ---- RELACIÓN ----
   const valorResp = getAllResponses('q9_1');
-  let valPos = 0, valNeg = 0, valMix = 0;
-  valorResp.forEach(r => {
-    const low = r.toLowerCase();
-    if (/sí|si |valorado|apreciad|bien/.test(low) && !/no /.test(low)) valPos++;
-    else if (/no |poco|falta|insufic/.test(low)) valNeg++;
-    else valMix++;
-  });
-  if (valorResp.length > 0) {
-    getOrCreate('cValorados', {
-      type: 'doughnut',
-      data: { labels: ['Sí, valorado', 'No / poco', 'Mixto'], datasets: [{ data: [valPos, valNeg, valMix], backgroundColor: ['#059669', '#dc2626', '#d97706'], borderWidth: 2, borderColor: '#fff' }] },
-      options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' } } }
-    });
+  let valPos=0,valNeg=0,valMix=0;
+  valorResp.forEach(r=>{ const low=r.toLowerCase(); if(/sí|si |valorado|apreciad|bien/.test(low)&&!/no /.test(low)) valPos++; else if(/no |poco|falta|insufic/.test(low)) valNeg++; else valMix++; });
+  if(valorResp.length>0){
+    getOrCreate('cValorados',{type:'doughnut',data:{labels:['Sí, valorado','No / poco','Mixto'],datasets:[{data:[valPos,valNeg,valMix],backgroundColor:['#059669','#dc2626','#d97706'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'bottom'}}}});
   }
+  renderThemes('themesBeneficios', extractThemes(getAllResponses('q9_3'),[
+    {label:'Descuentos / tarifas',terms:['descuento','tarifa','precio preferent']},
+    {label:'Equipo incluido',terms:['equipo','material','instrumental','incluido']},
+    {label:'Reconocimiento',terms:['reconocimiento','certificado','diploma']},
+    {label:'Educación / congresos',terms:['educación','educacion','congreso','capacitación','capacitacion']},
+    {label:'Referencia de pacientes',terms:['referencia','canalización','canalizacion','enviar pacient']},
+    {label:'Consultorio',terms:['consultorio','espacio','oficina']},
+  ]),['#2563eb','#059669','#7c3aed','#d97706','#ec4899','#0891b2']);
+  renderMultiQuotes('quotesPropuestas',['q10_1','q10_2'],8);
+  renderQuotes('quotesObs','q10_obs',8);
 
-  renderThemes('themesBeneficios', extractThemes(getAllResponses('q9_3'), [
-    { label: 'Descuentos / tarifas', terms: ['descuento', 'tarifa', 'precio preferent'] },
-    { label: 'Equipo incluido', terms: ['equipo', 'material', 'instrumental', 'incluido'] },
-    { label: 'Reconocimiento', terms: ['reconocimiento', 'certificado', 'diploma'] },
-    { label: 'Educación / congresos', terms: ['educación', 'educacion', 'congreso', 'capacitación', 'capacitacion'] },
-    { label: 'Referencia de pacientes', terms: ['referencia', 'canalización', 'canalizacion', 'enviar pacient'] },
-    { label: 'Consultorio', terms: ['consultorio', 'espacio', 'oficina'] },
-  ]), ['#2563eb', '#059669', '#7c3aed', '#d97706', '#ec4899', '#0891b2']);
-
-  renderMultiQuotes('quotesPropuestas', ['q10_1', 'q10_2'], 8);
-  renderQuotes('quotesObs', 'q10_obs', 8);
-
-  // ---- RAW ----
-  const rawList = document.getElementById('rawList');
-  if (filteredData.length === 0) {
-    rawList.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg><h3>Sin entrevistas registradas</h3><p>Las entrevistas aparecerán aquí conforme se guarden desde la guía de entrevista.</p></div>';
-  } else {
-    rawList.innerHTML = filteredData.map(d => {
-      const respHtml = Object.entries(d.respuestas || {}).map(([k, v]) =>
-        `<div style="margin-bottom:.5rem"><strong style="color:var(--gold);font-size:.75rem">${Q_LABELS[k] || k}:</strong><br><span style="font-size:.85rem">${v}</span></div>`
-      ).join('');
-      return `
-        <div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
-            <div><strong style="font-size:1rem">${d.nombre_entrevistado || 'Anónimo'}</strong> · <span style="color:var(--muted)">${d.especialidad || ''}</span></div>
-            <span class="theme-pill" style="background:${d.perfil === 'Alto' ? '#05966920' : d.perfil === 'Medio' ? '#d9770620' : '#dc262620'};color:${d.perfil === 'Alto' ? '#059669' : d.perfil === 'Medio' ? '#d97706' : '#dc2626'}">${d.perfil || '?'}</span>
-          </div>
-          <div style="font-size:.75rem;color:var(--muted);margin-bottom:.8rem">Entrevistó: ${d.entrevistador || '?'} · ${d.fecha_entrevista || '?'} · ${Math.round((d.duracion_segundos || 0) / 60)} min</div>
-          ${respHtml}
-        </div>
-      `;
-    }).join('');
-  }
+  // ---- RAW (colapsable + editable) ----
+  renderRaw();
 }
 
 // ============== INIT ==============
@@ -758,16 +867,10 @@ fetchData();
 
 // Dark mode
 (function(){
-  function applyTheme(dark){
-    document.documentElement.setAttribute('data-theme',dark?'dark':'');
-    const btn=document.getElementById('themeBtn');
-    if(btn)btn.textContent=dark?'☾':'☀';
-    localStorage.setItem('he-theme',dark?'dark':'light');
-  }
-  window.toggleTheme=function(){applyTheme(document.documentElement.getAttribute('data-theme')!=='dark');};
+  function applyTheme(dark){ document.documentElement.setAttribute('data-theme',dark?'dark':''); const btn=document.getElementById('themeBtn'); if(btn)btn.textContent=dark?'☾':'☀'; localStorage.setItem('he-theme',dark?'dark':'light'); }
+  window.toggleTheme=function(){ applyTheme(document.documentElement.getAttribute('data-theme')!=='dark'); };
   const saved=localStorage.getItem('he-theme');
-  if(saved){applyTheme(saved==='dark');}
-  else{applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);}
+  if(saved){ applyTheme(saved==='dark'); } else { applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches); }
 })();
 </script>
 </body>
