@@ -7,6 +7,7 @@
 <link rel="icon" href="https://hospitalescandon.org/img/core-img/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -188,6 +189,28 @@ nav button:hover{color:var(--text)}
   font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;
 }
 .btn-cancel:hover{border-color:var(--red);color:var(--red)}
+/* Descarga dropdown */
+.btn-dl-wrap{position:relative;display:inline-block}
+.btn-dl{
+  padding:.3rem .8rem;border-radius:20px;border:1.5px solid var(--gold);
+  background:transparent;color:var(--gold);font-family:'Inter',sans-serif;
+  font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:.3rem;
+}
+.btn-dl:hover{background:var(--gold);color:#fff}
+.dl-menu{
+  position:absolute;right:0;top:calc(100% + 4px);z-index:100;
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:150px;display:none;overflow:hidden;
+}
+.dl-menu.open{display:block}
+.dl-menu button{
+  display:block;width:100%;text-align:left;padding:.55rem .9rem;
+  background:transparent;border:none;font-family:'Inter',sans-serif;
+  font-size:.78rem;font-weight:500;color:var(--text);cursor:pointer;
+  transition:background .15s;
+}
+.dl-menu button:hover{background:var(--bg)}
 .save-msg{font-size:.75rem;font-weight:600;padding:.2rem .6rem;border-radius:20px}
 .save-msg.ok{color:#059669;background:#f0fdf4}
 .save-msg.err{color:#dc2626;background:#fef2f2}
@@ -610,6 +633,13 @@ function renderRaw() {
         <div class="interview-body" id="body-${d.id}">
           <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:.8rem;align-items:center">
             <span class="save-msg" id="msg-${d.id}" style="display:none"></span>
+            <div class="btn-dl-wrap" id="dlwrap-${d.id}">
+              <button class="btn-dl" onclick="toggleDlMenu('${d.id}')">⬇ Descargar ▾</button>
+              <div class="dl-menu" id="dlmenu-${d.id}">
+                <button onclick="downloadWord('${d.id}')">📄 Word (.doc)</button>
+                <button onclick="downloadExcel('${d.id}')">📊 Excel (.xlsx)</button>
+              </div>
+            </div>
             <button class="btn-edit" id="btnedit-${d.id}" onclick="startEdit('${d.id}')">✏️ Editar respuestas</button>
             <button class="btn-save" id="btnsave-${d.id}" style="display:none" onclick="saveEdit('${d.id}')">💾 Guardar</button>
             <button class="btn-cancel" id="btncancel-${d.id}" style="display:none" onclick="cancelEdit('${d.id}')">Cancelar</button>
@@ -703,6 +733,121 @@ function cancelEdit(id) {
   document.getElementById(`btnsave-${id}`).textContent = '💾 Guardar';
   document.getElementById(`btnsave-${id}`).disabled = false;
   document.getElementById(`btncancel-${id}`).style.display = 'none';
+}
+
+// ============== DESCARGA ==============
+function toggleDlMenu(id) {
+  const menu = document.getElementById(`dlmenu-${id}`);
+  const isOpen = menu.classList.contains('open');
+  // Cerrar todos los menús abiertos
+  document.querySelectorAll('.dl-menu.open').forEach(m => m.classList.remove('open'));
+  if (!isOpen) menu.classList.add('open');
+}
+// Cerrar menú al hacer clic fuera
+document.addEventListener('click', e => {
+  if (!e.target.closest('.btn-dl-wrap')) {
+    document.querySelectorAll('.dl-menu.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+function getEntrevistaData(id) {
+  return allData.find(x => x.id === id);
+}
+
+function downloadWord(id) {
+  document.querySelectorAll('.dl-menu.open').forEach(m => m.classList.remove('open'));
+  const d = getEntrevistaData(id);
+  if (!d) return;
+  const nombre = d.nombre_entrevistado || 'Anónimo';
+  const fecha = d.fecha_entrevista || '—';
+  const durMin = Math.round((d.duracion_segundos || 0) / 60);
+  const entrevistador = d.entrevistador || '—';
+  const especialidad = d.especialidad || '—';
+  const perfil = d.perfil || '—';
+
+  const bloques = Object.entries(d.respuestas || {}).map(([k, v]) => {
+    const label = Q_LABELS[k] || k;
+    const texto = (v || '<em>Sin respuesta</em>').replace(/\n/g, '<br>');
+    return `<div class="bloque"><p class="preg">${label}</p><p class="resp">${texto}</p></div>`;
+  }).join('');
+
+  const html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:w="urn:schemas-microsoft-com:office:word"
+          xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="UTF-8">
+      <!--[if gte mso 9]><xml>
+        <w:WordDocument><w:View>Print</w:View><w:DoNotOptimizeForBrowser/></w:WordDocument>
+      </xml><![endif]-->
+      <style>
+        @page { size: 21cm 29.7cm; margin: 2.5cm 2.5cm 2.5cm 2.5cm; }
+        body  { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #1a1a1a; }
+        h1    { font-size: 15pt; color: #127850; margin: 0 0 4pt 0; }
+        .meta { font-size: 10pt; color: #444; margin-bottom: 18pt; line-height: 1.8; border-bottom: 1pt solid #ccc; padding-bottom: 10pt; }
+        .bloque { margin-bottom: 14pt; }
+        .preg { font-size: 10pt; font-weight: 700; color: #127850; margin: 0 0 3pt 0; text-transform: uppercase; letter-spacing: .3pt; }
+        .resp { font-size: 11pt; color: #1a1a1a; margin: 0; line-height: 1.5; }
+        hr    { border: none; border-top: 1pt solid #e0e0e0; margin: 10pt 0; }
+        .footer { font-size: 8pt; color: #aaa; margin-top: 20pt; }
+      </style>
+    </head>
+    <body>
+      <h1>Entrevista — ${nombre}</h1>
+      <div class="meta">
+        <b>Especialidad:</b> ${especialidad}<br>
+        <b>Fecha:</b> ${fecha} &nbsp;&nbsp;&nbsp; <b>Duración:</b> ${durMin} min<br>
+        <b>Entrevistó:</b> ${entrevistador} &nbsp;&nbsp;&nbsp; <b>Perfil:</b> ${perfil}
+      </div>
+      ${bloques}
+      <p class="footer">Generado por Dashboard Hospital Escandón · ${new Date().toLocaleDateString('es-MX')}</p>
+    </body>
+    </html>`;
+
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Entrevista_${nombre.replace(/\s+/g,'_')}_${fecha}.doc`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadExcel(id) {
+  document.querySelectorAll('.dl-menu.open').forEach(m => m.classList.remove('open'));
+  const d = getEntrevistaData(id);
+  if (!d) return;
+  const nombre = d.nombre_entrevistado || 'Anónimo';
+  const fecha = d.fecha_entrevista || '—';
+  const durMin = Math.round((d.duracion_segundos || 0) / 60);
+
+  // Hoja 1: Datos generales
+  const infoRows = [
+    ['Campo', 'Valor'],
+    ['Nombre', nombre],
+    ['Especialidad', d.especialidad || '—'],
+    ['Perfil', d.perfil || '—'],
+    ['Fecha', fecha],
+    ['Duración (min)', durMin],
+    ['Entrevistador', d.entrevistador || '—'],
+  ];
+
+  // Hoja 2: Respuestas
+  const respRows = [['Pregunta', 'Respuesta']];
+  Object.entries(d.respuestas || {}).forEach(([k, v]) => {
+    respRows.push([Q_LABELS[k] || k, v || '']);
+  });
+
+  const wb = XLSX.utils.book_new();
+  const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
+  wsInfo['!cols'] = [{ wch: 20 }, { wch: 50 }];
+  XLSX.utils.book_append_sheet(wb, wsInfo, 'Datos generales');
+
+  const wsResp = XLSX.utils.aoa_to_sheet(respRows);
+  wsResp['!cols'] = [{ wch: 35 }, { wch: 80 }];
+  XLSX.utils.book_append_sheet(wb, wsResp, 'Respuestas');
+
+  XLSX.writeFile(wb, `Entrevista_${nombre.replace(/\s+/g,'_')}_${fecha}.xlsx`);
 }
 
 // ============== RENDER PRINCIPAL ==============
