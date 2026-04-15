@@ -39,14 +39,32 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .hero h1{font-family:'Playfair Display',serif;font-style:italic;font-size:1.7rem;font-weight:700;margin-bottom:.2rem}
 .hero p{font-size:.85rem;opacity:.8}
 
-/* STATS */
-.stats-bar{background:var(--card);border-bottom:1px solid var(--border);padding:.8rem 1.5rem;display:flex;gap:2rem;overflow-x:auto}
-.stat{text-align:center;min-width:80px}
-.stat .val{font-size:1.5rem;font-weight:800;color:var(--green);line-height:1}
-[data-theme="dark"] .stat .val{color:#5DCAA5}
-.stat .lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:.15rem}
-.stat.s-pend .val{color:var(--gold)}
-.stat.s-comp .val{color:#059669}
+/* STATS — Opción B: Estado + Perfil */
+.stats-bar{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:grid;grid-template-columns:1fr 1.2fr;gap:1.2rem}
+.stats-block{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:.85rem 1.05rem}
+.stats-block-title{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:.6rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+.stat-row{display:flex;align-items:center;gap:.55rem;padding:.32rem 0;font-size:.88rem}
+.stat-row .stat-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
+.stat-row .stat-label{flex:1;color:var(--text)}
+.stat-row .stat-value{font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;min-width:48px;text-align:right}
+[data-theme="dark"] .stat-row .stat-value{color:#5DCAA5}
+.stat-row.stat-completed .stat-value{color:#059669}
+.stat-row.stat-pending .stat-value{color:var(--gold)}
+.stat-row.stat-total{border-top:1px solid var(--border);margin-top:.3rem;padding-top:.55rem}
+.stat-row.stat-total .stat-label{font-weight:700}
+.stat-row.stat-total .stat-value{font-size:1.05rem}
+/* Perfil con barra */
+.stat-row.stat-profile{gap:.65rem}
+.stat-row.stat-profile .stat-label{min-width:58px;flex:none;font-weight:600}
+.stat-row.stat-profile .stat-bar{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+.stat-row.stat-profile .stat-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.stat-row.stat-profile.perfil-alto .stat-bar-fill{background:#059669}
+.stat-row.stat-profile.perfil-medio .stat-bar-fill{background:#D4A574}
+.stat-row.stat-profile.perfil-bajo .stat-bar-fill{background:#B45454}
+.stat-row.stat-profile .stat-value{font-size:.82rem;min-width:46px}
+@media (max-width: 760px){
+  .stats-bar{grid-template-columns:1fr;gap:.8rem;padding:.8rem 1rem}
+}
 
 /* CONTROLS */
 .controls{padding:.9rem 1.5rem;display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;border-bottom:1px solid var(--border);background:var(--card)}
@@ -174,6 +192,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 [data-theme="dark"] .comp-card{opacity:.65}
 [data-theme="dark"] .comp-meta{color:#5DCAA5}
 
+/* sin-perfil card */
+.cita-card.sin-perfil{border-left-color:#94a3b8;background:#f8fafc}
+[data-theme="dark"] .cita-card.sin-perfil{background:#1a2636}
+.badge-sinperfil{background:#e2e8f0;color:#475569}
+[data-theme="dark"] .badge-sinperfil{background:#1e293b;color:#94a3b8}
+
+/* Botón eliminar en cards */
+.del-btn{position:absolute;top:.55rem;right:2.2rem;width:24px;height:24px;border-radius:6px;border:1px solid rgba(0,0,0,.12);background:rgba(255,255,255,.7);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .2s;line-height:1;padding:0;color:#dc2626;font-weight:700}
+.del-btn:hover{background:#fee2e2;border-color:#dc2626}
+[data-theme="dark"] .del-btn{background:rgba(15,35,25,.8);border-color:rgba(255,255,255,.15)}
+
+/* Botones en pend-card */
+.pend-actions{display:flex;gap:.4rem;margin-bottom:.4rem}
+.pend-act-btn{padding:.22rem .55rem;border-radius:6px;border:1px solid var(--border);background:transparent;font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--muted)}
+.pend-act-btn:hover{border-color:var(--green);color:var(--green);background:rgba(18,120,80,.06)}
+.pend-act-btn.del:hover{border-color:#dc2626;color:#dc2626;background:#fee2e2}
+
+/* Botón nueva cita */
+.btn-nueva{padding:.38rem .85rem;border-radius:20px;border:none;background:var(--green);color:#fff;font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:background .2s;display:inline-flex;align-items:center;gap:.3rem}
+.btn-nueva:hover{background:var(--green-dark)}
+
 /* RESPONSIVE */
 @media(max-width:640px){
   .controls{flex-direction:column;align-items:flex-start}
@@ -202,15 +241,57 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
-<!-- STATS -->
+<!-- STATS — Opción B: Estado + Perfil -->
 <div class="stats-bar">
-  <div class="stat"><div class="val">15</div><div class="lbl">Total</div></div>
-  <div class="stat"><div class="val" id="statConf">11</div><div class="lbl">Confirmadas</div></div>
-  <div class="stat s-pend"><div class="val" id="statPend">4</div><div class="lbl">Pendientes</div></div>
-  <div class="stat s-comp"><div class="val" id="statComp">—</div><div class="lbl">Completadas</div></div>
-  <div class="stat"><div class="val" id="statAlto">5</div><div class="lbl">Perfil Alto</div></div>
-  <div class="stat"><div class="val" id="statMedio">5</div><div class="lbl">Perfil Medio</div></div>
-  <div class="stat"><div class="val" id="statBajo">5</div><div class="lbl">Perfil Bajo</div></div>
+  <!-- BLOQUE: ESTADO -->
+  <div class="stats-block">
+    <div class="stats-block-title">Estado</div>
+    <div class="stat-row stat-completed">
+      <span class="stat-icon">✅</span>
+      <span class="stat-label">Completadas</span>
+      <span class="stat-value" id="statComp">—</span>
+    </div>
+    <div class="stat-row stat-confirmed">
+      <span class="stat-icon">📅</span>
+      <span class="stat-label">Confirmadas</span>
+      <span class="stat-value" id="statConf">—</span>
+    </div>
+    <div class="stat-row stat-pending">
+      <span class="stat-icon">⏳</span>
+      <span class="stat-label">Por confirmar</span>
+      <span class="stat-value" id="statPend">—</span>
+    </div>
+    <div class="stat-row stat-total">
+      <span class="stat-icon">📊</span>
+      <span class="stat-label">Total</span>
+      <span class="stat-value" id="statTotal">—</span>
+    </div>
+  </div>
+
+  <!-- BLOQUE: PERFIL -->
+  <div class="stats-block">
+    <div class="stats-block-title">Perfil — Progreso</div>
+    <div class="stat-row stat-profile perfil-alto">
+      <span class="stat-label">🟢 Alto</span>
+      <div class="stat-bar"><div class="stat-bar-fill" id="barAlto" style="width:0%"></div></div>
+      <span class="stat-value" id="statAlto">—</span>
+    </div>
+    <div class="stat-row stat-profile perfil-medio">
+      <span class="stat-label">🟡 Medio</span>
+      <div class="stat-bar"><div class="stat-bar-fill" id="barMedio" style="width:0%"></div></div>
+      <span class="stat-value" id="statMedio">—</span>
+    </div>
+    <div class="stat-row stat-profile perfil-bajo">
+      <span class="stat-label">🔴 Bajo</span>
+      <div class="stat-bar"><div class="stat-bar-fill" id="barBajo" style="width:0%"></div></div>
+      <span class="stat-value" id="statBajo">—</span>
+    </div>
+    <div class="stat-row stat-total">
+      <span class="stat-icon">📈</span>
+      <span class="stat-label">Total</span>
+      <span class="stat-value" id="statProgreso">—</span>
+    </div>
+  </div>
 </div>
 
 <!-- CONTROLS -->
@@ -225,6 +306,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <button class="filter-btn" onclick="setFilter('Medio',this)">Medio</button>
     <button class="filter-btn" onclick="setFilter('Bajo',this)">Bajo</button>
   </div>
+  <button class="btn-nueva" onclick="openNewEntry()">＋ Nueva entrada</button>
 </div>
 
 <!-- MAIN -->
@@ -279,13 +361,16 @@ const CITAS = [
   {nombre:'Rivera Oliva Dori Daisy',esp:'Urología',perfil:'Medio',fecha:'2026-04-13',hora:'11:30',lugar:'Hospital Escandón',forma:'Presencial',co:625,ci:24,f:658416},
   {nombre:'Arguelles López Patricia Elizabeth',esp:'Cirugía Plástica',perfil:'Alto',fecha:'2026-04-14',hora:'10:00',lugar:'Hospital Escandón',forma:'Presencial',co:211,ci:29,f:777983},
   {nombre:'Conde Gutiérrez Martha',esp:'Cirugía Pediátrica',perfil:'Bajo',fecha:'2026-04-14',hora:'14:00',lugar:'Consultorio Dra. (Zoom)',forma:'Zoom',co:0,ci:5,f:91166},
-  {nombre:'Márquez Ugalde Miguel Ángel',esp:'Cirugía General',perfil:'Alto',fecha:'2026-04-14',hora:'15:00',lugar:'Zoom',forma:'Zoom',co:0,ci:43,f:4583886},
   {nombre:'Castilla Serrano Horacio Alfonso',esp:'Otorrinolaringología',perfil:'Medio',fecha:'2026-04-15',hora:'16:30',lugar:'Hospital Escandón',forma:'Presencial',co:890,ci:7,f:200520},
+  {nombre:'Gamboa Ramírez Fernando',esp:'',perfil:'',fecha:'2026-04-15',hora:'16:30',lugar:'Hospital Escandón',forma:'Presencial',co:0,ci:0,f:0},
+  {nombre:'Jiménez Canet Atilano Alejandro',esp:'',perfil:'',fecha:'2026-04-15',hora:'17:15',lugar:'Zoom',forma:'Zoom',co:0,ci:0,f:0},
+  {nombre:'Torrején Hernández Carlos Adrián',esp:'',perfil:'',fecha:'2026-04-16',hora:'14:00',lugar:'Zoom',forma:'Zoom',co:0,ci:0,f:0},
   {nombre:'Ortiz Ramírez Juan Eduardo',esp:'Cx. Maxilofacial',perfil:'Medio',fecha:'2026-04-16',hora:'10:30',lugar:'Hospital Escandón',forma:'Presencial',co:103,ci:21,f:1008011},
   {nombre:'Herrera Meillón Hector',esp:'Cirugía General',perfil:'Medio',fecha:'2026-04-16',hora:'11:00',lugar:'Hospital Escandón',forma:'Presencial',co:84,ci:19,f:1072513},
 ];
 
 const PENDIENTES = [
+  {nombre:'Márquez Ugalde Miguel Ángel',esp:'Cirugía General',perfil:'Alto',razon:'Pendiente confirmación — dar seguimiento',co:0,ci:43,f:4583886},
   {nombre:'Vázquez Arroyo David',esp:'Urología',perfil:'Bajo',razon:'Estaba en consulta — llamar más tarde',co:363,ci:5,f:210282},
   {nombre:'Fuentes Ernult Luisa Victoria',esp:'Gastroenterología',perfil:'Bajo',razon:'Estaba en consulta — llamar más tarde',co:15,ci:0,f:0},
   {nombre:'Burgess Valdez Flaquer Alfred Paul',esp:'Cirugía General',perfil:'Bajo',razon:'No responde — llamar más tarde',co:1,ci:0,f:0},
@@ -351,25 +436,75 @@ async function loadCompleted(){
 function loadConfirmed(){ try{ return JSON.parse(localStorage.getItem('he-citas-confirmed')||'[]'); }catch(e){ return []; } }
 function saveConfirmed(arr){ localStorage.setItem('he-citas-confirmed', JSON.stringify(arr)); }
 
-// ─── LOCAL OVERRIDES (edición inline de fecha/hora/lugar/forma) ───────
+// ─── LOCAL OVERRIDES (edición de fecha/hora/lugar/forma/esp/perfil) ───
 function loadOverrides(){ try{ return JSON.parse(localStorage.getItem('he-citas-overrides')||'[]'); }catch(e){ return []; } }
 function saveOverrides(arr){ localStorage.setItem('he-citas-overrides', JSON.stringify(arr)); }
+
+// ─── CITAS EXTRA (agregadas desde UI) ─────────────────────────────────
+function loadCitasExtra(){ try{ return JSON.parse(localStorage.getItem('he-citas-extra')||'[]'); }catch(e){ return []; } }
+function saveCitasExtra(arr){ localStorage.setItem('he-citas-extra', JSON.stringify(arr)); }
+
+// ─── PENDIENTES EXTRA (agregadas desde UI) ────────────────────────────
+function loadPendExtra(){ try{ return JSON.parse(localStorage.getItem('he-pend-extra')||'[]'); }catch(e){ return []; } }
+function savePendExtra(arr){ localStorage.setItem('he-pend-extra', JSON.stringify(arr)); }
+
+// ─── ELIMINADOS ───────────────────────────────────────────────────────
+function loadDeleted(){ try{ return JSON.parse(localStorage.getItem('he-deleted')||'[]'); }catch(e){ return []; } }
+function saveDeleted(arr){ localStorage.setItem('he-deleted', JSON.stringify(arr)); }
+
+// ─── MOVIDOS A PENDIENTE ──────────────────────────────────────────────
+function loadMovedPend(){ try{ return JSON.parse(localStorage.getItem('he-moved-pend')||'[]'); }catch(e){ return []; } }
+function saveMovedPend(arr){ localStorage.setItem('he-moved-pend', JSON.stringify(arr)); }
+
+function isDeleted(nombre){
+  return loadDeleted().some(d => normalize(d) === normalize(nombre));
+}
+function isMovedToPend(nombre){
+  return loadMovedPend().some(m => normalize(m.nombre) === normalize(nombre));
+}
 
 function getEffectiveCitas(){
   const confirmed = loadConfirmed();
   const overrides = loadOverrides();
-  const extra = PENDIENTES
+  const extras    = loadCitasExtra();
+  // Pendientes confirmadas que pasan al calendario
+  const fromPend = [...PENDIENTES, ...loadPendExtra()]
     .filter(p => confirmed.find(c => c.nombre === p.nombre))
-    .map(p => { const c = confirmed.find(c => c.nombre === p.nombre); return Object.assign({},p,{fecha:c.fecha,hora:c.hora,forma:c.forma,lugar:c.lugar}); });
-  const all = CITAS.concat(extra);
-  return all.map(c => {
-    const ov = overrides.find(o => o.nombre === c.nombre);
-    return ov ? Object.assign({},c,{fecha:ov.fecha,hora:ov.hora,forma:ov.forma||c.forma,lugar:ov.lugar||c.lugar}) : c;
-  });
+    .map(p => { const c = confirmed.find(c => c.nombre === p.nombre); return Object.assign({},p,{fecha:c.fecha,hora:c.hora,forma:c.forma,lugar:c.lugar,razon:undefined}); });
+  const all = [...CITAS, ...extras, ...fromPend];
+  return all
+    .filter(c => !isDeleted(c.nombre) && !isMovedToPend(c.nombre))
+    .map(c => {
+      const ov = overrides.find(o => normalize(o.nombre) === normalize(c.nombre));
+      if(!ov) return c;
+      return Object.assign({},c,{
+        fecha: ov.fecha||c.fecha, hora: ov.hora||c.hora,
+        forma: ov.forma||c.forma, lugar: ov.lugar||c.lugar,
+        esp:   ov.esp!==undefined  ? ov.esp  : c.esp,
+        perfil:ov.perfil!==undefined? ov.perfil: c.perfil,
+      });
+    });
 }
+
 function getEffectivePendientes(){
-  const confirmed = loadConfirmed();
-  return PENDIENTES.filter(p => !confirmed.find(c => c.nombre === p.nombre));
+  const confirmed  = loadConfirmed();
+  const pendExtras = loadPendExtra();
+  const moved      = loadMovedPend();
+  const overrides  = loadOverrides();
+  const base = [...PENDIENTES, ...pendExtras]
+    .filter(p => !confirmed.find(c => c.nombre === p.nombre));
+  const all = [...base, ...moved];
+  return all
+    .filter(p => !isDeleted(p.nombre))
+    .map(p => {
+      const ov = overrides.find(o => normalize(o.nombre) === normalize(p.nombre));
+      if(!ov) return p;
+      return Object.assign({},p,{
+        esp:   ov.esp!==undefined   ? ov.esp   : p.esp,
+        perfil:ov.perfil!==undefined ? ov.perfil: p.perfil,
+        razon: ov.razon!==undefined  ? ov.razon : p.razon,
+      });
+    });
 }
 
 function safeId(nombre){ return nombre.replace(/[^a-zA-Z0-9]/g,'_'); }
@@ -424,20 +559,24 @@ function fmt(n){
   return '$'+n;
 }
 function ticket(ci,f){ return ci>0 ? fmt(Math.round(f/ci)) : '—'; }
-function perfilClass(p){ return p==='Alto'?'alto':p==='Medio'?'medio':'bajo'; }
-function interviewUrl(c){ return `entrevista-cirujanos.html?dr=${encodeURIComponent(c.nombre)}&esp=${encodeURIComponent(c.esp)}`; }
+function perfilClass(p){ return p==='Alto'?'alto':p==='Medio'?'medio':p==='Bajo'?'bajo':'sin-perfil'; }
+function perfilBadgeClass(p){ return p==='Alto'?'alto':p==='Medio'?'medio':p==='Bajo'?'bajo':'sinperfil'; }
+function interviewUrl(c){ return `entrevista-cirujanos.html?dr=${encodeURIComponent(c.nombre)}&esp=${encodeURIComponent(c.esp||'')}`; }
 
 function citaCard(c, compact=false){
   const comp = isCompleted(c.nombre);
-  const cls = perfilClass(c.perfil);
+  const cls  = perfilClass(c.perfil);
+  const bcls = perfilBadgeClass(c.perfil);
   const nombreEsc = c.nombre.replace(/'/g,"\\'");
+  const perfilLabel = c.perfil || 'Sin perfil';
   return `<div class="cita-card ${cls}" data-perfil="${c.perfil}">
-    <button class="edit-btn" onclick="openListEdit('${nombreEsc}')" title="Editar fecha/hora">✏</button>
+    <button class="del-btn" onclick="confirmDelete('${nombreEsc}','cita')" title="Eliminar">✕</button>
+    <button class="edit-btn" onclick="openListEdit('${nombreEsc}')" title="Editar">✏</button>
     ${c.hora?`<div class="cita-hora">⏰ ${c.hora}</div>`:''}
     <div class="cita-nombre">${c.nombre}</div>
-    <div class="cita-esp">${c.esp}</div>
+    <div class="cita-esp">${c.esp||'<em style="opacity:.5">Sin especialidad</em>'}</div>
     <div class="cita-badges">
-      <span class="badge badge-${cls}">${c.perfil}</span>
+      <span class="badge badge-${bcls}">${perfilLabel}</span>
       ${c.forma==='Zoom'?'<span class="badge badge-zoom">Zoom</span>':''}
       ${comp?'<span class="badge badge-comp">✓ Completada</span>':''}
     </div>
@@ -470,14 +609,20 @@ function completedCard(c){
 
 function pendCard(p){
   const comp = isCompleted(p.nombre);
-  const cls = perfilClass(p.perfil);
-  const id = safeId(p.nombre);
+  const cls  = perfilClass(p.perfil);
+  const bcls = perfilBadgeClass(p.perfil);
+  const id   = safeId(p.nombre);
+  const nombreEsc = p.nombre.replace(/'/g,"\\'");
   return `<div class="pend-card" data-perfil="${p.perfil}">
+    <div class="pend-actions">
+      <button class="pend-act-btn" onclick="openPendEdit('${nombreEsc}')">✏ Editar</button>
+      <button class="pend-act-btn del" onclick="confirmDelete('${nombreEsc}','pend')">✕ Eliminar</button>
+    </div>
     <div class="pend-nombre">${p.nombre}</div>
-    <div class="pend-esp">${p.esp}</div>
-    <div class="pend-razon">${p.razon}</div>
+    <div class="pend-esp">${p.esp||'<em style="opacity:.5">Sin especialidad</em>'}</div>
+    ${p.razon?`<div class="pend-razon">${p.razon}</div>`:''}
     <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">
-      <span class="badge badge-${cls}">${p.perfil}</span>
+      <span class="badge badge-${bcls}">${p.perfil||'Sin perfil'}</span>
       ${comp?'<span class="badge badge-comp">✓ Completada</span>':''}
     </div>
     <div class="cita-kpis" style="border-top:1px solid var(--border);padding-top:.4rem">
@@ -511,11 +656,34 @@ function filteredPend(){ const all=getEffectivePendientes().filter(p=>!isComplet
 function filteredCompleted(){ const all=[...getEffectiveCitas(),...getEffectivePendientes()].filter(c=>isCompleted(c.nombre)); return currentFilter==='todos'?all:all.filter(c=>c.perfil===currentFilter); }
 
 function updateStats(){
-  const eff = getEffectiveCitas();
+  const eff  = getEffectiveCitas();
   const pend = getEffectivePendientes();
-  const pendientes = eff.filter(c=>!isCompleted(c.nombre)).length + pend.filter(p=>!isCompleted(p.nombre)).length;
-  document.getElementById('statConf').textContent = eff.filter(c=>!isCompleted(c.nombre)).length;
-  document.getElementById('statPend').textContent = pendientes;
+  const all  = [...eff, ...pend];
+  const completed = all.filter(x=>isCompleted(x.nombre)).length;
+  const confirmed = eff.filter(c=>!isCompleted(c.nombre)).length;
+  const pending   = pend.filter(p=>!isCompleted(p.nombre)).length;
+
+  // Bloque ESTADO
+  document.getElementById('statTotal').textContent = all.length;
+  document.getElementById('statConf').textContent  = confirmed;
+  document.getElementById('statPend').textContent  = pending;
+  document.getElementById('statComp').textContent  = completed;
+
+  // Bloque PERFIL (barra + valor "hechos/total")
+  ['Alto','Medio','Bajo'].forEach(perfil=>{
+    const grupo  = all.filter(x=>x.perfil===perfil);
+    const hechos = grupo.filter(x=>isCompleted(x.nombre)).length;
+    const total  = grupo.length;
+    const pct    = total ? Math.round(hechos/total*100) : 0;
+    const valEl  = document.getElementById('stat'+perfil);
+    const barEl  = document.getElementById('bar'+perfil);
+    if(valEl) valEl.textContent = `${hechos}/${total}`;
+    if(barEl) barEl.style.width = pct + '%';
+  });
+
+  // Progreso total
+  const progresoEl = document.getElementById('statProgreso');
+  if(progresoEl) progresoEl.textContent = `${completed}/${all.length}`;
 }
 
 function renderCal(){
@@ -576,67 +744,234 @@ function render(){
   if(v==='cal') renderCal(); else renderList();
 }
 
-// ─── LIST-VIEW EDIT (modal) ───────────────────────────────────────────
-window.openListEdit = function(nombre){
-  const cita = getEffectiveCitas().find(c=>c.nombre===nombre);
-  if(!cita) return;
-  const horaInput = cita.hora ? cita.hora.substring(0,5) : '';
-  const esc = nombre.replace(/'/g,"\\'");
-  const html = `<div id="ledit-overlay" onclick="if(event.target===this)closeListEdit()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem">
-    <div style="background:var(--card);border-radius:16px;padding:1.4rem 1.5rem;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.2)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-        <div style="font-weight:700;font-size:.9rem;color:var(--text)">✏ Editar cita</div>
-        <button onclick="closeListEdit()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);line-height:1">×</button>
-      </div>
-      <div style="font-size:.8rem;color:var(--muted);margin-bottom:.9rem">${nombre}</div>
-      <div style="margin-bottom:.6rem">
-        <label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.5px">Forma</label>
-        <div style="display:flex;gap:.4rem">
-          <label class="cf-radio-opt ${cita.forma!=='Zoom'?'sel':''}" data-grp="le" data-val="Presencial" onclick="selectLeForma('Presencial')"><input type="radio" ${cita.forma!=='Zoom'?'checked':''}>Presencial</label>
-          <label class="cf-radio-opt ${cita.forma==='Zoom'?'sel':''}" data-grp="le" data-val="Zoom" onclick="selectLeForma('Zoom')"><input type="radio" ${cita.forma==='Zoom'?'checked':''}>Zoom</label>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem">
-        <div>
-          <label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.5px">Fecha</label>
-          <input type="date" id="le-fecha" value="${cita.fecha}" min="2026-04-01" style="width:100%;padding:.4rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem;background:var(--card);color:var(--text)">
-        </div>
-        <div>
-          <label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.5px">Hora</label>
-          <input type="time" id="le-hora" value="${horaInput}" style="width:100%;padding:.4rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem;background:var(--card);color:var(--text)">
-        </div>
-      </div>
-      <div style="margin-bottom:.9rem">
-        <label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.5px">Lugar</label>
-        <input type="text" id="le-lugar" value="${cita.lugar||'Hospital Escandón'}" style="width:100%;padding:.4rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem;background:var(--card);color:var(--text)">
-      </div>
-      <button onclick="saveListEdit('${esc}')" style="width:100%;padding:.55rem;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer">✓ Actualizar cita</button>
-    </div>
+// ─── HELPERS MODAL ────────────────────────────────────────────────────
+function modalInput(id, label, type, value, extra=''){
+  return `<div>
+    <label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.5px">${label}</label>
+    <input type="${type}" id="${id}" value="${(value||'').replace(/"/g,'&quot;')}" ${extra}
+      style="width:100%;padding:.4rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem;background:var(--card);color:var(--text)">
   </div>`;
-  document.body.insertAdjacentHTML('beforeend', html);
-};
-window.closeListEdit = function(){
-  const el = document.getElementById('ledit-overlay');
-  if(el) el.remove();
-};
-window.selectLeForma = function(val){
-  document.querySelectorAll('.cf-radio-opt[data-grp="le"]').forEach(el=>{
+}
+function modalFormaRadios(grp, current){
+  return `<label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.5px">Forma</label>
+  <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+    <label class="cf-radio-opt ${current!=='Zoom'?'sel':''}" data-grp="${grp}" data-val="Presencial" onclick="selectModalForma('${grp}','Presencial')"><input type="radio" ${current!=='Zoom'?'checked':''}>Presencial</label>
+    <label class="cf-radio-opt ${current==='Zoom'?'sel':''}" data-grp="${grp}" data-val="Zoom" onclick="selectModalForma('${grp}','Zoom')"><input type="radio" ${current==='Zoom'?'checked':''}>Zoom</label>
+  </div>`;
+}
+function modalPerfilRadios(grp, current){
+  return `<label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-bottom:.2rem;text-transform:uppercase;letter-spacing:.5px">Perfil</label>
+  <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+    ${['Alto','Medio','Bajo',''].map(v=>`<label class="cf-radio-opt ${current===v?'sel':''}" data-grp="${grp}-perf" data-val="${v}" onclick="selectModalForma('${grp}-perf','${v}')"><input type="radio" ${current===v?'checked':''}>${v||'—'}</label>`).join('')}
+  </div>`;
+}
+window.selectModalForma = function(grp, val){
+  document.querySelectorAll(`.cf-radio-opt[data-grp="${grp}"]`).forEach(el=>{
     el.classList.toggle('sel', el.dataset.val===val);
     const inp=el.querySelector('input'); if(inp) inp.checked=el.dataset.val===val;
   });
 };
+function getModalForma(grp){ const el=document.querySelector(`.cf-radio-opt.sel[data-grp="${grp}"]`); return el?el.dataset.val:'Presencial'; }
+function closeModal(){ const el=document.getElementById('modal-overlay'); if(el) el.remove(); }
+
+// ─── EDITAR CITA (calendario) ─────────────────────────────────────────
+window.openListEdit = function(nombre){
+  const cita = getEffectiveCitas().find(c=>c.nombre===nombre);
+  if(!cita) return;
+  closeModal();
+  const esc = nombre.replace(/'/g,"\\'");
+  const html = `<div id="modal-overlay" onclick="if(event.target===this)closeModal()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:var(--card);border-radius:16px;padding:1.4rem 1.5rem;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+        <div style="font-weight:700;font-size:.9rem;color:var(--text)">✏ Editar cita</div>
+        <button onclick="closeModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);line-height:1">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.55rem">
+        ${modalInput('le-nombre','Nombre del doctor','text',cita.nombre)}
+        ${modalInput('le-esp','Especialidad','text',cita.esp)}
+        ${modalPerfilRadios('le',cita.perfil||'')}
+        ${modalFormaRadios('le',cita.forma||'Presencial')}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          ${modalInput('le-fecha','Fecha','date',cita.fecha,'min="2026-04-01"')}
+          ${modalInput('le-hora','Hora','time',cita.hora?cita.hora.substring(0,5):'')}
+        </div>
+        ${modalInput('le-lugar','Lugar','text',cita.lugar||'Hospital Escandón')}
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.9rem">
+        <button onclick="saveListEdit('${esc}')" style="flex:1;padding:.5rem;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">✓ Guardar</button>
+        <button onclick="moveToPending('${esc}')" style="flex:1;padding:.5rem;background:var(--gold);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer" title="Pasar a sección Pendientes">⏳ Mover a pendiente</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+};
 window.saveListEdit = function(nombre){
+  const nombreNuevo = document.getElementById('le-nombre')?.value?.trim() || nombre;
+  const esp    = document.getElementById('le-esp')?.value?.trim() || '';
   const fecha  = document.getElementById('le-fecha')?.value;
   const hora   = document.getElementById('le-hora')?.value;
   const lugar  = document.getElementById('le-lugar')?.value || 'Hospital Escandón';
-  const formaEl= document.querySelector('.cf-radio-opt.sel[data-grp="le"]');
-  const forma  = formaEl ? formaEl.dataset.val : 'Presencial';
+  const forma  = getModalForma('le');
+  const perfil = getModalForma('le-perf');
   if(!fecha||!hora){ alert('Por favor ingresa fecha y hora.'); return; }
-  const arr = loadOverrides().filter(o=>o.nombre!==nombre);
-  arr.push({nombre, fecha, hora:hora.substring(0,5), forma, lugar});
-  saveOverrides(arr);
-  closeListEdit();
-  render();
+  // For custom entries, update in-place
+  const extras = loadCitasExtra();
+  const exIdx = extras.findIndex(e=>normalize(e.nombre)===normalize(nombre));
+  if(exIdx>=0){
+    extras[exIdx] = Object.assign({},extras[exIdx],{nombre:nombreNuevo,esp,perfil,fecha,hora:hora.substring(0,5),forma,lugar});
+    saveCitasExtra(extras);
+  } else {
+    // Built-in: use overrides (keep original nombre as key, update other fields)
+    const arr = loadOverrides().filter(o=>normalize(o.nombre)!==normalize(nombre));
+    arr.push({nombre, esp, perfil, fecha, hora:hora.substring(0,5), forma, lugar});
+    saveOverrides(arr);
+  }
+  closeModal(); updateStats(); render();
+};
+window.moveToPending = function(nombre){
+  const cita = getEffectiveCitas().find(c=>normalize(c.nombre)===normalize(nombre));
+  if(!cita) return;
+  if(!confirm(`¿Mover a "${nombre}" a Pendientes?`)) return;
+  const moved = loadMovedPend().filter(m=>normalize(m.nombre)!==normalize(nombre));
+  moved.push(Object.assign({},cita,{razon:'Movido a pendiente manualmente',fecha:undefined,hora:undefined}));
+  saveMovedPend(moved);
+  // Also remove from citas-extra if it was custom
+  const extras = loadCitasExtra().filter(e=>normalize(e.nombre)!==normalize(nombre));
+  saveCitasExtra(extras);
+  closeModal(); updateStats(); render();
+};
+
+// ─── EDITAR PENDIENTE ────────────────────────────────────────────────
+window.openPendEdit = function(nombre){
+  const p = getEffectivePendientes().find(x=>x.nombre===nombre);
+  if(!p) return;
+  closeModal();
+  const esc = nombre.replace(/'/g,"\\'");
+  const html = `<div id="modal-overlay" onclick="if(event.target===this)closeModal()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:var(--card);border-radius:16px;padding:1.4rem 1.5rem;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+        <div style="font-weight:700;font-size:.9rem;color:var(--text)">✏ Editar pendiente</div>
+        <button onclick="closeModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);line-height:1">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.55rem">
+        ${modalInput('pe-nombre','Nombre del doctor','text',p.nombre)}
+        ${modalInput('pe-esp','Especialidad','text',p.esp||'')}
+        ${modalPerfilRadios('pe',p.perfil||'')}
+        ${modalInput('pe-razon','Razón / seguimiento','text',p.razon||'')}
+      </div>
+      <button onclick="savePendEdit('${esc}')" style="width:100%;margin-top:.9rem;padding:.5rem;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">✓ Guardar</button>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+};
+window.savePendEdit = function(nombre){
+  const esp    = document.getElementById('pe-esp')?.value?.trim()||'';
+  const perfil = getModalForma('pe-perf');
+  const razon  = document.getElementById('pe-razon')?.value?.trim()||'';
+  // Custom pendiente?
+  const extras = loadPendExtra();
+  const exIdx = extras.findIndex(e=>normalize(e.nombre)===normalize(nombre));
+  if(exIdx>=0){
+    extras[exIdx] = Object.assign({},extras[exIdx],{esp,perfil,razon});
+    savePendExtra(extras);
+  } else {
+    // Moved from citas?
+    const moved = loadMovedPend();
+    const moIdx = moved.findIndex(m=>normalize(m.nombre)===normalize(nombre));
+    if(moIdx>=0){ moved[moIdx] = Object.assign({},moved[moIdx],{esp,perfil,razon}); saveMovedPend(moved); }
+    else {
+      const arr = loadOverrides().filter(o=>normalize(o.nombre)!==normalize(nombre));
+      arr.push({nombre,esp,perfil,razon});
+      saveOverrides(arr);
+    }
+  }
+  closeModal(); updateStats(); render();
+};
+
+// ─── NUEVA ENTRADA ───────────────────────────────────────────────────
+window.openNewEntry = function(){
+  closeModal();
+  const html = `<div id="modal-overlay" onclick="if(event.target===this)closeModal()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem">
+    <div style="background:var(--card);border-radius:16px;padding:1.4rem 1.5rem;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+        <div style="font-weight:700;font-size:.9rem;color:var(--text)">＋ Nueva entrada</div>
+        <button onclick="closeModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);line-height:1">×</button>
+      </div>
+      <div style="margin-bottom:.8rem">
+        <label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.5px">Tipo</label>
+        <div style="display:flex;gap:.4rem">
+          <label class="cf-radio-opt sel" data-grp="ne-tipo" data-val="cita" onclick="selectModalForma('ne-tipo','cita');document.getElementById('ne-fecha-section').style.display=''">📅 Cita en calendario</label>
+          <label class="cf-radio-opt" data-grp="ne-tipo" data-val="pend" onclick="selectModalForma('ne-tipo','pend');document.getElementById('ne-fecha-section').style.display='none'">⏳ Pendiente</label>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.55rem">
+        ${modalInput('ne-nombre','Nombre del doctor','text','')}
+        ${modalInput('ne-esp','Especialidad','text','')}
+        ${modalPerfilRadios('ne','')}
+        <div id="ne-fecha-section">
+          ${modalFormaRadios('ne-forma','Presencial')}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+            ${modalInput('ne-fecha','Fecha','date','','min="2026-04-01"')}
+            ${modalInput('ne-hora','Hora','time','')}
+          </div>
+          ${modalInput('ne-lugar','Lugar','text','Hospital Escandón')}
+        </div>
+        <div id="ne-razon-section" style="display:none">
+          ${modalInput('ne-razon','Razón / seguimiento','text','')}
+        </div>
+      </div>
+      <button onclick="saveNewEntry()" style="width:100%;margin-top:.9rem;padding:.5rem;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">＋ Agregar</button>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+  // Toggle razon/fecha on tipo change
+  document.querySelectorAll('[data-grp="ne-tipo"]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const isPend = el.dataset.val==='pend';
+      document.getElementById('ne-fecha-section').style.display = isPend?'none':'';
+      document.getElementById('ne-razon-section').style.display = isPend?'':'none';
+    });
+  });
+};
+window.saveNewEntry = function(){
+  const nombre = document.getElementById('ne-nombre')?.value?.trim();
+  const esp    = document.getElementById('ne-esp')?.value?.trim()||'';
+  const perfil = getModalForma('ne-perf');
+  const tipo   = getModalForma('ne-tipo');
+  if(!nombre){ alert('El nombre es obligatorio.'); return; }
+  if(tipo==='cita'){
+    const fecha = document.getElementById('ne-fecha')?.value;
+    const hora  = document.getElementById('ne-hora')?.value;
+    const lugar = document.getElementById('ne-lugar')?.value||'Hospital Escandón';
+    const forma = getModalForma('ne-forma');
+    if(!fecha||!hora){ alert('Ingresa fecha y hora para la cita.'); return; }
+    const extras = loadCitasExtra();
+    extras.push({nombre,esp,perfil,fecha,hora:hora.substring(0,5),lugar,forma,co:0,ci:0,f:0});
+    saveCitasExtra(extras);
+  } else {
+    const razon = document.getElementById('ne-razon')?.value?.trim()||'Pendiente — dar seguimiento';
+    const extras = loadPendExtra();
+    extras.push({nombre,esp,perfil,razon,co:0,ci:0,f:0});
+    savePendExtra(extras);
+  }
+  closeModal(); updateStats(); render();
+};
+
+// ─── ELIMINAR ────────────────────────────────────────────────────────
+window.confirmDelete = function(nombre, tipo){
+  if(!confirm(`¿Eliminar a "${nombre}" de la agenda?`)) return;
+  // Remove from custom lists
+  saveCitasExtra(loadCitasExtra().filter(e=>normalize(e.nombre)!==normalize(nombre)));
+  savePendExtra(loadPendExtra().filter(e=>normalize(e.nombre)!==normalize(nombre)));
+  saveMovedPend(loadMovedPend().filter(m=>normalize(m.nombre)!==normalize(nombre)));
+  // For built-ins, add to deleted list
+  const isBuiltIn = [...CITAS,...PENDIENTES].some(x=>normalize(x.nombre)===normalize(nombre));
+  if(isBuiltIn){
+    const del = loadDeleted();
+    if(!del.some(d=>normalize(d)===normalize(nombre))) del.push(nombre);
+    saveDeleted(del);
+  }
+  updateStats(); render();
 };
 
 // ─── VIEW / FILTER CONTROLS ──────────────────────────────────────────
