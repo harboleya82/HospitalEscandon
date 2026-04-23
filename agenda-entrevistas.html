@@ -447,19 +447,26 @@ async function initAgendaState(){
       const rows = await res.json();
       if(rows.length > 0){
         const r = rows[0];
-        agendaState = {
-          confirmed:   Array.isArray(r.confirmed)   ? r.confirmed   : [],
-          overrides:   Array.isArray(r.overrides)   ? r.overrides   : [],
-          citas_extra: Array.isArray(r.citas_extra) ? r.citas_extra : [],
-          pend_extra:  Array.isArray(r.pend_extra)  ? r.pend_extra  : [],
-          deleted:     Array.isArray(r.deleted)     ? r.deleted     : [],
-          moved_pend:  Array.isArray(r.moved_pend)  ? r.moved_pend  : []
-        };
-        return;
+        // Si el row de Supabase tiene datos reales, usarlos
+        const sbHasData = r.citas_extra?.length || r.confirmed?.length ||
+                          r.deleted?.length     || r.moved_pend?.length ||
+                          r.overrides?.length   || r.pend_extra?.length;
+        if(sbHasData){
+          agendaState = {
+            confirmed:   Array.isArray(r.confirmed)   ? r.confirmed   : [],
+            overrides:   Array.isArray(r.overrides)   ? r.overrides   : [],
+            citas_extra: Array.isArray(r.citas_extra) ? r.citas_extra : [],
+            pend_extra:  Array.isArray(r.pend_extra)  ? r.pend_extra  : [],
+            deleted:     Array.isArray(r.deleted)     ? r.deleted     : [],
+            moved_pend:  Array.isArray(r.moved_pend)  ? r.moved_pend  : []
+          };
+          return; // Supabase tiene datos reales — usarlos y salir
+        }
+        // Row existe pero vacío — caer a localStorage para migrar
       }
     }
   } catch(e){ console.warn('Supabase estado no disponible, usando localStorage:', e); }
-  // Fallback: cargar localStorage y migrar a Supabase
+  // Fallback/migración: cargar localStorage y subir a Supabase
   agendaState = {
     confirmed:   safeLS('he-citas-confirmed'),
     overrides:   safeLS('he-citas-overrides'),
@@ -468,7 +475,7 @@ async function initAgendaState(){
     deleted:     safeLS('he-deleted'),
     moved_pend:  safeLS('he-moved-pend'),
   };
-  persistState();
+  persistState(); // Subir localStorage a Supabase
 }
 function safeLS(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
 
