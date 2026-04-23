@@ -421,8 +421,6 @@ async function loadCompleted(){
     if(res.ok){
       const rows = await res.json();
       completedNames = new Set(rows.map(r=>normalize(r.nombre_entrevistado||'')));
-      console.log('[Agenda] Entrevistas en Supabase raw:', rows.map(r=>r.nombre_entrevistado));
-      console.log('[Agenda] Normalizados:', [...completedNames]);
       const allNames = [...CITAS, ...PENDIENTES];
       const count = allNames.filter(c=>isCompleted(c.nombre)).length;
       document.getElementById('statComp').textContent = count;
