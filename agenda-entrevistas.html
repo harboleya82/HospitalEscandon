@@ -423,8 +423,6 @@ async function loadCompleted(){
     if(res.ok){
       const rows = await res.json();
       completedNames = new Set(rows.map(r=>normalize(r.nombre_entrevistado||'')));
-      console.log('[Agenda] Entrevistas en Supabase raw:', rows.map(r=>r.nombre_entrevistado));
-      console.log('[Agenda] Normalizados:', [...completedNames]);
       const allNames = [...CITAS, ...PENDIENTES];
       const count = allNames.filter(c=>isCompleted(c.nombre)).length;
       document.getElementById('statComp').textContent = count;
@@ -434,29 +432,85 @@ async function loadCompleted(){
   }catch(e){ console.warn('Supabase offline',e); render(); }
 }
 
+// ─── SUPABASE ESTADO SYNC ────────────────────────────────────────────
+const ESTADO_URL = `${SB_URL}/rest/v1/agenda_estado?id=eq.default`;
+function getToken(){ try{ return JSON.parse(localStorage.getItem('sb-gggwswbgwihlokrnvktl-auth-token')||'{}').access_token||''; }catch(e){ return ''; } }
+
+let agendaState = { confirmed:[], overrides:[], citas_extra:[], pend_extra:[], deleted:[], moved_pend:[] };
+
+async function initAgendaState(){
+  try {
+    const tok = getToken();
+    if(!tok) throw new Error('no token');
+    const res = await fetch(ESTADO_URL, { headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok} });
+    if(res.ok){
+      const rows = await res.json();
+      if(rows.length > 0){
+        const r = rows[0];
+        agendaState = {
+          confirmed:   Array.isArray(r.confirmed)   ? r.confirmed   : [],
+          overrides:   Array.isArray(r.overrides)   ? r.overrides   : [],
+          citas_extra: Array.isArray(r.citas_extra) ? r.citas_extra : [],
+          pend_extra:  Array.isArray(r.pend_extra)  ? r.pend_extra  : [],
+          deleted:     Array.isArray(r.deleted)     ? r.deleted     : [],
+          moved_pend:  Array.isArray(r.moved_pend)  ? r.moved_pend  : []
+        };
+        return;
+      }
+    }
+  } catch(e){ console.warn('Supabase estado no disponible, usando localStorage:', e); }
+  // Fallback: cargar localStorage y migrar a Supabase
+  agendaState = {
+    confirmed:   safeLS('he-citas-confirmed'),
+    overrides:   safeLS('he-citas-overrides'),
+    citas_extra: safeLS('he-citas-extra'),
+    pend_extra:  safeLS('he-pend-extra'),
+    deleted:     safeLS('he-deleted'),
+    moved_pend:  safeLS('he-moved-pend'),
+  };
+  persistState();
+}
+function safeLS(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
+
+function persistState(){
+  localStorage.setItem('he-citas-confirmed', JSON.stringify(agendaState.confirmed));
+  localStorage.setItem('he-citas-overrides', JSON.stringify(agendaState.overrides));
+  localStorage.setItem('he-citas-extra',     JSON.stringify(agendaState.citas_extra));
+  localStorage.setItem('he-pend-extra',      JSON.stringify(agendaState.pend_extra));
+  localStorage.setItem('he-deleted',         JSON.stringify(agendaState.deleted));
+  localStorage.setItem('he-moved-pend',      JSON.stringify(agendaState.moved_pend));
+  const tok = getToken();
+  if(!tok) return;
+  fetch(`${SB_URL}/rest/v1/agenda_estado`, {
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+    body: JSON.stringify({id:'default', ...agendaState, updated_at: new Date().toISOString()})
+  }).catch(e => console.warn('Error al guardar en Supabase:', e));
+}
+
 // ─── LOCAL CONFIRMED CITAS ───────────────────────────────────────────
-function loadConfirmed(){ try{ return JSON.parse(localStorage.getItem('he-citas-confirmed')||'[]'); }catch(e){ return []; } }
-function saveConfirmed(arr){ localStorage.setItem('he-citas-confirmed', JSON.stringify(arr)); }
+function loadConfirmed(){ return agendaState.confirmed; }
+function saveConfirmed(arr){ agendaState.confirmed = arr; persistState(); }
 
 // ─── LOCAL OVERRIDES (edición de fecha/hora/lugar/forma/esp/perfil) ───
-function loadOverrides(){ try{ return JSON.parse(localStorage.getItem('he-citas-overrides')||'[]'); }catch(e){ return []; } }
-function saveOverrides(arr){ localStorage.setItem('he-citas-overrides', JSON.stringify(arr)); }
+function loadOverrides(){ return agendaState.overrides; }
+function saveOverrides(arr){ agendaState.overrides = arr; persistState(); }
 
 // ─── CITAS EXTRA (agregadas desde UI) ─────────────────────────────────
-function loadCitasExtra(){ try{ return JSON.parse(localStorage.getItem('he-citas-extra')||'[]'); }catch(e){ return []; } }
-function saveCitasExtra(arr){ localStorage.setItem('he-citas-extra', JSON.stringify(arr)); }
+function loadCitasExtra(){ return agendaState.citas_extra; }
+function saveCitasExtra(arr){ agendaState.citas_extra = arr; persistState(); }
 
 // ─── PENDIENTES EXTRA (agregadas desde UI) ────────────────────────────
-function loadPendExtra(){ try{ return JSON.parse(localStorage.getItem('he-pend-extra')||'[]'); }catch(e){ return []; } }
-function savePendExtra(arr){ localStorage.setItem('he-pend-extra', JSON.stringify(arr)); }
+function loadPendExtra(){ return agendaState.pend_extra; }
+function savePendExtra(arr){ agendaState.pend_extra = arr; persistState(); }
 
 // ─── ELIMINADOS ───────────────────────────────────────────────────────
-function loadDeleted(){ try{ return JSON.parse(localStorage.getItem('he-deleted')||'[]'); }catch(e){ return []; } }
-function saveDeleted(arr){ localStorage.setItem('he-deleted', JSON.stringify(arr)); }
+function loadDeleted(){ return agendaState.deleted; }
+function saveDeleted(arr){ agendaState.deleted = arr; persistState(); }
 
 // ─── MOVIDOS A PENDIENTE ──────────────────────────────────────────────
-function loadMovedPend(){ try{ return JSON.parse(localStorage.getItem('he-moved-pend')||'[]'); }catch(e){ return []; } }
-function saveMovedPend(arr){ localStorage.setItem('he-moved-pend', JSON.stringify(arr)); }
+function loadMovedPend(){ return agendaState.moved_pend; }
+function saveMovedPend(arr){ agendaState.moved_pend = arr; persistState(); }
 
 function isDeleted(nombre){
   return loadDeleted().some(d => normalize(d) === normalize(nombre));
@@ -1012,7 +1066,7 @@ function setFilter(f, btn){
 // ─── INIT ────────────────────────────────────────────────────────────
 updateStats();
 render();
-loadCompleted();
+initAgendaState().then(() => { updateStats(); render(); loadCompleted(); });
 </script>
 </body>
 </html>
