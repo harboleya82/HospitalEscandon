@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
 }
 
 Deno.serve(async (req) => {
@@ -30,9 +30,21 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { id, respuestas, tabla } = await req.json()
-    if (!id || !respuestas) {
-      return new Response(JSON.stringify({ error: 'Faltan campos: id y respuestas' }), {
+    const { id, respuestas, tabla, nombre_entrevistado, especialidad, perfil } = await req.json()
+    if (!id) {
+      return new Response(JSON.stringify({ error: 'Falta campo: id' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    const updatePayload: Record<string, unknown> = {}
+    if (respuestas !== undefined) updatePayload.respuestas = respuestas
+    if (nombre_entrevistado !== undefined) updatePayload.nombre_entrevistado = nombre_entrevistado
+    if (especialidad !== undefined) updatePayload.especialidad = especialidad
+    if (perfil !== undefined) updatePayload.perfil = perfil
+
+    if (Object.keys(updatePayload).length === 0) {
+      return new Response(JSON.stringify({ error: 'No hay campos para actualizar' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
@@ -44,7 +56,7 @@ Deno.serve(async (req) => {
     const nombreTabla = tabla || 'entrevistas_cirujanos'
     const { data, error } = await supabaseAdmin
       .from(nombreTabla)
-      .update({ respuestas })
+      .update(updatePayload)
       .eq('id', id)
       .select()
 
