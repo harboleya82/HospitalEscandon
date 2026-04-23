@@ -518,15 +518,25 @@ async function fetchData() {
   render();
 }
 
+// ============== AUTH TOKEN ==============
+function getSessionToken() {
+  try {
+    const raw = localStorage.getItem('sb-gggwswbgwihlokrnvktl-auth-token') || '{}';
+    return JSON.parse(raw).access_token || '';
+  } catch(e) { return ''; }
+}
+
 // ============== SAVE A SUPABASE ==============
 async function saveRespuestas(id, respuestas, extraFields = {}) {
   const body = { id, ...extraFields };
   if (respuestas !== undefined) body.respuestas = respuestas;
+  const token = getSessionToken();
+  if (!token) throw new Error('No hay sesión activa. Recarga e inicia sesión.');
   const res = await fetch(`${SUPABASE_URL}/functions/v1/update-entrevista`, {
     method: 'POST',
     headers: {
       'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },
