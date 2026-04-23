@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 Deno.serve(async (req) => {
@@ -11,49 +11,40 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { id, respuestas, tabla, nombre_entrevistado, especialidad, perfil, action } = await req.json()
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'No autorizado' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
 
-    if (!id) {
-      return new Response(JSON.stringify({ error: 'Falta campo: id' }), {
+    const supabaseAuth = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    )
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Sesión inválida' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    const { id, respuestas, tabla } = await req.json()
+    if (!id || !respuestas) {
+      return new Response(JSON.stringify({ error: 'Faltan campos: id y respuestas' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SERVICE_ROLE_KEY') ?? ''
     )
-
     const nombreTabla = tabla || 'entrevistas_cirujanos'
-
-    // ---- ELIMINAR ----
-    if (action === 'delete') {
-      const { error } = await supabaseAdmin
-        .from(nombreTabla)
-        .delete()
-        .eq('id', id)
-
-      if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
-      }
-
-      return new Response(JSON.stringify({ ok: true, deleted: id }), {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
-
-    // ---- ACTUALIZAR ----
-    const updateObj: Record<string, unknown> = {}
-    if (respuestas          !== undefined) updateObj.respuestas          = respuestas
-    if (nombre_entrevistado !== undefined) updateObj.nombre_entrevistado = nombre_entrevistado
-    if (especialidad        !== undefined) updateObj.especialidad        = especialidad
-    if (perfil              !== undefined) updateObj.perfil              = perfil
-
     const { data, error } = await supabaseAdmin
       .from(nombreTabla)
-      .update(updateObj)
+      .update({ respuestas })
       .eq('id', id)
       .select()
 
@@ -68,7 +59,7 @@ Deno.serve(async (req) => {
     })
 
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), {
+    return new Response(JSON.stringify({ error: e.message }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }
