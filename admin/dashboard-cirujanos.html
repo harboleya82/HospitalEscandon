@@ -519,7 +519,9 @@ async function fetchData() {
 }
 
 // ============== SAVE A SUPABASE ==============
-async function saveRespuestas(id, respuestas) {
+async function saveRespuestas(id, respuestas, extraFields = {}) {
+  const body = { id, ...extraFields };
+  if (respuestas !== undefined) body.respuestas = respuestas;
   const res = await fetch(`${SUPABASE_URL}/functions/v1/update-entrevista`, {
     method: 'POST',
     headers: {
@@ -528,7 +530,7 @@ async function saveRespuestas(id, respuestas) {
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },
-    body: JSON.stringify({ id, respuestas })
+    body: JSON.stringify(body)
   });
   if (!res.ok) {
     const err = await res.text();
@@ -674,6 +676,35 @@ function startEdit(id) {
   const d = allData.find(x => x.id === id);
   if (!d) return;
   const container = document.getElementById(`resps-${id}`);
+
+  // Meta-editor (nombre, especialidad, perfil)
+  const uniqueEsps = [...new Set(allData.map(x => x.especialidad).filter(Boolean))].sort();
+  const datalistId = `esp-list-${id}`;
+  const perfilOpts = ['', 'Alto', 'Medio', 'Bajo']
+    .map(v => `<option value="${v}"${d.perfil === v ? ' selected' : ''}>${v || '(sin asignar)'}</option>`)
+    .join('');
+  const metaHtml = `<div id="meta-editor-${id}" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;margin-bottom:.8rem;display:grid;grid-template-columns:1fr 1fr auto;gap:.6rem;align-items:end">
+    <div>
+      <label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.2rem">Nombre</label>
+      <input id="meta-nombre-${id}" type="text" value="${(d.nombre_entrevistado || '').replace(/"/g,'&quot;')}"
+        style="width:100%;padding:.35rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem;background:var(--bg);color:var(--text)">
+    </div>
+    <div>
+      <label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.2rem">Especialidad</label>
+      <input id="meta-esp-${id}" type="text" list="${datalistId}" value="${(d.especialidad || '').replace(/"/g,'&quot;')}"
+        style="width:100%;padding:.35rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem;background:var(--bg);color:var(--text)">
+      <datalist id="${datalistId}">${uniqueEsps.map(e => `<option value="${e}">`).join('')}</datalist>
+    </div>
+    <div>
+      <label style="display:block;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.2rem">Perfil</label>
+      <select id="meta-perfil-${id}"
+        style="padding:.35rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem;background:var(--bg);color:var(--text);cursor:pointer">
+        ${perfilOpts}
+      </select>
+    </div>
+  </div>`;
+  container.insertAdjacentHTML('beforebegin', metaHtml);
+
   container.querySelectorAll('.resp-row').forEach(row => {
     const key = row.dataset.key;
     const valEl = row.querySelector('.resp-value');
@@ -699,26 +730,33 @@ async function saveEdit(id) {
   container.querySelectorAll('textarea[data-editkey]').forEach(ta => {
     newResp[ta.dataset.editkey] = ta.value;
   });
-  const msgEl = document.getElementById(`msg-${id}`);
+
+  // Leer meta-campos y construir extraFields solo con los que cambiaron
+  const extraFields = {};
+  const newNombre = document.getElementById(`meta-nombre-${id}`)?.value?.trim();
+  const newEsp    = document.getElementById(`meta-esp-${id}`)?.value?.trim();
+  const newPerfil = document.getElementById(`meta-perfil-${id}`)?.value;
+  if (newNombre !== undefined && newNombre !== (d.nombre_entrevistado || '')) extraFields.nombre_entrevistado = newNombre;
+  if (newEsp    !== undefined && newEsp    !== (d.especialidad || ''))        extraFields.especialidad = newEsp;
+  if (newPerfil !== undefined && newPerfil !== (d.perfil || ''))              extraFields.perfil = newPerfil;
+
+  const msgEl  = document.getElementById(`msg-${id}`);
   const saveBtn = document.getElementById(`btnsave-${id}`);
   saveBtn.textContent = 'Guardando...';
   saveBtn.disabled = true;
   try {
-    await saveRespuestas(id, newResp);
-    // Actualizar local
+    await saveRespuestas(id, newResp, extraFields);
+    // Actualizar objeto local con todos los cambios
     d.respuestas = newResp;
+    if (extraFields.nombre_entrevistado !== undefined) d.nombre_entrevistado = extraFields.nombre_entrevistado;
+    if (extraFields.especialidad        !== undefined) d.especialidad        = extraFields.especialidad;
+    if (extraFields.perfil              !== undefined) d.perfil              = extraFields.perfil;
     msgEl.textContent = '✅ Guardado';
     msgEl.className = 'save-msg ok';
     msgEl.style.display = 'inline-block';
     setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
     cancelEdit(id);
-    // Re-render respuestas con nuevos valores
-    const respRows = Object.entries(newResp).map(([k, v]) => `
-      <div class="resp-row" data-key="${k}">
-        <div class="resp-label">${Q_LABELS[k] || k}</div>
-        <div class="resp-value" data-display="${k}">${v || '<em style="color:var(--muted)">Sin respuesta</em>'}</div>
-      </div>`).join('');
-    container.innerHTML = respRows;
+    render(); // Actualizar header de la card con nuevo nombre/especialidad/perfil
   } catch(e) {
     msgEl.textContent = '❌ Error al guardar';
     msgEl.className = 'save-msg err';
@@ -731,6 +769,7 @@ async function saveEdit(id) {
 function cancelEdit(id) {
   const d = allData.find(x => x.id === id);
   if (!d) return;
+  document.getElementById(`meta-editor-${id}`)?.remove();
   const container = document.getElementById(`resps-${id}`);
   const respRows = Object.entries(d.respuestas || {}).map(([k, v]) => `
     <div class="resp-row" data-key="${k}">
