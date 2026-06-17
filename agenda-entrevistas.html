@@ -269,6 +269,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   .mode-toggle button{padding:.28rem .55rem;font-size:.7rem}
   .site-header .theme-btn{width:28px;height:28px;font-size:12px}
 }
+
+/* ─── WhatsApp + Embudo de contacto (Pacientes) ───────────────────── */
+.wa-row{display:flex;gap:.4rem;align-items:center;margin:.15rem 0 .55rem}
+.wa-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;padding:.42rem .6rem;border:none;border-radius:8px;background:#127850;color:#fff;font-family:'Inter',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;transition:background .2s;line-height:1}
+.wa-btn:hover{background:#0e6040}
+.wa-btn-off{background:#cbd5e1;color:#64748b;cursor:not-allowed}
+[data-theme="dark"] .wa-btn-off{background:#334155;color:#94a3b8}
+.wa-select{flex:1;min-width:0;padding:.4rem .5rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.74rem;background:var(--card);color:var(--text);cursor:pointer}
+.wa-select:focus{outline:none;border-color:var(--green)}
+.wa-funnel{display:flex;flex-wrap:wrap;gap:.45rem;margin:.2rem 0 .6rem}
+.wa-chip{display:flex;flex-direction:column;align-items:center;min-width:80px;padding:.45rem .55rem;border:1.5px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif}
+.wa-chip:hover{border-color:var(--green)}
+.wa-chip.on{border-color:var(--green);background:rgba(18,120,80,.08)}
+[data-theme="dark"] .wa-chip.on{background:rgba(18,120,80,.2)}
+.wa-chip-n{font-size:1.05rem;font-weight:800;color:var(--green);font-variant-numeric:tabular-nums}
+[data-theme="dark"] .wa-chip-n{color:#5DCAA5}
+.wa-chip-l{font-size:.61rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;text-align:center;margin-top:.18rem}
+.wa-contactados{font-size:.82rem;color:var(--muted);margin-bottom:.85rem;font-weight:600}
 </style>
 </head>
 <body>
@@ -368,6 +386,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
   <!-- CALENDAR VIEW -->
   <div id="calView">
+    <div id="pacEmbudo" style="display:none"></div>
+    <div class="section-title" id="pacCalTitle" style="display:none">📅 Calendario de llamadas agendadas</div>
     <div class="cal-scroll">
       <div class="cal-grid" id="calGrid"></div>
     </div>
@@ -476,7 +496,7 @@ function isCompleted(nombre){
 async function loadCompleted(){
   try{
     const res = await fetch(`${SB_URL}/rest/v1/entrevistas_cirujanos?select=nombre_entrevistado`,{
-      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(getToken()||SB_KEY)}
     });
     if(res.ok){
       const rows = await res.json();
@@ -809,6 +829,9 @@ function updateStats(){
 }
 
 function renderCal(){
+  const emb=document.getElementById('pacEmbudo'); if(emb) emb.style.display='none';
+  const pct=document.getElementById('pacCalTitle'); if(pct) pct.style.display='none';
+  const pt=document.getElementById('pendTitle'); if(pt) pt.style.display='';
   const citas = filteredCitas();
   const pends = filteredPend();
   const days = getCalDays();
@@ -834,6 +857,8 @@ function renderCal(){
 }
 
 function renderList(){
+  const emb=document.getElementById('pacEmbudo'); if(emb) emb.style.display='none';
+  const pct=document.getElementById('pacCalTitle'); if(pct) pct.style.display='none';
   const citas = filteredCitas().slice().sort((a,b)=>a.fecha.localeCompare(b.fecha)||a.hora.localeCompare(b.hora));
   const pends = filteredPend();
   const daysMap = Object.fromEntries(getCalDays().map(d=>[d.key, d.dow+' '+d.date]));
@@ -1127,6 +1152,96 @@ function pacRamaBadge(r){ return r==='5A'?'badge-5a':r==='5B'?'badge-5b':''; }
 function pacRamaLabel(r){ return r==='5A'?'5A · Ambulatorio':r==='5B'?'5B · Quirúrgico':r||''; }
 function escAttr(s){ return (s==null?'':String(s)).replace(/"/g,'&quot;').replace(/'/g,"\\'"); }
 
+// ─── WhatsApp / Embudo de contacto ───────────────────────────────────
+const MENSAJE_WA = `Buenos días, hablamos del Hospital Escandón. Estamos haciendo una breve entrevista para mejorar nuestros servicios y nos gustaría conocer su experiencia. Tiene usted unos minutos para atenderme, todo lo que comente es completamente confidencial. Nos interesa su opinión real, tanto positiva como negativa para poder mejorar nuestros servicios. En agradecimiento por su ayuda le ofrecemos una consulta gratis con alguno de nuestros especialistas.
+Muchas gracias, quedamos en espera de su respuesta.`;
+
+const WA_ESTADOS = [
+  {key:'pendiente',       label:'Pendiente'},
+  {key:'mensaje_enviado', label:'Mensaje enviado'},
+  {key:'respondio',       label:'Respondió'},
+  {key:'entrevista',      label:'Entrevista'},
+  {key:'no_contesta',     label:'No contesta / rechazó'},
+  {key:'sin_whatsapp',    label:'Sin WhatsApp'},
+];
+const WA_CONTACTADOS = ['mensaje_enviado','respondio','entrevista'];
+const WA_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 18.13h-.01c-1.52 0-3.01-.41-4.3-1.18l-.31-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.35c0-4.54 3.7-8.23 8.24-8.23 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.69 8.23-8.23 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/></svg>';
+
+let waFilter = 'todos';
+
+function normalizeMx(raw){
+  var d=(raw||'').replace(/\D/g,'');
+  if(d.indexOf('00')===0) d=d.slice(2);
+  if(d.length===10) d='52'+d;
+  else if(d.length===11 && d.charAt(0)==='1') d='52'+d.slice(1);
+  return d;
+}
+function waEstado(p){ return p.wa_estado || 'pendiente'; }
+
+async function patchPacienteWa(id, fields){
+  try{
+    const tok = getToken();
+    const res = await fetch(`${SB_URL}/rest/v1/pacientes?id=eq.${id}`, {
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+(tok||SB_KEY),'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify(fields)
+    });
+    if(!res.ok){ console.warn('PATCH wa falló:', res.status, await res.text()); alert('No se pudo guardar en Supabase. Revisa permisos / RLS.'); return false; }
+    const rows = await res.json();
+    if(rows && rows[0]){ const idx=PACIENTES_DATA.findIndex(x=>x.id===id); if(idx>=0) PACIENTES_DATA[idx]=rows[0]; }
+    return true;
+  }catch(e){ console.warn(e); alert('Error de red al guardar.'); return false; }
+}
+
+window.waSend = async function(id){
+  const p = PACIENTES_DATA.find(x=>x.id===id);
+  if(!p) return;
+  const num = normalizeMx(p.telefono);
+  if(num.length!==12) return; // botón deshabilitado de todos modos
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(MENSAJE_WA)}`,'_blank');
+  if(waEstado(p)==='pendiente'){
+    const ok = await patchPacienteWa(id, {wa_estado:'mensaje_enviado', wa_fecha_contacto:new Date().toISOString()});
+    if(ok){ updateStats(); render(); }
+  }
+};
+
+window.waSetEstado = async function(id, val){
+  const p = PACIENTES_DATA.find(x=>x.id===id);
+  if(!p || val===waEstado(p)) return;
+  const ok = await patchPacienteWa(id, {wa_estado: val});
+  if(ok){ updateStats(); render(); }
+};
+
+window.setWaFilter = function(k){
+  waFilter = (waFilter===k) ? 'todos' : k;
+  render();
+};
+
+function renderEmbudoPac(withList){
+  const cont = document.getElementById('pacEmbudo');
+  if(!cont) return;
+  const seg = filteredPacientes(); // aplica filtro de segmento (origen)
+  const counts = {}; WA_ESTADOS.forEach(e=>counts[e.key]=0);
+  seg.forEach(p=>{ const k=waEstado(p); counts[k]=(counts[k]||0)+1; });
+  const contactados = WA_CONTACTADOS.reduce((s,k)=>s+(counts[k]||0),0);
+  const total = seg.length;
+  const chips = WA_ESTADOS.map(e=>`<button class="wa-chip${waFilter===e.key?' on':''}" onclick="setWaFilter('${e.key}')">
+      <span class="wa-chip-n">${counts[e.key]||0}</span><span class="wa-chip-l">${e.label}</span></button>`).join('');
+  let html = `<div class="section-title" style="margin-top:.4rem">📲 Embudo de contacto — WhatsApp</div>
+    <div class="wa-funnel">
+      <button class="wa-chip${waFilter==='todos'?' on':''}" onclick="setWaFilter('todos')"><span class="wa-chip-n">${total}</span><span class="wa-chip-l">Todos</span></button>
+      ${chips}
+    </div>
+    <div class="wa-contactados">${contactados} de ${total} ya contactados</div>`;
+  if(withList){
+    const lista = (waFilter==='todos' ? seg : seg.filter(p=>waEstado(p)===waFilter))
+      .slice().sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+    html += `<div class="pend-grid">${lista.length?lista.map(pacCardCall).join(''):'<p style="color:var(--muted);font-size:.85rem">Sin pacientes en este filtro.</p>'}</div>`;
+  }
+  cont.innerHTML = html;
+  cont.style.display = '';
+}
+
 async function loadPacientes(){
   try{
     const tok = getToken();
@@ -1213,10 +1328,17 @@ function pacCardCal(p){
 }
 
 function pacCardCall(p){
-  // Card de la sección "Por llamar"
+  // Card del embudo de contacto (WhatsApp) + acciones de llamada
   const oBadge = pacOrigenBadge(p.origen);
   const rBadge = pacRamaBadge(p.rama);
   const borderCol = p.origen==='Urgencias'?'#B45454':p.origen==='Hospitalización'?'#127850':p.origen==='Público General'?'#AA8A4A':'#94a3b8';
+  const num = normalizeMx(p.telefono);
+  const waOk = num.length===12;
+  const est = waEstado(p);
+  const waBtn = waOk
+    ? `<button class="wa-btn" onclick="waSend(${p.id})" title="Enviar WhatsApp">${WA_ICON}<span>WhatsApp</span></button>`
+    : `<button class="wa-btn wa-btn-off" disabled title="Teléfono sin número válido">${WA_ICON}<span>Sin número</span></button>`;
+  const sel = `<select class="wa-select" onchange="waSetEstado(${p.id}, this.value)">${WA_ESTADOS.map(e=>`<option value="${e.key}"${e.key===est?' selected':''}>${e.label}</option>`).join('')}</select>`;
   return `<div class="pend-card" style="border-left:4px solid ${borderCol}" data-origen="${p.origen||''}">
     <div class="pend-nombre">${p.nombre||''}</div>
     <div class="pend-esp">${p.detalle||'<em style="opacity:.5">Sin detalle</em>'}</div>
@@ -1225,6 +1347,7 @@ function pacCardCall(p){
       ${p.rama?`<span class="badge ${rBadge}">${pacRamaLabel(p.rama)}</span>`:''}
     </div>
     <div class="pend-razon pac-tel">📞 ${p.telefono||'—'} · ${p.intentos||0} intento${(p.intentos||0)===1?'':'s'}</div>
+    <div class="wa-row">${waBtn}${sel}</div>
     <div class="pend-actions">
       <button class="pend-act-btn" onclick="openAgendarPac(${p.id})" title="Programar llamada">📅 Agendar</button>
       <button class="pend-act-btn" onclick="location.href='${pacInterviewUrl(p)}'" title="Abrir entrevista">✓ Registrar</button>
@@ -1249,14 +1372,15 @@ function getCalDaysPac(){
 }
 
 function renderCalPac(){
+  renderEmbudoPac(true);
+  document.getElementById('pacCalTitle').style.display = '';
   const data = filteredPacientes();
   const agendadas = data.filter(p => p.estatus==='Agendada' && p.fecha_llamada);
-  const porLlamar = data.filter(p => p.estatus!=='Agendada' && !isPacCompleted(p));
   const days = getCalDaysPac();
   const grid = document.getElementById('calGrid');
   if(!days.length){
     grid.style.gridTemplateColumns = '1fr';
-    grid.innerHTML = '<div class="empty-cal">📞 Aún no hay llamadas agendadas. Empieza por la lista de abajo.</div>';
+    grid.innerHTML = '<div class="empty-cal">📞 Aún no hay llamadas agendadas.</div>';
   } else {
     grid.style.gridTemplateColumns = `repeat(${days.length},1fr)`;
     grid.innerHTML = days.map(d => {
@@ -1269,15 +1393,16 @@ function renderCalPac(){
       </div>`;
     }).join('');
   }
-  document.getElementById('pendGrid').innerHTML = porLlamar.length
-    ? porLlamar.map(pacCardCall).join('')
-    : '<p style="color:var(--muted);font-size:.85rem">Sin pacientes por llamar en este filtro.</p>';
+  document.getElementById('pendGrid').innerHTML = '';
+  document.getElementById('pendTitle').style.display = 'none';
   // sin sección "Encuesta realizada" duplicada en pacientes
   const compSection = document.getElementById('compSection');
   if(compSection) compSection.style.display = 'none';
 }
 
 function renderListPac(){
+  const emb=document.getElementById('pacEmbudo'); if(emb) emb.style.display='none';
+  const pct=document.getElementById('pacCalTitle'); if(pct) pct.style.display='none';
   const data = filteredPacientes();
   // Header dinámico
   document.getElementById('listHead').innerHTML = `<tr>
