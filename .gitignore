@@ -5,3 +5,6 @@ node_modules/
 *.bak
 scripts/
 admin/preview-dashboard-v2.html
+*.bak*
+_referencias/
+*.save
