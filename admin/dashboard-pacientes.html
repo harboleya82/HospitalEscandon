@@ -350,12 +350,12 @@ async function fetchData() {
 function buildFilters(id) {
   const el = document.getElementById(id); if (!el) return;
   el.innerHTML = '';
-  const types = ['Todos', ...new Set(allData.map(d => d.tipo_paciente).filter(Boolean))];
+  const types = ['Todos', ...new Set(allData.map(d => d.origen).filter(Boolean))];
   types.forEach(t => {
     const btn = document.createElement('button');
     btn.className = 'filter-btn' + (t === activeFilter ? ' active' : '');
     btn.textContent = t;
-    btn.onclick = () => { activeFilter = t; filteredData = t === 'Todos' ? [...allData] : allData.filter(d => d.tipo_paciente === t); render(); };
+    btn.onclick = () => { activeFilter = t; filteredData = t === 'Todos' ? [...allData] : allData.filter(d => d.origen === t); render(); };
     el.appendChild(btn);
   });
 }
@@ -383,13 +383,13 @@ function renderQuotes(id, key, max = 6) {
   const el = document.getElementById(id); if (!el) return;
   const qs = filteredData.filter(d => getResp(d, key)).slice(0, max);
   if (!qs.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas.</p>'; return; }
-  el.innerHTML = qs.map(d => `<div class="quote"><div class="text">${getResp(d, key)}</div><div class="meta"><span class="tag">${d.tipo_paciente || '?'}</span> ${d.identificador_paciente || '?'} · ${d.fecha_entrevista || ''}</div></div>`).join('');
+  el.innerHTML = qs.map(d => `<div class="quote"><div class="text">${getResp(d, key)}</div><div class="meta"><span class="tag">${d.origen || '?'}</span> ${d.identificador_paciente || '?'} · ${d.fecha_entrevista || ''}</div></div>`).join('');
 }
 
 function renderMultiQ(id, keys, max = 6) {
   const el = document.getElementById(id); if (!el) return;
   const qs = [];
-  filteredData.forEach(d => keys.forEach(k => { const t = getResp(d, k); if (t) qs.push({ text: t, tipo: d.tipo_paciente, pac: d.identificador_paciente, fecha: d.fecha_entrevista }); }));
+  filteredData.forEach(d => keys.forEach(k => { const t = getResp(d, k); if (t) qs.push({ text: t, tipo: d.origen, pac: d.identificador_paciente, fecha: d.fecha_entrevista }); }));
   if (!qs.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem;font-style:italic">Sin citas.</p>'; return; }
   el.innerHTML = qs.slice(0, max).map(q => `<div class="quote"><div class="text">${q.text}</div><div class="meta"><span class="tag">${q.tipo || '?'}</span> ${q.pac || '?'} · ${q.fecha || ''}</div></div>`).join('');
 }
@@ -418,7 +418,7 @@ function render() {
     document.getElementById('lastUpdate').textContent = `Última: ${allData[0]?.fecha_entrevista || ''}`;
 
     // Tipo chart
-    const tipos = {}; filteredData.forEach(d => { const t = d.tipo_paciente || 'Sin tipo'; tipos[t] = (tipos[t]||0)+1; });
+    const tipos = {}; filteredData.forEach(d => { const t = d.origen || 'Sin tipo'; tipos[t] = (tipos[t]||0)+1; });
     getOrCreate('cTipo', { type: 'doughnut', data: { labels: Object.keys(tipos), datasets: [{ data: Object.values(tipos), backgroundColor: ['#2563eb','#059669','#d97706','#7c3aed','#ec4899'], borderWidth: 2, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '55%', plugins: { legend: { position: 'bottom' } } } });
 
     // Cómo conoció
@@ -437,7 +437,7 @@ function render() {
 
     // Timeline
     const sorted = [...filteredData].sort((a, b) => new Date(a.fecha_entrevista) - new Date(b.fecha_entrevista));
-    document.getElementById('timeline').innerHTML = sorted.map(d => `<div class="timeline-item"><div class="t-date">${d.fecha_entrevista || '?'}</div><div class="t-content"><strong>${d.identificador_paciente || '?'}</strong> · ${d.tipo_paciente || ''} · ${d.seccion_5_tipo === '5B_Quirurgico' ? '🔪 Qx' : '🩺 Amb'} · ${Math.round((d.duracion_segundos||0)/60)} min</div></div>`).join('');
+    document.getElementById('timeline').innerHTML = sorted.map(d => `<div class="timeline-item"><div class="t-date">${d.fecha_entrevista || '?'}</div><div class="t-content"><strong>${d.identificador_paciente || '?'}</strong> · ${d.origen || ''} · ${d.seccion_5_tipo === '5B_Quirurgico' ? '🔪 Qx' : '🩺 Amb'} · ${Math.round((d.duracion_segundos||0)/60)} min</div></div>`).join('');
   } else {
     document.getElementById('kpi_dur').textContent = '–';
     document.getElementById('timeline').innerHTML = '<div class="empty"><h3>Sin entrevistas aún</h3><p>Aparecerán conforme se registren.</p></div>';
@@ -536,7 +536,7 @@ function render() {
   if (!filteredData.length) { rawEl.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg><h3>Sin entrevistas</h3><p>Aparecerán conforme se guarden.</p></div>'; return; }
   rawEl.innerHTML = filteredData.map(d => {
     const rHtml = Object.entries(d.respuestas || {}).map(([k,v]) => `<div style="margin-bottom:.5rem"><strong style="color:var(--gold);font-size:.75rem">${Q_LABELS[k]||k}:</strong><br><span style="font-size:.85rem">${v}</span></div>`).join('');
-    return `<div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem"><div style="display:flex;justify-content:space-between;margin-bottom:.8rem"><div><strong>${d.identificador_paciente||'?'}</strong> · <span style="color:var(--muted)">${d.tipo_paciente||''}</span></div><span class="theme-pill" style="background:#2563eb20;color:#2563eb">${d.seccion_5_tipo==='5B_Quirurgico'?'Quirúrgico':'Ambulatorio'}</span></div><div style="font-size:.75rem;color:var(--muted);margin-bottom:.8rem">${d.entrevistador||'?'} · ${d.fecha_entrevista||'?'} · ${Math.round((d.duracion_segundos||0)/60)} min</div>${rHtml}</div>`;
+    return `<div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem"><div style="display:flex;justify-content:space-between;margin-bottom:.8rem"><div><strong>${d.identificador_paciente||'?'}</strong> · <span style="color:var(--muted)">${d.origen||''}</span></div><span class="theme-pill" style="background:#2563eb20;color:#2563eb">${d.seccion_5_tipo==='5B_Quirurgico'?'Quirúrgico':'Ambulatorio'}</span></div><div style="font-size:.75rem;color:var(--muted);margin-bottom:.8rem">${d.entrevistador||'?'} · ${d.fecha_entrevista||'?'} · ${Math.round((d.duracion_segundos||0)/60)} min</div>${rHtml}</div>`;
   }).join('');
 }
 
