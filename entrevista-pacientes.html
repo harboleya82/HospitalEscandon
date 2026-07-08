@@ -805,6 +805,7 @@ async function submitInterview() {
     origen: origen,
     detalle: document.getElementById('m_det').value.trim() || null,
     no_paciente: noPaciente,
+    identificador_paciente: pacienteIdFromAgenda ? String(pacienteIdFromAgenda) : ('MANUAL-' + Date.now()),
     resultado_llamada: getResultadoLlamada(),
     seccion_5_tipo: seccion5_tipo,
     fecha_entrevista: document.getElementById('m_fecha').value || new Date().toISOString().split('T')[0],
